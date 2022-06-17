@@ -9,29 +9,30 @@
 #include <set>
 #include <boost/iostreams/device/mapped_file.hpp>
 
-#include "Logging.tpp"
-#include "puzzle.h"
-#include "puzzleState.h"
+#include "../util/Logging.tpp"
+#include "../solver/puzzle.h"
+#include "../solver/puzzleState.h"
+#include "../config.hpp"
 
 class Puzzle;
 
 class RedundancyTable {
 private:
-	
 	uint64_t lastMovesToHash( const vector<int>& e ) const;
 	
 	void performSizeCheck();
 	void generate();
 public:
 	uint64_t getChecksum();
-	//vector<uint64_t> stats;
+	vector<uint64_t> stats;
 	uint8_t* data = nullptr;
 	string path = "";
-	double maxSizeInGigabytes = 0;
+	// double maxSizeInGigabytes = 0;
 	int depth = 0;
 	bool inverse = false;
 	Logging log;
 	Puzzle puzzle;
+	SolverConfig* cfg = &SolverConfig::global;
 	
 	double estimateSizeInGb();
 
@@ -41,7 +42,7 @@ public:
 	void load(); // consumes a lot of memory
 	void unload(); // frees the memory.
 	
-	string toString();
+	string getStats();
 };
 
 #endif // PUZZLE_REDUNDANCY_H

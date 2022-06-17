@@ -1,4 +1,4 @@
-#include "pruningTree.h"
+#include "../pruning/pruningTree.h"
 #include <sstream>
 #include <iostream>
 #include <fstream>
@@ -9,14 +9,14 @@
 
 // #include <boost/iostreams/device/mapped_file.hpp>
 
-#include "puzzle.h"
+#include "../solver/puzzle.h"
 
 #include <set>
 #include <algorithm>    // std::reverse
 #include <stack>
 
-#include "redundancy.hpp"
-#include "puzzle.h"
+#include "../pruning/redundancy.hpp"
+#include "../solver/puzzle.h"
 
 #include <unistd.h>
 
@@ -49,7 +49,7 @@ void RedundancyTable::generate() {
 	int numChoices = validMoves.size();
 
 	int depth = 1;
-	//stats.push_back( 0 );
+	stats.push_back( 0 );
 
 	while ( depth <= targetDepth ) {
 		log << "generating depth: " << depth << endl;
@@ -66,7 +66,7 @@ void RedundancyTable::generate() {
 			if ( moves.size() >= depth ) {
 				if ( states.count( puzzle.compressState( ss.top() ) ) ) {
 					//printMoves(moveNames, moves);
-					//stats.back()++;
+					stats.back()++;
 					insert( moves );
 				} else {
 					states.insert( puzzle.compressState( ss.top() ) );
@@ -97,7 +97,7 @@ void RedundancyTable::generate() {
 
 			if ( moves.size() >= depth && states.count( puzzle.compressState( ss.top() ) ) ) {
 				//printMoves(moveNames, moves);
-				//stats.back()++;
+				stats.back()++;
 				insert( moves );
 				goto retard;
 			}
@@ -110,7 +110,7 @@ void RedundancyTable::generate() {
 		}
 
 	nextDepth:
-		//stats.push_back( 0 );
+		stats.push_back( 0 );
 		depth++;
 	}
 
@@ -129,7 +129,7 @@ bool RedundancyTable::contains( const vector<int>& e ) const {
 
 uint64_t RedundancyTable::lastMovesToHash( const vector<int>& e ) const {
 	uint64_t hash = 0;
-	//for(int i = e.size()-whatever; i < e.size(); i++){
+
 	int i = 0;
 
 	if ( e.size() > depth ) {
@@ -164,23 +164,23 @@ double RedundancyTable::estimateSizeInGb() {
 }
 
 void RedundancyTable::performSizeCheck() {
-	if ( estimateSizeInGb() > maxSizeInGigabytes ) {
+	if ( estimateSizeInGb() > cfg->maxMemoryInGb ) {
 		stringstream ss;
-		ss << "error: redundancy table ("<<path<<") size exceeds " << maxSizeInGigabytes << " gigabytes, attempted to allocate " << estimateSizeInGb() << " gigabytes";
+		ss << "error: redundancy table ("<<path<<") size exceeds " << cfg->maxMemoryInGb << " gigabytes, attempted to allocate " << estimateSizeInGb() << " gigabytes";
 		throw runtime_error( ss.str() );
 	}
 }
 
-string RedundancyTable::toString(){
+string RedundancyTable::getStats(){
     stringstream ss;
 	//uint64_t siz = ( ( uint64_t ) 1 ) << hashSize;
 	uint64_t total = 0;
-	/*for ( int i = 0; i < stats.size(); i++ ) {
+	for ( int i = 0; i < stats.size(); i++ ) {
 		
 		ss << "Depth " << i+1 << " has " << stats[i]-total << "." << endl;
 		//total = (stats[i]+total)*totalMoves;
 		
-	}*/
+	}
     return ss.str();
 }
 
@@ -222,6 +222,11 @@ void RedundancyTable::load() {
 		if ( checksum != getChecksum() ) {
 			throw runtime_error( "error: checksum mismatch for redundancy table (" + path + ") consider deleting it, or maybe it is from another puzzle?" );
 		}
+
+		uint64_t statSize = 0;
+		infile.read ( (char* ) &statSize, sizeof(uint64_t) );
+		stats.resize(statSize);
+		infile.read ( (char* ) stats.data(), sizeof(stats.data()) * statSize );
 		
 		
 		if ( !( infile.read( (char*) data, siz ) ) ) { // read up to the size of the buffer
@@ -235,12 +240,18 @@ void RedundancyTable::load() {
 		// create table and save it
 		generate();
 		log << "Saving table (" << path << ").\n";
-		log << "----------------------------------------------------------------\n";
+		
 		ofstream file( path, std::ios::binary );
 		uint64_t checksum = getChecksum();
 		file.write( ( char* ) &checksum, sizeof( checksum ) );
+
+		uint64_t statSize = (uint64_t)stats.size();
+		file.write ( (char* ) &statSize, sizeof(uint64_t) );
+		file.write ( (char* ) stats.data(), sizeof(stats.data()) * stats.size() );
+
 		file.write( ( char* ) data, siz );
-		
+
+		log << "----------------------------------------------------------------\n";
 	}
 }
 

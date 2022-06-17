@@ -1,13 +1,14 @@
-#include "pruningTree.h"
+#include "../pruning/pruningTree.h"
 #include <sstream>
 #include <iostream>
 #include <fstream>
 #include <cmath>
 #include <stdexcept>
+#include <sstream>
 
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/filesystem.hpp>
-#include "puzzle.h"
+#include "../solver/puzzle.h"
 
 using namespace boost::iostreams;
 
@@ -28,8 +29,11 @@ void PruningStates::performSizeCheck() {
 
 void PruningStates::insert ( State& state, int moves )
 {
-	auto hash = state.toHash() >> discardBits;
-	data[hash] = data[hash] < moves ? data[hash] : moves;
+    auto s = preHashTransformation(state);
+	auto hash = s.toHash() >> discardBits;
+    //tableMutex.lock();
+	((volatile uint8_t&) data[hash]) = data[hash] < moves ? data[hash] : moves;
+    //tableMutex.unlock();
 }
 
 bool PruningStates::cannotBeSolvedInLimit( int movesAvailable, const State& state ) {
@@ -45,7 +49,9 @@ void PruningStates::unload() {
 	if(data != nullptr){
 		log << "Unloading table (" << path << ") from memory\n";
 		log << "----------------------------------------------------------------\n";
-		delete[] data;
+
+        delete[] data;
+
 		data = nullptr;
 	}
 }
@@ -53,6 +59,7 @@ void PruningStates::unload() {
 
 
 void PruningStates::load() {
+	threadManager.targetThreads = cfg->targetThreads;
 	if(data != nullptr){
 		return;
 	}
@@ -68,7 +75,9 @@ void PruningStates::load() {
 	if ( boost::filesystem::exists( path ) ) {
 		if ( !useMmap ) {
 			log << "Pruning table (" << path << ") exists, loading it to memory (size=" << estimateSizeInGb() << "Gb)...\n";
-			data = new uint8_t[ siz ];
+
+            data = new uint8_t[ siz ];
+
 			uint64_t checksum = 0;
 			ifstream infile( path, std::ios::binary );
 
@@ -76,6 +85,7 @@ void PruningStates::load() {
 			if(checksum != getChecksum()){
 				throw runtime_error( "error: checksum mismatch for pruning table ("+path+") consider deleting it, or maybe it is from another puzzle?" );
 			}
+			infile.read( ( char* ) stats.data(), sizeof(stats.data())*stats.size());
 			
 			
 			if ( !( infile.read( ( char* ) data, siz ) ) ) { // read up to the size of the buffer
@@ -104,7 +114,13 @@ void PruningStates::load() {
 			
 			uint64_t checksum = 0; 
 			checksum = *((uint64_t*)data);
-			data+= sizeof(checksum);
+			data += sizeof(checksum);
+			uint64_t* statsPtr = (uint64_t*)data;
+			data += sizeof(stats.data())*stats.size();
+
+			for(int i = 0; i < stats.size(); i++){
+				stats[i] = statsPtr[i];
+			}
 			
 			if ( checksum != getChecksum() ) {
 				throw runtime_error( "error: checksum mismatch for pruning table (" + path + ") consider deleting it, or maybe it is from another puzzle?" );
@@ -138,33 +154,46 @@ void PruningStates::load() {
 			data = new uint8_t[ siz ];
 		}
 		for(uint64_t i = 0; i < siz; i ++) data[i] = depth+1;
+		
 		generate();
 
-		if ( !useMmap ) {
+		if ( !useMmap && path != "") {
 			log << "\nSaving table (" << path << ").\n";
 			ofstream file( path, std::ios::binary );
 			uint64_t checksum = getChecksum();
 			file.write( ( char* ) &checksum, sizeof(checksum) );
+			file.write( ( char* ) stats.data(), sizeof(stats.data())*stats.size());
 			file.write( ( char* ) data, siz );
+			file.close();
 		}
 	}
 	
 	log <<"----------------------------------------------------------------\n";
 }
 
-
-#include <sstream>
 string PruningStates::getStats() { // TODO: store stats so we dont have to look through the whole TABLE (potentially several Gib)
     uint64_t siz = ( ( uint64_t ) 1 ) <<hashSize;
     stringstream ss;
-    vector<uint64_t> counts ( 256,0 );
     ss << "maxDepth = " << depth << endl;
-    for ( uint64_t i = 0; i < siz; i++ ) {
-        counts[data[i]]++;
-    }
+
+	bool needsStats = true;
+
+	for ( int i = 0; i < 256; i++ ) if(stats[i]) needsStats = false;
+    
+	if(needsStats){
+		for ( uint64_t i = 0; i < siz; i++ ) {
+			stats[data[i]]++;
+		}
+		fstream file( path, std::ios::binary | std::ios::in | std::ios::out );
+		uint64_t checksum = getChecksum();
+		file.write( ( char* ) &checksum, sizeof(checksum) );
+		file.write( ( char* ) stats.data(), sizeof(stats.data())*stats.size());
+		file.close();
+	}
+
     for ( int i = 0; i < 256; i++ ) {
-		if(counts[i])
-			ss << "Depth " << i << " has " << counts[i] << "." << endl;
+		if(stats[i])
+			ss << "Depth " << i << " has " << stats[i] << "." << endl;
     }
     return ss.str();
 }

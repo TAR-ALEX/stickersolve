@@ -1,4 +1,4 @@
-#include "puzzle.h"
+#include "../solver/puzzle.h"
 
 #include <unistd.h>
 #include <stack>
@@ -6,13 +6,14 @@
 #include <sstream>
 #include <chrono>
 #include "PuzzleSolver.h"
+#include "../util/threadmanager.hpp"
 
 using namespace std::chrono;
 using namespace std;
 
 
 void Solver::init() {
-
+	threadManager.targetThreads = cfg->targetThreads;
 }
 
 void Solver::initReverse() {
@@ -21,8 +22,6 @@ void Solver::initReverse() {
 	"This has not been implemented, remove this exception to get this functionality with bugs related to restricted moves, will not work with custom move pruning"
 	);
 }
-
-
 
 void printMoves(vector<string>& moveNames, vector<int> moves){
   for(auto move : moves){
@@ -41,12 +40,20 @@ vector<vector<int>> Solver::rawSolve( State initial, int targetDepth, bool inver
 	auto start = high_resolution_clock::now();
 
 	vector<vector<int>> solutions;
+    vector<int> moves;
+    vector<State> ss;
+    ss.push_back(initial);
+    mutex gMutex;
+    volatile bool terminateEarly = false;
 
 	if ( inverse ) {
-		solutions = rawSolveInverse( initial, targetDepth, numberOfSolutionsToGet );
+        rawSolveMultiInverse(ss, targetDepth, 2, moves, solutions, gMutex, terminateEarly, numberOfSolutionsToGet);
 	} else {
-		solutions = rawSolveRegular( initial, targetDepth, numberOfSolutionsToGet );
+        rawSolveMulti(ss, targetDepth, 2, moves, solutions, gMutex, terminateEarly, numberOfSolutionsToGet);
+        threadManager.waitThreads();
 	}
+
+
 
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<chrono::duration<double>>( stop - start );
@@ -58,7 +65,15 @@ vector<vector<int>> Solver::rawSolve( State initial, int targetDepth, bool inver
 }
 
 
-vector<vector<int>> Solver::rawSolveInverse( State initial, int targetDepth, unsigned int numberOfSolutionsToGet ) {
+void Solver::rawSolveMultiInverse(
+        vector<State> ss,
+        int targetDepth,
+        int detachDepth,
+        vector<int> moves,
+        vector<vector<int>>& gSolutions,
+        mutex& gLock, volatile bool& stop,
+        unsigned int numberOfSolutionsToGet
+){
 	if ( !puzzle.checkIfAllMovesHaveInverses() ) {
 		throw runtime_error( 
 			string() + 
@@ -67,36 +82,93 @@ vector<vector<int>> Solver::rawSolveInverse( State initial, int targetDepth, uns
 			"be required and might be supported in the future." 
 		);
 	}
-	auto solutions = rawSolveRegular(initial, targetDepth, numberOfSolutionsToGet);
+	rawSolveMulti(ss, targetDepth, detachDepth, moves, gSolutions, gLock, stop, numberOfSolutionsToGet);
 	auto inverse = puzzle.buildInverseTable();
-	for(auto& solution : solutions){
+    threadManager.waitThreads();
+	for(auto& solution : gSolutions){
 		// Flip the order
 		reverse(solution.begin(),solution.end());
 		// Flip the move
 		for(int i = 0; i < solution.size(); i++) solution[i] = inverse[solution[i]];
 	}
-	return solutions;
+
 }
 
-
-vector<vector<int>> Solver::rawSolveRegular( State initial, int targetDepth, unsigned int numberOfSolutionsToGet ) {
-	if ( targetDepth <= 0 ) return {};
+void Solver::rawSolveMulti(
+    vector<State> ss,
+    int targetDepth,
+    int detachDepth,
+    vector<int> moves,
+    vector<vector<int>>&
+    gSolutions,
+    mutex& gLock,
+    volatile bool &stop,
+    unsigned int numberOfSolutionsToGet
+) {
+    if ( targetDepth <= 0 ) return;
 
 	State final = puzzle.solvedState;
 
-	vector<vector<int>> solutions;
-
-	vector<int> moves;
-
-	moves.reserve( targetDepth );
-
-	vector<State> ss;
-
-	ss.push_back( initial );
 
 	int numChoices = puzzle.validMoves.size();
 
-	// basically a counting algorithm with cary rippled over.
+    moves.push_back(0);
+    ss.emplace_back();
+    int movesLeft = targetDepth - moves.size();
+    while ( moves.back() < numChoices ) {
+        if(canDiscardMoves( movesLeft, moves )){
+            moves.back()++; continue;
+        }
+
+        ss.back() = ss.rbegin()[1] + puzzle.validMoves[moves.back()];
+
+        if(canDiscardPosition( movesLeft, ss.back() )){
+            moves.back()++; continue;
+        }
+
+        if(stop) return;
+
+        if ( ss.back() == final ) {
+            gLock.lock();
+			if ( gSolutions.size() < numberOfSolutionsToGet ) {
+				gSolutions.push_back( moves );
+                stop = true;
+                gLock.unlock();
+				continue;
+			} else {
+                gLock.unlock();
+				return;
+			}
+		}
+
+        if(moves.size() >= detachDepth){
+            threadManager.requestThread();
+            thread t(
+                [&gLock, &gSolutions, &stop, ss, moves, targetDepth, numberOfSolutionsToGet, this] {
+                    rawSolveRegular(ss, targetDepth, moves.size(), moves, gSolutions, gLock, stop, numberOfSolutionsToGet);
+                    threadManager.deleteThread();
+                }
+            );
+            t.detach();
+        }else{
+            rawSolveMulti( ss, targetDepth, detachDepth, moves, gSolutions, gLock, stop, numberOfSolutionsToGet);
+        }
+        moves.back()++;
+    }
+}
+
+//( vector<State> ss, int targetDepth, int startDepth, vector<int> moves, unsigned int numberOfSolutionsToGet )
+
+void Solver::rawSolveRegular(vector<State> ss, int targetDepth, int startDepth, vector<int> moves, vector<vector<int>>& solutions, mutex& gLock,volatile bool &stop, unsigned int numberOfSolutionsToGet) {
+	if ( targetDepth <= 0 ) return;
+
+	State final = puzzle.solvedState;
+
+	moves.reserve( targetDepth );
+
+	int numChoices = puzzle.validMoves.size();
+
+	// basically a counting algorithm with carry rippled over.
 	for ( ;; ) {
 		if ( moves.size() < targetDepth) {
 			moves.push_back( 0 );
@@ -108,7 +180,7 @@ vector<vector<int>> Solver::rawSolveRegular( State initial, int targetDepth, uns
 		while ( moves.back() >= numChoices ) { retard:
 			ss.pop_back();
 			moves.pop_back();
-			if ( moves.size() == 0 ) {
+			if ( moves.size() <= startDepth) {
 				goto done;
 			}
 			moves.back()++;
@@ -131,22 +203,29 @@ vector<vector<int>> Solver::rawSolveRegular( State initial, int targetDepth, uns
 
 			break;
 		}
+
+		if(stop) return;
 		
 		if ( ss.back() == final ) {
+            gLock.lock();
 			if ( solutions.size() < numberOfSolutionsToGet ) {
 				solutions.push_back( moves );
+                gLock.unlock();
+                if ( solutions.size() == numberOfSolutionsToGet ) stop = true;
 				goto retard;
 			} else {
+                gLock.unlock();
+                stop = true;
 				goto done;
 			}
 		}
 	}
 done:
-	return solutions;
+	return;
 }
 
-vector<vector<string>> Solver::solveVectors(State initial, int targetDepth) {
-  auto solutions = rawSolve(initial, targetDepth, false);
+vector<vector<string>> Solver::solveVectors(Puzzle initial, int targetDepth, unsigned int numberOfSolutionsToGet) {
+  auto solutions = rawSolve(initial.state, targetDepth, false, numberOfSolutionsToGet);
   sort(
     solutions.begin(),
     solutions.end(),
@@ -166,10 +245,10 @@ vector<vector<string>> Solver::solveVectors(State initial, int targetDepth) {
   return solutionStrings;
 }
 
-vector<std::string> Solver::solveStrings( State initial, int depth ) {
+vector<std::string> Solver::solveStrings( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet) {
 	stringstream ss;
 	vector<std::string> result;
-	auto solutions =  solveVectors( initial, depth );
+	auto solutions =  solveVectors( initial, depth, numberOfSolutionsToGet);
 
 	for ( auto solution : solutions ) {
 		bool first = true;
@@ -191,9 +270,9 @@ vector<std::string> Solver::solveStrings( State initial, int depth ) {
 	return result;
 }
 
-string Solver::solve( State initial, int depth ) {
+string Solver::solve( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet) {
 	stringstream ss;
-	auto solutions =  solveVectors( initial, depth );
+	auto solutions =  solveVectors( initial, depth, numberOfSolutionsToGet);
 	
 	int lastSize = 0;
 	for ( auto solution : solutions ) {

@@ -1,0 +1,21 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/media/alex/HOME/Win Data/Lesha/Code/cube/stickersolve'
+mkdir -p build/./src/
+g++ -Wall -O3 -std=c++11 -c src/main.cpp -o build/./src/main.cpp.o
+mkdir -p build/./src/pruning/
+g++ -Wall -O3 -std=c++11 -c src/pruning/pruningTree.cpp -o build/./src/pruning/pruningTree.cpp.o
+mkdir -p build/./src/pruning/
+g++ -Wall -O3 -std=c++11 -c src/pruning/redundancy.cpp -o build/./src/pruning/redundancy.cpp.o
+mkdir -p build/./src/pruning/
+g++ -Wall -O3 -std=c++11 -c src/pruning/pruning.cpp -o build/./src/pruning/pruning.cpp.o
+mkdir -p build/./src/
+g++ -Wall -O3 -std=c++11 -c src/config.cpp -o build/./src/config.cpp.o
+mkdir -p build/./src/solver/
+g++ -Wall -O3 -std=c++11 -c src/solver/puzzleState.cpp -o build/./src/solver/puzzleState.cpp.o
+mkdir -p build/./src/solver/
+g++ -Wall -O3 -std=c++11 -c src/solver/puzzle.cpp -o build/./src/solver/puzzle.cpp.o
+mkdir -p build/./src/solver/
+g++ -Wall -O3 -std=c++11 -c src/solver/puzzleSolver.cpp -o build/./src/solver/puzzleSolver.cpp.o
+g++ -o stickersolve build/./src/main.cpp.o build/./src/pruning/pruningTree.cpp.o build/./src/pruning/redundancy.cpp.o build/./src/pruning/pruning.cpp.o build/./src/config.cpp.o build/./src/solver/puzzleState.cpp.o build/./src/solver/puzzle.cpp.o build/./src/solver/puzzleSolver.cpp.o -O3 -std=c++11 -lboost_system -lboost_iostreams -lboost_filesystem -lpthread
+make: Leaving directory '/media/alex/HOME/Win Data/Lesha/Code/cube/stickersolve'
+ 

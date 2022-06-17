@@ -1,0 +1,8 @@
+[Buildset]
+BuildItems=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x01\x00\x00\x00\x18\x00s\x00t\x00i\x00c\x00k\x00e\x00r\x00s\x00o\x00l\x00v\x00e)
+
+[Project]
+VersionControlSupport=kdevgit
+
+[SourceFileTemplates]
+LastUsedTemplate=/home/alex/.local/share/kdevfiletemplates/template_descriptions/cpp_basic.desktop

@@ -5,11 +5,11 @@
 #include <chrono>
 #include <algorithm>
 #include <tuple>
-#include <boost/interprocess/file_mapping.hpp>
-#include <boost/interprocess/mapped_region.hpp>
 #include <cmath>
 #include <sstream>
-#include "puzzle.h"
+#include <regex>
+
+#include "../solver/puzzle.h"
 
 
 using namespace std::chrono;
@@ -37,20 +37,21 @@ bool Puzzle::checkIfAllMovesHaveInverses() {
 }
 
 
-// string Puzzle::toString() {
-//   string result = "[";
-//   for (int i = 0; i < solvedState.size(); i++) {
-//     if (i != 0) {
-//       result += ", ";
-//     }
-//     result += to_string(solvedState[i]);
-//   }
-//   return result + "]";
-// }
+string Puzzle::toString() {
+  string result = "[";
+  for (int i = 0; i < state.size(); i++) {
+    if (i != 0) {
+      result += ", ";
+    }
+    result += to_string(state[i]);
+  }
+  return result + "]";
+}
 
 Puzzle::Puzzle() {}
 Puzzle::Puzzle( State s ) {
 	solvedState = s;
+	state = s;
 }
 
 void Puzzle::addMove( string name, State move ) {
@@ -107,6 +108,64 @@ uint64_t Puzzle::getChecksum() const {
 
 	return result;
 }
+
+void Puzzle::applyMoves(string str){
+	if(state.size() != solvedState.size()){
+		state = solvedState;
+	}
+    std::regex regex{R"([\s]+)"}; // split on space
+    std::sregex_token_iterator it{str.begin(), str.end(), regex, -1};
+    std::vector<std::string> moves{it, {}};
+
+    for(int i = 0; i < moves.size(); i++){
+        this->state += getMove(moves[i]);
+    }
+}
+
+void Puzzle::keepOnlyMoves(set<string> keep){
+	vector<string> newMoveNames;
+	vector<State> newMoveSates;
+	for(int i = 0; i < validMoves.size(); i++){
+		if(keep.count(moveNames[i])){
+			newMoveNames.push_back(moveNames[i]);
+			newMoveSates.push_back(validMoves[i]);
+		}
+	}
+	moveNames = newMoveNames;
+	validMoves = newMoveSates;
+}
+
+void Puzzle::deleteMoves(set<string> discard){
+	vector<string> newMoveNames;
+	vector<State> newMoveSates;
+	for(int i = 0; i < validMoves.size(); i++){
+		if(!discard.count(moveNames[i])){
+			newMoveNames.push_back(moveNames[i]);
+			newMoveSates.push_back(validMoves[i]);
+		}
+	}
+	moveNames = newMoveNames;
+	validMoves = newMoveSates;
+}
+
+void Puzzle::deleteMove(string m){
+	deleteMoves({m});
+}
+
+void Puzzle::keepOnlyMoves(string allowedMoves){
+	std::regex regex{R"([\s]+)"}; // split on space
+	std::sregex_token_iterator it{allowedMoves.begin(), allowedMoves.end(), regex, -1};
+	std::set<std::string> movesToInit{it, {}};
+	keepOnlyMoves(movesToInit);
+}
+
+void Puzzle::deleteMoves(string movesDenied){
+	std::regex regex{R"([\s]+)"}; // split on space
+	std::sregex_token_iterator it{movesDenied.begin(), movesDenied.end(), regex, -1};
+	std::set<std::string> movesToBlock{it, {}};
+	deleteMoves(movesToBlock);
+}
+
 
 
 

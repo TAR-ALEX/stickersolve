@@ -3,7 +3,7 @@
 #ifndef PUZZLE_2x2_H
 #define PUZZLE_2x2_H
 
-#include "../puzzle.h"
+#include "../solver/puzzle.h"
 
 using namespace std;
 

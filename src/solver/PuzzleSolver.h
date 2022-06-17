@@ -9,32 +9,73 @@
 #include <unordered_map>
 #include <fstream>
 
-#include "Logging.tpp"
-#include "puzzle.h"
-#include "redundancy.hpp"
-#include "pruningTree.h"
-#include "puzzleState.h"
+#include "../util/Logging.tpp"
+#include "../util/threadmanager.hpp"
+#include "../solver/puzzle.h"
+#include "../pruning/redundancy.hpp"
+#include "../pruning/pruningTree.h"
+#include "../solver/puzzleState.h"
+#include "../config.hpp"
 
 using namespace std;
 
 class Solver {
 private:
 	int numStickers = 1;
+
 	void calculateStickerWidth();
-	
-	vector<vector<int>> rawSolve( State initial, int depth, bool inverse = false, unsigned int numberOfSolutionsToGet = -1 );
-	vector<vector<int>> rawSolveRegular( State initial, int depth, unsigned int numberOfSolutionsToGet = -1 );
-	vector<vector<int>> rawSolveInverse( State initial, int depth, unsigned int numberOfSolutionsToGet = -1 );
-public:
+
+	void rawSolveMulti(
+        vector<State> ss,
+        int targetDepth,
+        int detachDepth,
+        vector<int> moves,
+        vector<vector<int>>& gSolutions,
+        mutex& gLock, volatile bool& stop,
+        unsigned int numberOfSolutionsToGet = -1
+    );
+
+    void rawSolveRegular( 
+        vector<State> ss, 
+        int depth, 
+        int startDepth, 
+        vector<int> moves, 
+        vector<vector<int>>& gSolutions, 
+        mutex& gLock, 
+        volatile bool& stop, 
+        unsigned int numberOfSolutionsToGet = -1
+    );
+
+	vector<vector<int>> rawSolve( 
+        State initial, 
+        int depth, 
+        bool inverse = false, 
+        unsigned int numberOfSolutionsToGet = -1 
+    );
+
+	void rawSolveMultiInverse(
+        vector<State> ss,
+        int targetDepth,
+        int detachDepth,
+        vector<int> moves,
+        vector<vector<int>>& gSolutions,
+        mutex& gLock, volatile bool& stop,
+        unsigned int numberOfSolutionsToGet = -1
+    );
+
+public: // TODO: make protected
 	virtual bool canDiscardPosition(int movesAvailable, const State& state);
 	virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves);
-	
+public:
+    SolverConfig* cfg = &SolverConfig::global;
+
 	Logging log;
 	Puzzle puzzle;
+    ThreadManager threadManager = ThreadManager();
 
-	vector<vector<string>> solveVectors( State initial, int depth );
-	vector<string> solveStrings( State initial, int depth );
-	string solve( State initial, int depth );
+	vector<vector<string>> solveVectors( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
+	vector<string> solveStrings( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
+	string solve( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
 	
 	virtual void init();
 	virtual void initReverse();

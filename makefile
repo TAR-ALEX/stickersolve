@@ -2,7 +2,7 @@ CC=g++
 # CCFLAGS=-Wall  -std=c++11 -g -pg
 # LDFLAGS=  -std=c++11 -g  -pg
 CCFLAGS=-Wall -O3 -std=c++11
-LDFLAGS=-O3 -std=c++11 -lboost_system -lboost_iostreams -lboost_filesystem
+LDFLAGS=-O3 -std=c++11 -lboost_system -lboost_iostreams -lboost_filesystem -lpthread
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
@@ -14,17 +14,17 @@ DEBUG_OBJECTS := $(SOURCES:%=$(BUILD_DIR)/%.d.o)
 TARGET=stickersolve
 
 # all: $(TARGET)
-all: debug
+all: release
 
 gprof:
 	gprof $(TARGET)_DEBUG gmon.out  >output.txt
 
 release: $(TARGET)
-	./$(TARGET)
+#	./$(TARGET)
 
 debug: $(TARGET)_DEBUG
 # 	gdb $(TARGET)_DEBUG
-	./$(TARGET)_DEBUG
+#	./$(TARGET)_DEBUG
 
 $(TARGET)_DEBUG: $(DEBUG_OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS) -ggdb -pg

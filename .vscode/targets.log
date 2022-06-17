@@ -1,0 +1,540 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+# GNU Make 4.2.1
+# Built for x86_64-pc-linux-gnu
+# Copyright (C) 1988-2016 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+
+# Make data base, printed on Fri Jun 17 14:54:07 2022
+
+# Variables
+
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# automatic
+?F = $(notdir $?)
+# environment
+DESKTOP_SESSION = cinnamon
+# default
+.SHELLFLAGS := -c
+# environment
+XDG_SESSION_CLASS = user
+# environment
+XDG_SESSION_TYPE = x11
+# environment
+VSCODE_LOG_NATIVE = false
+# makefile (from 'makefile', line 14)
+TARGET = stickersolve
+# environment
+GTK3_MODULES = xapp-gtk3-module
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# makefile (from 'makefile', line 12)
+DEBUG_OBJECTS := ./build/./src/main.cpp.d.o ./build/./src/pruning/pruningTree.cpp.d.o ./build/./src/pruning/redundancy.cpp.d.o ./build/./src/pruning/pruning.cpp.d.o ./build/./src/config.cpp.d.o ./build/./src/solver/puzzleState.cpp.d.o ./build/./src/solver/puzzle.cpp.d.o ./build/./src/solver/puzzleSolver.cpp.d.o
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# environment
+XAUTHORITY = /home/alex/.Xauthority
+# environment
+GDMSESSION = cinnamon
+# default
+MAKE_VERSION := 4.2.1
+# makefile
+CURDIR := /media/alex/HOME/Win Data/Lesha/Code/cube/stickersolve
+# makefile
+SHELL = /bin/sh
+# environment
+GDM_LANG = en_US
+# environment
+VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
+# environment
+_ = /usr/share/code/code
+# environment
+XDG_CONFIG_DIRS = /etc/xdg/xdg-cinnamon:/etc/xdg
+# environment
+GTK_OVERLAY_SCROLLING = 1
+# makefile (from 'makefile', line 1)
+MAKEFILE_LIST :=  makefile
+# automatic
+@F = $(notdir $@)
+# environment
+GIO_LAUNCHED_DESKTOP_FILE = /usr/share/applications/code.desktop
+# 'override' directive
+GNUMAKEFLAGS := 
+# makefile (from 'makefile', line 10)
+SOURCES := ./src/main.cpp ./src/pruning/pruningTree.cpp ./src/pruning/redundancy.cpp ./src/pruning/pruning.cpp ./src/config.cpp ./src/solver/puzzleState.cpp ./src/solver/puzzle.cpp ./src/solver/puzzleSolver.cpp
+# environment
+XDG_DATA_DIRS = /usr/share/cinnamon:/usr/share/gnome:/home/alex/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share
+# environment
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+# environment
+VSCODE_VERBOSE_LOGGING = true
+# environment
+LESSOPEN = | /usr/bin/lesspipe %s
+# environment
+VSCODE_CWD = /home/alex
+# environment
+XDG_SESSION_PATH = /org/freedesktop/DisplayManager/Session0
+# default
+MAKE_HOST := x86_64-pc-linux-gnu
+# environment
+PATH = /home/alex/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+# environment
+GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
+# environment
+SESSION_MANAGER = local/G700:@/tmp/.ICE-unix/1719,unix/G700:/tmp/.ICE-unix/1719
+# environment
+XDG_RUNTIME_DIR = /run/user/1000
+# makefile (from 'makefile', line 4)
+CCFLAGS = -Wall -O3 -std=c++11
+# environment
+VSCODE_LOG_STACK = false
+# environment
+ELECTRON_RUN_AS_NODE = 1
+# makefile (from 'makefile', line 5)
+LDFLAGS = -O3 -std=c++11 -lboost_system -lboost_iostreams -lboost_filesystem -lpthread
+# default
+.FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
+# environment
+XDG_GREETER_DATA_DIR = /var/lib/lightdm-data/alex
+# environment
+LS_COLORS = 
+# environment
+INSIDE_NEMO_PYTHON = 
+# environment
+XDG_SESSION_DESKTOP = cinnamon
+# environment
+SSH_AUTH_SOCK = /run/user/1000/keyring/ssh
+# environment
+GIO_LAUNCHED_DESKTOP_FILE_PID = 8377
+# automatic
+%F = $(notdir $%)
+# environment
+DISPLAY = :0
+# environment
+VSCODE_PIPE_LOGGING = true
+# makefile (from 'makefile', line 8)
+SRC_DIRS = ./src
+# environment
+PWD = /media/alex/HOME/Win Data/Lesha/Code/cube/stickersolve
+# environment
+QT_QPA_PLATFORMTHEME = qt5ct
+# default
+.LOADED := 
+# environment
+XDG_SEAT = seat0
+# environment
+SSH_AGENT_PID = 1788
+# environment
+ORIGINAL_XDG_CURRENT_DESKTOP = X-Cinnamon
+# environment
+GTK_MODULES = gail:atk-bridge
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
+# environment
+HOME = /home/alex
+# environment
+LESSCLOSE = /usr/bin/lesspipe %s %s
+# environment
+VSCODE_CODE_CACHE_PATH = /home/alex/.config/Code/CachedData/4af164ea3a06f701fe3e89a2bcbb421d2026b68f
+# environment
+LOGNAME = alex
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = true
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# environment
+GNOME_DESKTOP_SESSION_ID = this-is-deprecated
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# environment
+XDG_VTNR = 7
+# environment
+MAKELEVEL := 0
+# default
+MAKE = $(MAKE_COMMAND)
+# default
+MAKECMDGOALS := all
+# environment
+SHLVL = 0
+# makefile (from 'makefile', line 1)
+CC = g++
+# makefile (from 'makefile', line 7)
+BUILD_DIR = ./build
+# environment
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-ff9dd4d9-dd00-4142-a87f-d87d0a0373f1.sock
+# environment
+XDG_SESSION_ID = c2
+# environment
+USER = alex
+# makefile
+.DEFAULT_GOAL := all
+# environment
+XDG_CURRENT_DESKTOP = X-Cinnamon
+# makefile (from 'makefile', line 47)
+MKDIR_P = mkdir -p
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# default
+MAKE_COMMAND := make
+# default
+.VARIABLES := 
+# automatic
+*F = $(notdir $*)
+# environment
+LANGUAGE = en_US
+# environment
+XDG_SEAT_PATH = /org/freedesktop/DisplayManager/Seat0
+# environment
+VSCODE_IPC_HOOK = /run/user/1000/vscode-d32d3ff9-1.68.0-main.sock
+# makefile
+MAKEFLAGS = pqrR
+# environment
+MFLAGS = -pqrR
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# environment
+GDK_BACKEND = x11
+# automatic
++F = $(notdir $+)
+# environment
+CINNAMON_VERSION = 5.2.7
+# environment
+QT_ACCESSIBILITY = 1
+# 'override' directive
+.SHELLSTATUS := 0
+# default
+MAKEFILES := 
+# automatic
+<F = $(notdir $<)
+# environment
+LC_ALL = C
+# environment
+GJS_DEBUG_TOPICS = JS ERROR;JS LOG
+# automatic
+^F = $(notdir $^)
+# default
+SUFFIXES := 
+# environment
+CHROME_DESKTOP = code-url-handler.desktop
+# default
+.INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
+# environment
+GJS_DEBUG_OUTPUT = stderr
+# default
+.RECIPEPREFIX := 
+# makefile (from 'makefile', line 11)
+OBJECTS := ./build/./src/main.cpp.o ./build/./src/pruning/pruningTree.cpp.o ./build/./src/pruning/redundancy.cpp.o ./build/./src/pruning/pruning.cpp.o ./build/./src/config.cpp.o ./build/./src/solver/puzzleState.cpp.o ./build/./src/solver/puzzle.cpp.o ./build/./src/solver/puzzleSolver.cpp.o
+# environment
+LANG = C
+# environment
+VSCODE_PID = 8377
+# variable set hash-table stats:
+# Load=111/1024=11%, Rehash=0, Collisions=13/155=8%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# . (device 64768, inode 111281170): 13 files, no impossibilities.
+# src/solver (device 64768, inode 111282434): 8 files, no impossibilities so far.
+# src (device 64768, inode 111282411): 4 files, no impossibilities so far.
+# src/pruning (device 64768, inode 111282425): 7 files, no impossibilities so far.
+
+# 32 files, no impossibilities in 4 directories.
+
+# Implicit Rules
+
+build/%.cpp.o: %.cpp
+#  recipe to execute (from 'makefile', line 36):
+	$(MKDIR_P) $(dir $@)
+	$(CC) $(CCFLAGS) -c $< -o $@
+	
+
+build/%.cpp.d.o: %.cpp
+#  recipe to execute (from 'makefile', line 40):
+	$(MKDIR_P) $(dir $@)
+	$(CC) $(CCFLAGS) -c $< -o $@ -ggdb -pg
+
+# 2 implicit rules, 0 (0.0%) terminal.
+
+# Files
+
+# Not a target:
+build/./src/main.cpp.d.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+build/./src/solver/puzzleSolver.cpp.d.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+all: release
+#  Command line target.
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+src/solver/puzzle.cpp:
+#  Implicit rule search has been done.
+#  Last modified 2022-06-15 13:56:57.486885
+#  File has been updated.
+#  Successfully updated.
+
+build/./src/pruning/redundancy.cpp.o: src/pruning/redundancy.cpp
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: './src/pruning/redundancy'
+#  Last modified 2022-06-16 18:41:16.272883
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'makefile', line 36):
+	$(MKDIR_P) $(dir $@)
+	$(CC) $(CCFLAGS) -c $< -o $@
+	
+
+build/./src/solver/puzzleState.cpp.o: src/solver/puzzleState.cpp
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: './src/solver/puzzleState'
+#  Last modified 2022-06-16 18:41:14.251197
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'makefile', line 36):
+	$(MKDIR_P) $(dir $@)
+	$(CC) $(CCFLAGS) -c $< -o $@
+	
+
+build/./src/pruning/pruning.cpp.o: src/pruning/pruning.cpp
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: './src/pruning/pruning'
+#  Last modified 2022-06-16 18:41:16.007161
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'makefile', line 36):
+	$(MKDIR_P) $(dir $@)
+	$(CC) $(CCFLAGS) -c $< -o $@
+	
+ 
+
+# Not a target:
+src/pruning/pruningTree.cpp:
+#  Implicit rule search has been done.
+#  Last modified 2022-06-16 18:33:11.984361
+#  File has been updated.
+#  Successfully updated.
+
+debug: stickersolve_DEBUG
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+stickersolve_DEBUG: build/./src/main.cpp.d.o build/./src/pruning/pruningTree.cpp.d.o build/./src/pruning/redundancy.cpp.d.o build/./src/pruning/pruning.cpp.d.o build/./src/config.cpp.d.o build/./src/solver/puzzleState.cpp.d.o build/./src/solver/puzzle.cpp.d.o build/./src/solver/puzzleSolver.cpp.d.o
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 30):
+	$(CC) -o $@ $^ $(LDFLAGS) -ggdb -pg
+
+# Not a target:
+makefile:
+#  Implicit rule search has been done.
+#  Last modified 2022-06-04 14:05:53.923607
+#  File has been updated.
+#  Successfully updated.
+
+build/./src/main.cpp.o: src/main.cpp
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: './src/main'
+#  Last modified 2022-06-16 18:51:57.699865
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'makefile', line 36):
+	$(MKDIR_P) $(dir $@)
+	$(CC) $(CCFLAGS) -c $< -o $@
+	
+
+build/./src/solver/puzzleSolver.cpp.o: src/solver/puzzleSolver.cpp
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: './src/solver/puzzleSolver'
+#  Last modified 2022-06-16 18:41:16.30118
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'makefile', line 36):
+	$(MKDIR_P) $(dir $@)
+	$(CC) $(CCFLAGS) -c $< -o $@
+	
+
+# Not a target:
+src/config.cpp:
+#  Implicit rule search has been done.
+#  Last modified 2022-06-15 13:15:32.291982
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+build/./src/solver/puzzle.cpp.d.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/pruning/redundancy.cpp:
+#  Implicit rule search has been done.
+#  Last modified 2022-06-15 13:07:13.978224
+#  File has been updated.
+#  Successfully updated.
+
+gprof:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 20):
+	gprof $(TARGET)_DEBUG gmon.out  >output.txt
+
+release: stickersolve
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+src/solver/puzzleState.cpp:
+#  Implicit rule search has been done.
+#  Last modified 2022-06-04 15:59:03.089807
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+build/./src/pruning/pruningTree.cpp.d.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/pruning/pruning.cpp:
+#  Implicit rule search has been done.
+#  Last modified 2022-06-09 17:03:35.174692
+#  File has been updated.
+#  Successfully updated.
+
+clean:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 44):
+	rm -rf $(BUILD_DIR)
+	rm -f $(TARGET) $(TARGET)_DEBUG
+	
+
+# Not a target:
+build/./src/config.cpp.d.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+src/main.cpp:
+#  Implicit rule search has been done.
+#  Last modified 2022-06-16 18:51:51.275693
+#  File has been updated.
+#  Successfully updated.
+
+build/./src/solver/puzzle.cpp.o: src/solver/puzzle.cpp
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: './src/solver/puzzle'
+#  Last modified 2022-06-16 18:41:18.680997
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'makefile', line 36):
+	$(MKDIR_P) $(dir $@)
+	$(CC) $(CCFLAGS) -c $< -o $@
+	
+
+# Not a target:
+src/solver/puzzleSolver.cpp:
+#  Implicit rule search has been done.
+#  Last modified 2022-06-15 13:06:32.661271
+#  File has been updated.
+#  Successfully updated.
+
+stickersolve: build/./src/main.cpp.o build/./src/pruning/pruningTree.cpp.o build/./src/pruning/redundancy.cpp.o build/./src/pruning/pruning.cpp.o build/./src/config.cpp.o build/./src/solver/puzzleState.cpp.o build/./src/solver/puzzle.cpp.o build/./src/solver/puzzleSolver.cpp.o
+#  Implicit rule search has not been done.
+#  Last modified 2022-06-16 18:51:57.873707
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'makefile', line 33):
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+# Not a target:
+build/./src/pruning/redundancy.cpp.d.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+build/./src/pruning/pruningTree.cpp.o: src/pruning/pruningTree.cpp
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: './src/pruning/pruningTree'
+#  Last modified 2022-06-16 18:41:15.778796
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'makefile', line 36):
+ 
+	$(MKDIR_P) $(dir $@)
+	$(CC) $(CCFLAGS) -c $< -o $@
+	
+
+# Not a target:
+build/./src/solver/puzzleState.cpp.d.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+build/./src/pruning/pruning.cpp.d.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+build/./src/config.cpp.o: src/config.cpp
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: './src/config'
+#  Last modified 2022-06-16 18:41:13.570767
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'makefile', line 36):
+	$(MKDIR_P) $(dir $@)
+	$(CC) $(CCFLAGS) -c $< -o $@
+	
+
+# files hash-table stats:
+# Load=34/1024=3%, Rehash=0, Collisions=0/91=0%
+# VPATH Search Paths
+
+# No 'vpath' search paths.
+
+# No general ('VPATH' variable) search path.
+
+# strcache buffers: 1 (0) / strings = 75 / storage = 1345 B / avg = 17 B
+# current buf: size = 8162 B / used = 1345 B / count = 75 / avg = 17 B
+
+# strcache performance: lookups = 105 / hit rate = 28%
+# hash-table stats:
+# Load=75/8192=1%, Rehash=0, Collisions=3/105=3%
+# Finished Make data base on Fri Jun 17 14:54:07 2022
+
+ 

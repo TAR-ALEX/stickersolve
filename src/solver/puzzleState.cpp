@@ -4,7 +4,7 @@
 #include <cmath>
 #include <map>
 
-#include "puzzleState.h"
+#include "../solver/puzzleState.h"
 
 using namespace std;
 
@@ -78,13 +78,6 @@ uint64_t State::toHash() const{
 	}
 
 	return result;
-
-// 		uint64_t result = 0;
-//
-// 		for ( int i = 0; i < size(); i++ ) {
-// 			result ^= operator[](i);
-// 			result *= goldenRatioConstant;
-// 		}
-//
-// 		return result;
 }
+
+

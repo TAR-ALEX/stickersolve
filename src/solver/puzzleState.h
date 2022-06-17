@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <vector>
+#include <map>
 #include <initializer_list> // for std::initializer_list
 
 using namespace std;
@@ -19,7 +20,20 @@ public:
 	friend State operator-( State left, State right );
 	friend State& operator +=( State& left, const State& right );
 	friend State& operator -=( State& left, const State& right );
+    void recolor(const vector<int>& colorMap){
+        for (int i = 0; i < size(); i++) {
+            (*this)[i] = colorMap[(*this)[i]];
+        }
+    }
 	bool isNOP();
+    State applyMask(State m){
+        State delta(size());
+        for (int i = 0; i < size(); i++) {
+            if(m[i] != 0)
+                delta[i] = (*this)[i];
+        }
+        return delta;
+    }
 //  	State( vector<int> ints ): vector<int>(ints) {};
 //  	State() : vector<int>() {};
 	State& operator = (vector<string> t) {*this = State(t); return *this;};
