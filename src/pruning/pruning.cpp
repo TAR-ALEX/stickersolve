@@ -146,8 +146,9 @@ void PruningStates::generateLevel (int lvl)
         return;
     }
 
-    log << "detachWidth = " << detachWidth << endl;
-    log << "detachDepth = " << detachDepth << endl;
+    log << "targetThreads: " << threadManager.targetThreads << endl;
+    log << "detachWidth: " << detachWidth << endl;
+    log << "detachDepth: " << detachDepth << endl;
 
 
     generateLevelMultiThread(targetDepth, detachDepth, moves, ss, validMoves);

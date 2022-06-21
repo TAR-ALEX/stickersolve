@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <fstream>
 
+#include "../util/ResultQueue.h"
 #include "../util/Logging.tpp"
 #include "../util/threadmanager.hpp"
 #include "../solver/puzzle.h"
@@ -24,6 +25,9 @@ private:
 	int numStickers = 1;
 
 	void calculateStickerWidth();
+
+    virtual void localInit();
+	virtual void localInitReverse();
 
 	void rawSolveMulti(
         vector<State> ss,
@@ -73,12 +77,15 @@ public:
 	Puzzle puzzle;
     ThreadManager threadManager = ThreadManager();
 
+    ResultQueue<vector<string>> asyncSolveVectors( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
+	ResultQueue<string> asyncSolveStrings( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
+
 	vector<vector<string>> solveVectors( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
 	vector<string> solveStrings( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
 	string solve( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
 	
-	virtual void init();
-	virtual void initReverse();
+	virtual void init(){};
+	virtual void initReverse(){};
 };
 
 void printMoves( vector<string>& moveNames, vector<int> moves );

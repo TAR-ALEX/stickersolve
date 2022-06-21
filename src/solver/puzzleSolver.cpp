@@ -12,11 +12,12 @@ using namespace std::chrono;
 using namespace std;
 
 
-void Solver::init() {
+void Solver::localInit() {
 	threadManager.targetThreads = cfg->targetThreads;
 }
 
-void Solver::initReverse() {
+void Solver::localInitReverse() {
+	threadManager.targetThreads = cfg->targetThreads;
 	throw runtime_error(
 	string() +
 	"This has not been implemented, remove this exception to get this functionality with bugs related to restricted moves, will not work with custom move pruning"
@@ -32,10 +33,34 @@ void printMoves(vector<string>& moveNames, vector<int> moves){
 
 vector<vector<int>> Solver::rawSolve( State initial, int targetDepth, bool inverse, unsigned int numberOfSolutionsToGet ) {
 	if ( inverse ) {
+		localInitReverse();
 		initReverse();
 	} else {
+		localInit();
 		init();
 	}
+
+	int numChoices = puzzle.validMoves.size();
+
+	int detachDepth = 0;
+    int detachWidth = 1;
+
+    while(detachWidth < threadManager.targetThreads){
+        detachWidth *= numChoices;
+        detachDepth++;
+        if(detachDepth >= targetDepth) {
+            break;
+        }
+    }
+
+    detachDepth++;
+    detachWidth *= numChoices;
+
+
+	log << "Starting solver with "<<threadManager.targetThreads<<" threads\n";
+	log << "detach depth = "<<detachDepth<<"\n";
+	log << "detach width = "<<detachWidth<<"\n";
+	log << "----------------------------------------------------\n";
 
 	auto start = high_resolution_clock::now();
 
@@ -47,9 +72,9 @@ vector<vector<int>> Solver::rawSolve( State initial, int targetDepth, bool inver
     volatile bool terminateEarly = false;
 
 	if ( inverse ) {
-        rawSolveMultiInverse(ss, targetDepth, 2, moves, solutions, gMutex, terminateEarly, numberOfSolutionsToGet);
+        rawSolveMultiInverse(ss, targetDepth, detachDepth, moves, solutions, gMutex, terminateEarly, numberOfSolutionsToGet);
 	} else {
-        rawSolveMulti(ss, targetDepth, 2, moves, solutions, gMutex, terminateEarly, numberOfSolutionsToGet);
+        rawSolveMulti(ss, targetDepth, detachDepth, moves, solutions, gMutex, terminateEarly, numberOfSolutionsToGet);
         threadManager.waitThreads();
 	}
 

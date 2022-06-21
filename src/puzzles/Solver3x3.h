@@ -12,36 +12,61 @@ struct MaskedPruningStates: public PruningStates {
 public:
     State puzzleMask;
     virtual State preHashTransformation(State s) {
-        return s.applyMask(puzzleMask);
+
+		s.recolor({0,1,1,1,1,2});
+		// Depth 0 has 1.
+		// Depth 1 has 18.
+		// Depth 2 has 295.
+		// Depth 3 has 4814.
+		// Depth 4 has 78836.
+		// Depth 5 has 1288318.
+		// Depth 6 has 20911358.
+		// Depth 7 has 329915476.
+		// Depth 8 has 4320443393.
+		// Depth 9 has 12507226675.
+		//s.recolor({0,1,2,1,2,3});
+		// Depth 0 has 1.
+		// Depth 1 has 21.
+		// Depth 2 has 359.
+		// Depth 3 has 5937.
+		// Depth 4 has 98828.
+		// Depth 5 has 1640953.
+		// Depth 6 has 27256485.
+		// Depth 7 has 445602386.
+		// Depth 8 has 5888972610.
+		// Depth 9 has 10816291604.
+
+        //return s.applyMask(puzzleMask);
+		return s;
     }
 };
 
 Puzzle Puzzle3x3(){
 	Puzzle puzzle( 
 		{
-			"U", "U", "U",
-			"U", "U", "U",
-			"U", "U", "U",
+			0, 0, 0,
+			0, 0, 0,
+			0, 0, 0,
 
-			"F", "F", "F",
-			"F", "F", "F",
-			"F", "F", "F",
+			1, 1, 1,
+			1, 1, 1,
+			1, 1, 1,
 
-			"R", "R", "R",
-			"R", "R", "R",
-			"R", "R", "R",
+			2, 2, 2,
+			2, 2, 2,
+			2, 2, 2,
 
-			"B", "B", "B",
-			"B", "B", "B",
-			"B", "B", "B",
+			3, 3, 3,
+			3, 3, 3,
+			3, 3, 3,
 
-			"L", "L", "L",
-			"L", "L", "L",
-			"L", "L", "L",
+			4, 4, 4,
+			4, 4, 4,
+			4, 4, 4,
 
-			"D", "D", "D",
-			"D", "D", "D",
-			"D", "D", "D"
+			5, 5, 5,
+			5, 5, 5,
+			5, 5, 5
 		}
 	);
 
@@ -295,7 +320,8 @@ Puzzle Puzzle3x3(string allowed){
 class Solver3x3: public Solver{
 public:
 	RedundancyTable redundancyTable;
-	MaskedPruningStates pruningTable;
+	MaskedPruningStates pruningTableMasked;
+	PruningStates pruningTableClassic;
 
 	Solver3x3(): Solver3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'"){
 		
@@ -303,152 +329,232 @@ public:
 	Solver3x3(string allowedMoves): Solver(){
 		puzzle = Puzzle3x3(allowedMoves);
 		
-		pruningTable.puzzleMask = {
+		
+		// maxDepth = 8
+		// Depth 0 has 1.
+		// Depth 1 has 15.
+		// Depth 2 has 237.
+		// Depth 3 has 3924.
+		// Depth 4 has 61753.
+		// Depth 5 has 921960.
+		// Depth 6 has 12442459.
+		// Depth 7 has 133098628.
+		// Depth 8 has 707220312.
+		// Depth 9 has 16326119895.
+		// Solving took: 12.7945 seconds.
+
+		// pruningTable.puzzleMask = {
+        //     0,0,0, 0,0,0, 0,0,0,
+        //     0,0,0, 0,0,0, 0,0,0,
+        //     0,0,0, 0,1,1, 0,1,1,
+        //     0,0,0, 1,1,1, 1,1,1,
+        //     0,0,0, 1,1,0, 1,1,0,
+        //     0,0,0, 1,1,1, 1,1,1
+        // };
+
+		// pruningTable.puzzleMask = {
+        //     0,0,0, 0,0,0, 0,0,0,
+        //     0,0,0, 0,0,0, 1,1,1,
+        //     0,0,0, 0,0,0, 1,1,1,
+        //     0,0,0, 0,0,0, 1,1,1,
+        //     0,0,0, 0,0,0, 1,1,1,
+        //     1,1,1, 1,1,1, 1,1,1
+        // };
+
+		pruningTableMasked.puzzleMask = {
+            1,1,1, 1,1,1, 1,1,1,
             0,0,0, 0,0,0, 0,0,0,
             0,0,0, 0,0,0, 0,0,0,
-            0,0,0, 0,1,1, 0,1,1,
-            0,0,0, 1,1,1, 1,1,1,
-            0,0,0, 1,1,0, 1,1,0,
+            0,0,0, 0,0,0, 0,0,0,
+            0,0,0, 0,0,0, 0,0,0,
             1,1,1, 1,1,1, 1,1,1
         };
 
-		pruningTable.puzzle = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'    FB FB2 FB'  UD UD2 UD'  RL RL2 RL'");
+		pruningTableMasked.puzzle = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'    FB FB2 FB'  UD UD2 UD'  RL RL2 RL'");
 
-		pruningTable.maxSizeInGb = 34.0;
-		pruningTable.depth = 7;// 8 HTM 10 rfu
-		pruningTable.hashSize = 34;
-		pruningTable.path = "../pruning.table";
-		pruningTable.useMmap = false;
-		pruningTable.log.forward(cerr);
-		pruningTable.cfg = cfg;
+		pruningTableMasked.maxSizeInGb = 34.0;
+		pruningTableMasked.depth = 9;// 8 HTM 10 rfu
+		pruningTableMasked.hashSize = 34;
+		pruningTableMasked.path = "/media/alex/TMP/tmp/pruning.table";
+		pruningTableMasked.useMmap = false;
+		pruningTableMasked.log.forward(cerr);
+		pruningTableMasked.cfg = cfg;
+
+		pruningTableClassic.puzzle = pruningTableMasked.puzzle;
+
+		pruningTableClassic.maxSizeInGb = 34.0;
+		pruningTableClassic.depth = 5;// 8 HTM 10 rfu
+		pruningTableClassic.hashSize = 23;
+		pruningTableClassic.path = "/media/alex/TMP/tmp/pruningNormal.table";
+		pruningTableClassic.useMmap = false;
+		pruningTableClassic.log.forward(cerr);
+		pruningTableClassic.cfg = cfg;
 
 		log.forward(cerr);
 		redundancyTable.depth = 3;
-		//redundancyTable.path = "../redundancy.table";
+		//redundancyTable.path = "/media/alex/TMP/tmp/redundancy.table";
 		redundancyTable.puzzle = puzzle;
 		redundancyTable.log.forward(cerr);
 		redundancyTable.cfg = cfg;
 
-		pruningTable.redundancyTableInverse.depth = 5;
-		pruningTable.redundancyTableInverse.path = "../redundancyInverse.table";
-		pruningTable.redundancyTableInverse.inverse = true;
-		pruningTable.redundancyTableInverse.puzzle = pruningTable.puzzle;
-		pruningTable.redundancyTableInverse.log.forward(cerr);
-		pruningTable.redundancyTableInverse.cfg = cfg;
-		
+		pruningTableMasked.redundancyTableInverse.depth = 5;
+		pruningTableMasked.redundancyTableInverse.path = "/media/alex/TMP/tmp/redundancyInverse.table";
+		pruningTableMasked.redundancyTableInverse.inverse = true;
+		pruningTableMasked.redundancyTableInverse.puzzle = pruningTableMasked.puzzle;
+		pruningTableMasked.redundancyTableInverse.log.forward(cerr);
+		pruningTableMasked.redundancyTableInverse.cfg = cfg;
+		pruningTableClassic.redundancyTableInverse = pruningTableMasked.redundancyTableInverse;
 
 	}
+	
+	vector<State> rotationMapping = vector<State>(36);
+	vector<vector<int>> recolorMapping = vector<vector<int>>(36);
+
+	inline int orientationToInt(int t, int f){
+		return 6*t+f;
+	}
+
+	const int top = 4;
+	const int bottom = 49;
+	const int left = 40;
+	const int right = 22;
+	const int front = 13;
+	const int back = 31;
+
+	const int topColor = Puzzle3x3().solvedState[top];
+	const int bottomColor = Puzzle3x3().solvedState[bottom];
+	const int leftColor = Puzzle3x3().solvedState[left];
+	const int rightColor = Puzzle3x3().solvedState[right];
+	const int frontColor = Puzzle3x3().solvedState[front];
+	const int backColor = Puzzle3x3().solvedState[back];
+
+	State rotateX;
+	State rotateX2;
+	State rotateX3;
+	vector<int> recolorX;
+	vector<int> recolorX2;
+	vector<int> recolorX3;
+
+	State rotateY;
+	State rotateY2;
+	State rotateY3;
+	vector<int> recolorY;
+	vector<int> recolorY2;
+	vector<int> recolorY3;
+
+	State rotateZ;
+	State rotateZ2;
+	State rotateZ3;
+	vector<int> recolorZ;
+	vector<int> recolorZ2;
+	vector<int> recolorZ3;
+
 	void init() {
 		redundancyTable.load();
- 		pruningTable.load();
+ 		pruningTableMasked.load();
+		pruningTableClassic.load();
+
+		Puzzle pzl = Puzzle3x3();
+
+		for(int i = 0; i < 6; i++){
+			for(int j = 0; j < 4; j++){
+				State rot;
+				if(i == 0) rot = pzl.getMove("x2") + pzl.getMove("x2"); // nop move
+				if(i == 1) rot = pzl.getMove("x2");
+				if(i == 2) rot = pzl.getMove("x");
+				if(i == 3) rot = pzl.getMove("x'");
+				if(i == 4) rot = pzl.getMove("z");
+				if(i == 5) rot = pzl.getMove("z'");
+
+				if(j == 1) rot += pzl.getMove("y");
+				if(j == 2) rot += pzl.getMove("y2");
+				if(j == 3) rot += pzl.getMove("y'");
+
+				State tst = pzl.solvedState;
+				tst -= rot;
+				
+				rotationMapping[orientationToInt(tst[top], tst[front])] = rot;
+
+				vector<int> recolorMap = {0,0,0,0,0,0};
+
+				State solved = pzl.solvedState;
+
+				recolorMap[tst[top]] = solved[top];
+				recolorMap[tst[bottom]] = solved[bottom];
+				recolorMap[tst[left]] = solved[left];
+				recolorMap[tst[right]] = solved[right];
+				recolorMap[tst[front]] = solved[front];
+				recolorMap[tst[back]] = solved[back];
+
+				recolorMapping[orientationToInt(tst[top], tst[front])] = recolorMap;
+
+
+			}
+		}
+
+		rotateX = State(pzl.getMove("x"));
+		rotateX2 = State(pzl.getMove("x2"));
+		rotateX3 = State(pzl.getMove("x'"));
+		recolorX = getRecolorMapForMove(rotateX);
+		recolorX2 = getRecolorMapForMove(rotateX2);
+		recolorX3 = getRecolorMapForMove(rotateX3);
+
+		rotateY = State(pzl.getMove("y"));
+		rotateY2 = State(pzl.getMove("y2"));
+		rotateY3 = State(pzl.getMove("y'"));
+		recolorY = getRecolorMapForMove(rotateY);
+		recolorY2 = getRecolorMapForMove(rotateY2);
+		recolorY3 = getRecolorMapForMove(rotateY3);
+
+		rotateZ = State(pzl.getMove("z"));
+		rotateZ2 = State(pzl.getMove("z2"));
+		rotateZ3 = State(pzl.getMove("z'"));
+		recolorZ = getRecolorMapForMove(rotateZ);
+		recolorZ2 = getRecolorMapForMove(rotateZ2);
+		recolorZ3 = getRecolorMapForMove(rotateZ3);
 	}
+	//rotatePuzzleToStandardOrientation
+	State rotatePuzzleSO(State s){
+		return s + rotationMapping[orientationToInt(s[top], s[front])];
+	}
+
+	//recolorPuzzleToStandardOrientation	
+	State recolorPuzzleSO(State s){
+		s.recolor(recolorMapping[orientationToInt(s[top], s[front])]);
+		return s;
+	}
+
+	//getRecolorMapForMove	
+	vector<int> getRecolorMapForMove(State m){
+		Puzzle pzl = Puzzle3x3();
+		State state = Puzzle3x3().solvedState;
+		state += m;
+		return recolorMapping[orientationToInt(state[top], state[front])];
+	}
+
 	virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves){
 		return redundancyTable.contains(moves);
 	}
-	virtual bool canDiscardPosition( int movesAvailable, const State& state ){
-        State s = state;
 
-        static State rotateX = {
-            35,34,33,  32,31,30,  29,28,27,
-            0,1,2,     3,4,5,     6,7,8,
-            20,23,26,  19,22,25,  18,21,24,
-            53,52,51,  50,49,48,  47,46,45,
-            42,39,36,  43,40,37,  44,41,38,
-            9,10,11,   12,13,14,  15,16,17,
-        };
+	virtual bool canDiscardPosition( int movesAvailable, const State& stateReal ){
+		if(pruningTableMasked.cannotUseTable(movesAvailable)) return false;
 
-        static State rotateX2 = rotateX*2;
-        static State rotateX3 = rotateX*3;
-
-        static vector<int> recolorX = {5, 0, 1, 3, 4, 2};
-        static vector<int> recolorX2 = {2, 5, 0, 3, 4, 1};
-
-
-        static State rotateY = {
-            6,3,0,     7,4,1,     8,5,2,
-            18,19,20,  21,22,23,  24,25,26,
-            27,28,29,  30,31,32,  33,34,35,
-            36,37,38,  39,40,41,  42,43,44,
-            9,10,11,   12,13,14,  15,16,17,
-            47,50,53,  46,49,52,  45,48,51,
-        };
-        /*
-         * 5 W W 5
-         * 2 G R 4
-         * 4 R B 0
-         * 0 B O 3
-         * 3 O G 2
-         * 1 Y Y 1
-         */
-
-        /*
-         * 5 W W 5
-         * 2 G B 0
-         * 4 R O 3
-         * 0 B G 2
-         * 3 O R 4
-         * 1 Y Y 1
-         */
-
-        static State rotateY2 = rotateY*2;
-        static State rotateY3 = rotateY*3;
-
-        static vector<int> recolorY = {4,1,3,0,2,5};
-        static vector<int> recolorY2 = {2,1,0,4,3,5};
-
-        if(pruningTable.cannotBeSolvedInLimit(movesAvailable, pruningTable.preHashTransformation(s))) return true;
-
-        s = state+rotateX2;
-        s.recolor(recolorX2);
-        if(pruningTable.cannotBeSolvedInLimit(movesAvailable, pruningTable.preHashTransformation(s))) return true;
-
-        s = s+rotateX;
-        s.recolor(recolorX);
-        if(pruningTable.cannotBeSolvedInLimit(movesAvailable, pruningTable.preHashTransformation(s))) return true;
-
-        s = s+rotateX2;
-        s.recolor(recolorX2);
-        if(pruningTable.cannotBeSolvedInLimit(movesAvailable, pruningTable.preHashTransformation(s))) return true;
+		State s = rotatePuzzleSO(stateReal);
+		if(pruningTableClassic.cannotBeSolvedInLimit(movesAvailable, s)) return true;
 
 
 
-        //--------------------------
-        s = state+rotateY;
-        s.recolor(recolorY);
-        if(pruningTable.cannotBeSolvedInLimit(movesAvailable, pruningTable.preHashTransformation(s))) return true;
+        if(pruningTableMasked.cannotBeSolvedInLimit(movesAvailable, s)) return true;
 
-        s = state+rotateX2;
-        s.recolor(recolorX2);
-        if(pruningTable.cannotBeSolvedInLimit(movesAvailable, pruningTable.preHashTransformation(s))) return true;
+        s += rotateX;
+		// s = recolorPuzzleSO(s);
+		s.recolor(recolorX);
+        if(pruningTableMasked.cannotBeSolvedInLimit(movesAvailable, s)) return true;
 
-        s = s+rotateX;
-        s.recolor(recolorX);
-        if(pruningTable.cannotBeSolvedInLimit(movesAvailable, pruningTable.preHashTransformation(s))) return true;
-
-        s = s+rotateX2;
-        s.recolor(recolorX2);
-        if(pruningTable.cannotBeSolvedInLimit(movesAvailable, pruningTable.preHashTransformation(s))) return true;
-
-
-
-        //--------------------------
-        s = state+rotateY2;
-        s.recolor(recolorY2);
-        if(pruningTable.cannotBeSolvedInLimit(movesAvailable, pruningTable.preHashTransformation(s))) return true;
-
-        s = state+rotateX2;
-        s.recolor(recolorX2);
-        if(pruningTable.cannotBeSolvedInLimit(movesAvailable, pruningTable.preHashTransformation(s))) return true;
-
-        s = s+rotateX;
-        s.recolor(recolorX);
-        if(pruningTable.cannotBeSolvedInLimit(movesAvailable, pruningTable.preHashTransformation(s))) return true;
-
-        s = s+rotateX2;
-        s.recolor(recolorX2);
-        if(pruningTable.cannotBeSolvedInLimit(movesAvailable, pruningTable.preHashTransformation(s))) return true;
-
-
+		s += rotateZ;
+		// s = recolorPuzzleSO(s);
+		s.recolor(recolorZ);
+        if(pruningTableMasked.cannotBeSolvedInLimit(movesAvailable, s)) return true;
 
 
 		return false;

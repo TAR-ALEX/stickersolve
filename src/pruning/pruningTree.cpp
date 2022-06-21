@@ -38,7 +38,7 @@ void PruningStates::insert ( State& state, int moves )
 
 bool PruningStates::cannotBeSolvedInLimit( int movesAvailable, const State& state ) {
 	if ( depth >= movesAvailable ) {
-		auto hash = state.toHash() >> discardBits;
+		auto hash = preHashTransformation(state).toHash() >> discardBits;
 		return data[hash] > movesAvailable;
 	}
 

@@ -56,6 +56,10 @@ public:
 	void unload(); // frees the memory.
 	
 	bool cannotBeSolvedInLimit( int movesAvailable, const State& hash );
+	bool cannotUseTable(int movesAvailable){
+		return depth < movesAvailable;
+	}
+	
 	void insert( State& hash, int moves );
 	
 	string getStats();

@@ -5,6 +5,11 @@
             "cwd": "/media/alex/TMP/Code/stickersolve",
             "binaryPath": "/media/alex/TMP/Code/stickersolve/stickersolve",
             "binaryArgs": []
+        },
+        {
+            "cwd": "/media/alex/HOME/Win Data/Lesha/Code/cube/stickersolve",
+            "binaryPath": "/media/alex/HOME/Win Data/Lesha/Code/cube/stickersolve/stickersolve",
+            "binaryArgs": []
         }
     ],
     "files.associations": {

@@ -44,8 +44,8 @@ public:
             threadLock.lock();
             if(numThreads < targetThreads) {
                 numThreads++;
+                //cerr << "thread created("<<numThreads<<"/"<<targetThreads<<")\n";
                 threadLock.unlock();
-    //             cerr << "thread created\n";
                 return;
             }else{
                 threadLock.unlock();
@@ -55,9 +55,9 @@ public:
     }
 
     inline void deleteThread(){
-        //cerr << "thread done\n";
         threadLock.lock();
         numThreads--;
+        //cerr << "thread deleted("<<numThreads<<"/"<<targetThreads<<")\n";
         threadLock.unlock();
     }
 
