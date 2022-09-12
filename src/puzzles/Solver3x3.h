@@ -41,8 +41,9 @@ public:
     }
 };
 
-Puzzle Puzzle3x3(){
-	Puzzle puzzle( 
+class Puzzle3x3: public Puzzle{
+public:
+	Puzzle3x3(): Puzzle(
 		{
 			0, 0, 0,
 			0, 0, 0,
@@ -68,254 +69,252 @@ Puzzle Puzzle3x3(){
 			5, 5, 5,
 			5, 5, 5
 		}
-	);
+	){
 
-// ---------------------------------------------------
-//        Move that does nothing
-// ---------------------------------------------------
-//         State move = {
-//             0, 1, 2,      3, 4, 5,      6, 7, 8,
-//             9, 10, 11,    12, 13, 14,   15, 16, 17,
-//             18, 19, 20,   21, 22, 23,   24, 25, 26,
-//             27, 28, 29,   30, 31, 32,   33, 34, 35,
-//             36, 37, 38,   39, 40, 41,   42, 43, 44,
-//             45, 46, 47,   48, 49, 50,   51, 52, 53
-//         };
-		
-	{
-		State move = {
-			6, 3, 0,      7, 4, 1,      8, 5, 2,
-			18, 19, 20,   12, 13, 14,   15, 16, 17,
-			27, 28, 29,   21, 22, 23,   24, 25, 26,
-			36, 37, 38,   30, 31, 32,   33, 34, 35,
-			9, 10, 11,    39, 40, 41,   42, 43, 44,
-			45, 46, 47,   48, 49, 50,   51, 52, 53
-		};
-		puzzle.addMove( "U", move );
-		puzzle.addMove( "U2", move * 2 );
-		puzzle.addMove( "U'", move * 3 );
-	}
-	{
-		State move = {
-			0, 1, 11,     3, 4, 14,     6, 7, 17,
-			9, 10, 47,    12, 13, 50,   15, 16, 53,
-			24, 21, 18,   25, 22, 19,   26, 23, 20,
-			8, 28, 29,    5, 31, 32,    2, 34, 35,
-			36, 37, 38,   39, 40, 41,   42, 43, 44,
-			45, 46, 33,   48, 49, 30,   51, 52, 27
-		};
-		puzzle.addMove( "R", move );
-		puzzle.addMove( "R2", move * 2 );
-		puzzle.addMove( "R'", move * 3 );
-	}
-	{
-		State move = {
-			0, 1, 2,      3, 4, 5,      44, 41, 38,
-			15, 12, 9,    16, 13, 10,   17, 14, 11,
-			6, 19, 20,    7, 22, 23,    8, 25, 26,
-			27, 28, 29,   30, 31, 32,   33, 34, 35,
-			36, 37, 45,   39, 40, 46,   42, 43, 47,
-			24, 21, 18,   48, 49, 50,   51, 52, 53
-		};
-		puzzle.addMove( "F", move );
-		puzzle.addMove( "F2", move * 2 );
-		puzzle.addMove( "F'", move * 3 );
+		// ---------------------------------------------------
+		//        Move that does nothing
+		// ---------------------------------------------------
+		//         State move = {
+		//             0, 1, 2,      3, 4, 5,      6, 7, 8,
+		//             9, 10, 11,    12, 13, 14,   15, 16, 17,
+		//             18, 19, 20,   21, 22, 23,   24, 25, 26,
+		//             27, 28, 29,   30, 31, 32,   33, 34, 35,
+		//             36, 37, 38,   39, 40, 41,   42, 43, 44,
+		//             45, 46, 47,   48, 49, 50,   51, 52, 53
+		//         };
+			
+		{
+			State move = {
+				6, 3, 0,      7, 4, 1,      8, 5, 2,
+				18, 19, 20,   12, 13, 14,   15, 16, 17,
+				27, 28, 29,   21, 22, 23,   24, 25, 26,
+				36, 37, 38,   30, 31, 32,   33, 34, 35,
+				9, 10, 11,    39, 40, 41,   42, 43, 44,
+				45, 46, 47,   48, 49, 50,   51, 52, 53
+			};
+			this->addMove( "U", move );
+			this->addMove( "U2", move * 2 );
+			this->addMove( "U'", move * 3 );
+		}
+		{
+			State move = {
+				0, 1, 11,     3, 4, 14,     6, 7, 17,
+				9, 10, 47,    12, 13, 50,   15, 16, 53,
+				24, 21, 18,   25, 22, 19,   26, 23, 20,
+				8, 28, 29,    5, 31, 32,    2, 34, 35,
+				36, 37, 38,   39, 40, 41,   42, 43, 44,
+				45, 46, 33,   48, 49, 30,   51, 52, 27
+			};
+			this->addMove( "R", move );
+			this->addMove( "R2", move * 2 );
+			this->addMove( "R'", move * 3 );
+		}
+		{
+			State move = {
+				0, 1, 2,      3, 4, 5,      44, 41, 38,
+				15, 12, 9,    16, 13, 10,   17, 14, 11,
+				6, 19, 20,    7, 22, 23,    8, 25, 26,
+				27, 28, 29,   30, 31, 32,   33, 34, 35,
+				36, 37, 45,   39, 40, 46,   42, 43, 47,
+				24, 21, 18,   48, 49, 50,   51, 52, 53
+			};
+			this->addMove( "F", move );
+			this->addMove( "F2", move * 2 );
+			this->addMove( "F'", move * 3 );
 
-	}
-	{
-		State move = {
-			35, 1, 2, 32, 4, 5, 29, 7, 8,
-			0, 10, 11, 3, 13, 14, 6, 16, 17,
-			18, 19, 20, 21, 22, 23, 24, 25, 26,
-			27, 28, 51, 30, 31, 48, 33, 34, 45,
+		}
+		{
+			State move = {
+				35, 1, 2, 32, 4, 5, 29, 7, 8,
+				0, 10, 11, 3, 13, 14, 6, 16, 17,
+				18, 19, 20, 21, 22, 23, 24, 25, 26,
+				27, 28, 51, 30, 31, 48, 33, 34, 45,
 
-			42, 39, 36, 43, 40, 37, 44, 41, 38,
-			9, 46, 47, 12, 49, 50, 15, 52, 53
-		};
-		puzzle.addMove( "L", move );
-		puzzle.addMove( "L2", move * 2 );
-		puzzle.addMove( "L'", move * 3 );
-	}
-	{
-		State move = {
-			0, 1, 2, 3, 4, 5, 6, 7, 8,
+				42, 39, 36, 43, 40, 37, 44, 41, 38,
+				9, 46, 47, 12, 49, 50, 15, 52, 53
+			};
+			this->addMove( "L", move );
+			this->addMove( "L2", move * 2 );
+			this->addMove( "L'", move * 3 );
+		}
+		{
+			State move = {
+				0, 1, 2, 3, 4, 5, 6, 7, 8,
 
-			9, 10, 11, 12, 13, 14,   42, 43, 44, // <>,
-			18, 19, 20, 21, 22, 23,  15, 16, 17, // <>
-			27, 28, 29, 30, 31, 32,  24, 25, 26, // <>
-			36, 37, 38, 39, 40, 41,  33, 34, 35, // <>
+				9, 10, 11, 12, 13, 14,   42, 43, 44, // <>,
+				18, 19, 20, 21, 22, 23,  15, 16, 17, // <>
+				27, 28, 29, 30, 31, 32,  24, 25, 26, // <>
+				36, 37, 38, 39, 40, 41,  33, 34, 35, // <>
 
-			51, 48, 45, 52, 49, 46, 53, 50, 47
-		};
-		puzzle.addMove( "D", move );
-		puzzle.addMove( "D2", move * 2 );
-		puzzle.addMove( "D'", move * 3 );
-	}
-	{
-		State move = {
-			20, 23, 26, 3, 4, 5, 6, 7, 8,
-			9, 10, 11, 12, 13, 14, 15, 16, 17,
-			18, 19, 53, 21, 22, 52, 24, 25, 51,
-			33, 30, 27, 34, 31, 28, 35, 32, 29,
-			2, 37, 38, 1, 40, 41, 0, 43, 44,
-			45, 46, 47, 48, 49, 50, 36, 39, 42
-		};
-		puzzle.addMove( "B", move );
-		puzzle.addMove( "B2", move * 2 );
-		puzzle.addMove( "B'", move * 3 );
-	}
-	{
-		State move = {
-			0, 10, 2, 3, 13, 5, 6, 16, 8,
-			9, 46, 11, 12, 49, 14, 15, 52, 17,
-			18, 19, 20, 21, 22, 23, 24, 25, 26,
-			27, 7, 29, 30, 4, 32, 33, 1, 35,
-			36, 37, 38, 39, 40, 41, 42, 43, 44,
-			45, 34, 47, 48, 31, 50, 51, 28, 53
-		};
-		puzzle.addMove( "M'", move );
-		puzzle.addMove( "M2", move * 2 );
-		puzzle.addMove( "M", move * 3 );
-	}
-	{
-		State move = {
-			0, 1, 2, 43, 40, 37, 6, 7, 8,
-			9, 10, 11, 12, 13, 14, 15, 16, 17,
-			18, 3, 20, 21, 4, 23, 24, 5, 26,
-			27, 28, 29, 30, 31, 32, 33, 34, 35,
-			36, 48, 38, 39, 49, 41, 42, 50, 44,
-			45, 46, 47, 25, 22, 19, 51, 52, 53
-		};
-		puzzle.addMove( "S", move );
-		puzzle.addMove( "S2", move * 2 );
-		puzzle.addMove( "S'", move * 3 );
-	}
-	{
-		State move = {
-			0, 1, 2,      3, 4, 5,      6, 7, 8,
-			9, 10, 11,    21, 22, 23,   15, 16, 17,
-			18, 19, 20,   30, 31, 32,   24, 25, 26,
-			27, 28, 29,   39, 40, 41,   33, 34, 35,
-			36, 37, 38,   12, 13, 14,   42, 43, 44,
-			45, 46, 47,   48, 49, 50,   51, 52, 53
-		};
-		puzzle.addMove( "E'", move );
-		puzzle.addMove( "E2", move * 2 );
-		puzzle.addMove( "E", move * 3 );
-	}
-	{
-		State move = {
-			0, 10, 11, 3, 13, 14, 6, 16, 17,
-			9, 46, 47, 12, 49, 50, 15, 52, 53,
-			24, 21, 18, 25, 22, 19, 26, 23, 20,
-			8, 7, 29, 5, 4, 32, 2, 1, 35,
-			36, 37, 38, 39, 40, 41, 42, 43, 44,
-			45, 34, 33, 48, 31, 30, 51, 28, 27
-		};
+				51, 48, 45, 52, 49, 46, 53, 50, 47
+			};
+			this->addMove( "D", move );
+			this->addMove( "D2", move * 2 );
+			this->addMove( "D'", move * 3 );
+		}
+		{
+			State move = {
+				20, 23, 26, 3, 4, 5, 6, 7, 8,
+				9, 10, 11, 12, 13, 14, 15, 16, 17,
+				18, 19, 53, 21, 22, 52, 24, 25, 51,
+				33, 30, 27, 34, 31, 28, 35, 32, 29,
+				2, 37, 38, 1, 40, 41, 0, 43, 44,
+				45, 46, 47, 48, 49, 50, 36, 39, 42
+			};
+			this->addMove( "B", move );
+			this->addMove( "B2", move * 2 );
+			this->addMove( "B'", move * 3 );
+		}
+		{
+			State move = {
+				0, 10, 2, 3, 13, 5, 6, 16, 8,
+				9, 46, 11, 12, 49, 14, 15, 52, 17,
+				18, 19, 20, 21, 22, 23, 24, 25, 26,
+				27, 7, 29, 30, 4, 32, 33, 1, 35,
+				36, 37, 38, 39, 40, 41, 42, 43, 44,
+				45, 34, 47, 48, 31, 50, 51, 28, 53
+			};
+			this->addMove( "M'", move );
+			this->addMove( "M2", move * 2 );
+			this->addMove( "M", move * 3 );
+		}
+		{
+			State move = {
+				0, 1, 2, 43, 40, 37, 6, 7, 8,
+				9, 10, 11, 12, 13, 14, 15, 16, 17,
+				18, 3, 20, 21, 4, 23, 24, 5, 26,
+				27, 28, 29, 30, 31, 32, 33, 34, 35,
+				36, 48, 38, 39, 49, 41, 42, 50, 44,
+				45, 46, 47, 25, 22, 19, 51, 52, 53
+			};
+			this->addMove( "S", move );
+			this->addMove( "S2", move * 2 );
+			this->addMove( "S'", move * 3 );
+		}
+		{
+			State move = {
+				0, 1, 2,      3, 4, 5,      6, 7, 8,
+				9, 10, 11,    21, 22, 23,   15, 16, 17,
+				18, 19, 20,   30, 31, 32,   24, 25, 26,
+				27, 28, 29,   39, 40, 41,   33, 34, 35,
+				36, 37, 38,   12, 13, 14,   42, 43, 44,
+				45, 46, 47,   48, 49, 50,   51, 52, 53
+			};
+			this->addMove( "E'", move );
+			this->addMove( "E2", move * 2 );
+			this->addMove( "E", move * 3 );
+		}
+		{
+			State move = {
+				0, 10, 11, 3, 13, 14, 6, 16, 17,
+				9, 46, 47, 12, 49, 50, 15, 52, 53,
+				24, 21, 18, 25, 22, 19, 26, 23, 20,
+				8, 7, 29, 5, 4, 32, 2, 1, 35,
+				36, 37, 38, 39, 40, 41, 42, 43, 44,
+				45, 34, 33, 48, 31, 30, 51, 28, 27
+			};
 
-		puzzle.addMove( "r", move );
-		puzzle.addMove( "r2", move * 2 );
-		puzzle.addMove( "r'", move * 3 );
-	}
-	{
-		State move = {
-			0, 1, 2,      43, 40, 37,      44, 41, 38,
-			15, 12, 9,    16, 13, 10,   17, 14, 11,
-			6, 3, 20,    7, 4, 23,    8, 5, 26,
-			27, 28, 29,   30, 31, 32,   33, 34, 35,
-			36, 48, 45,   39, 49, 46,   42, 50, 47,
-			24, 21, 18,   25, 22, 19,   51, 52, 53
-		};
-		puzzle.addMove( "f", move );
-		puzzle.addMove( "f2", move * 2 );
-		puzzle.addMove( "f'", move * 3 );
-	}
-	{
-		State move = {
-			6, 3, 0,      7, 4, 1,      8, 5, 2,
-			18, 19, 20,   21, 22, 23,   15, 16, 17,
-			27, 28, 29,   30, 31, 32,   24, 25, 26,
-			36, 37, 38,   39, 40, 41,   33, 34, 35,
-			9, 10, 11,    12, 13, 14,   42, 43, 44,
-			45, 46, 47,   48, 49, 50,   51, 52, 53
-		};
-		puzzle.addMove( "u", move );
-		puzzle.addMove( "u2", move * 2 );
-		puzzle.addMove( "u'", move * 3 );
+			this->addMove( "r", move );
+			this->addMove( "r2", move * 2 );
+			this->addMove( "r'", move * 3 );
+		}
+		{
+			State move = {
+				0, 1, 2,      43, 40, 37,      44, 41, 38,
+				15, 12, 9,    16, 13, 10,   17, 14, 11,
+				6, 3, 20,    7, 4, 23,    8, 5, 26,
+				27, 28, 29,   30, 31, 32,   33, 34, 35,
+				36, 48, 45,   39, 49, 46,   42, 50, 47,
+				24, 21, 18,   25, 22, 19,   51, 52, 53
+			};
+			this->addMove( "f", move );
+			this->addMove( "f2", move * 2 );
+			this->addMove( "f'", move * 3 );
+		}
+		{
+			State move = {
+				6, 3, 0,      7, 4, 1,      8, 5, 2,
+				18, 19, 20,   21, 22, 23,   15, 16, 17,
+				27, 28, 29,   30, 31, 32,   24, 25, 26,
+				36, 37, 38,   39, 40, 41,   33, 34, 35,
+				9, 10, 11,    12, 13, 14,   42, 43, 44,
+				45, 46, 47,   48, 49, 50,   51, 52, 53
+			};
+			this->addMove( "u", move );
+			this->addMove( "u2", move * 2 );
+			this->addMove( "u'", move * 3 );
+		}
+
+		{
+			State move = this->getMove("B");
+			move += this->getMove("S'");
+			this->addMove("b", move);
+			this->addMove("b2", move * 2 );
+			this->addMove("b'", move * 3 );
+		}
+		{
+			State move = this->getMove("D");
+			move += this->getMove("E");
+			this->addMove("d", move);
+			this->addMove("d2", move * 2 );
+			this->addMove("d'", move * 3 );
+		}
+		{
+			State move = this->getMove("L");
+			move += this->getMove("M");
+			this->addMove("l", move);
+			this->addMove("l2", move * 2 );
+			this->addMove("l'", move * 3 );
+		}
+
+		{
+			State move = this->getMove("R");
+			move += this->getMove("M'");
+			move += this->getMove("L'");
+			this->addMove("x", move);
+			this->addMove("x2", move * 2 );
+			this->addMove("x'", move * 3 );
+		}
+		{
+			State move = this->getMove("F");
+			move += this->getMove("S");
+			move += this->getMove("B'");
+			this->addMove("z", move);
+			this->addMove("z2", move * 2 );
+			this->addMove("z'", move * 3 );
+		}
+		{
+			State move = this->getMove("U");
+			move += this->getMove("E'");
+			move += this->getMove("D'");
+			this->addMove("y", move);
+			this->addMove("y2", move * 2 );
+			this->addMove("y'", move * 3 );
+		}
+		{
+			State move = this->getMove("U") + this->getMove("D'");
+			this->addMove("UD", move);
+			this->addMove("UD2", move * 2 );
+			this->addMove("UD'", move * 3 );
+		}
+		{
+			State move = this->getMove("R") + this->getMove("L'");
+			this->addMove("RL", move);
+			this->addMove("RL2", move * 2 );
+			this->addMove("RL'", move * 3 );
+		}
+		{
+			State move = this->getMove("F") + this->getMove("B'");
+			this->addMove("FB", move);
+			this->addMove("FB2", move * 2 );
+			this->addMove("FB'", move * 3 );
+		}
 	}
 
-	{
-		State move = puzzle.getMove("B");
-		move += puzzle.getMove("S'");
-		puzzle.addMove("b", move);
-		puzzle.addMove("b2", move * 2 );
-		puzzle.addMove("b'", move * 3 );
+	Puzzle3x3(string allowed): Puzzle3x3(){
+		keepOnlyMoves(allowed);
 	}
-	{
-		State move = puzzle.getMove("D");
-		move += puzzle.getMove("E");
-		puzzle.addMove("d", move);
-		puzzle.addMove("d2", move * 2 );
-		puzzle.addMove("d'", move * 3 );
-	}
-	{
-		State move = puzzle.getMove("L");
-		move += puzzle.getMove("M");
-		puzzle.addMove("l", move);
-		puzzle.addMove("l2", move * 2 );
-		puzzle.addMove("l'", move * 3 );
-	}
-
-	{
-		State move = puzzle.getMove("R");
-		move += puzzle.getMove("M'");
-		move += puzzle.getMove("L'");
-		puzzle.addMove("x", move);
-		puzzle.addMove("x2", move * 2 );
-		puzzle.addMove("x'", move * 3 );
-	}
-	{
-		State move = puzzle.getMove("F");
-		move += puzzle.getMove("S");
-		move += puzzle.getMove("B'");
-		puzzle.addMove("z", move);
-		puzzle.addMove("z2", move * 2 );
-		puzzle.addMove("z'", move * 3 );
-	}
-	{
-		State move = puzzle.getMove("U");
-		move += puzzle.getMove("E'");
-		move += puzzle.getMove("D'");
-		puzzle.addMove("y", move);
-		puzzle.addMove("y2", move * 2 );
-		puzzle.addMove("y'", move * 3 );
-	}
-	{
-		State move = puzzle.getMove("U") + puzzle.getMove("D'");
-		puzzle.addMove("UD", move);
-		puzzle.addMove("UD2", move * 2 );
-		puzzle.addMove("UD'", move * 3 );
-	}
-	{
-		State move = puzzle.getMove("R") + puzzle.getMove("L'");
-		puzzle.addMove("RL", move);
-		puzzle.addMove("RL2", move * 2 );
-		puzzle.addMove("RL'", move * 3 );
-	}
-	{
-		State move = puzzle.getMove("F") + puzzle.getMove("B'");
-		puzzle.addMove("FB", move);
-		puzzle.addMove("FB2", move * 2 );
-		puzzle.addMove("FB'", move * 3 );
-	}
-	return puzzle;
-}
-
-Puzzle Puzzle3x3(string allowed){
-	Puzzle puzzle = Puzzle3x3();
-	puzzle.keepOnlyMoves(allowed);
-	return puzzle;
-}
+};
 
 class Solver3x3: public Solver{
 public:
@@ -375,7 +374,7 @@ public:
 		pruningTableMasked.maxSizeInGb = 34.0;
 		pruningTableMasked.depth = 9;// 8 HTM 10 rfu
 		pruningTableMasked.hashSize = 34;
-		pruningTableMasked.path = "/media/alex/TMP/tmp/pruning.table";
+		pruningTableMasked.path = cfg->pruiningTablesPath+"/pruning.table";
 		pruningTableMasked.useMmap = false;
 		pruningTableMasked.log.forward(cerr);
 		pruningTableMasked.cfg = cfg;
@@ -385,20 +384,20 @@ public:
 		pruningTableClassic.maxSizeInGb = 34.0;
 		pruningTableClassic.depth = 5;// 8 HTM 10 rfu
 		pruningTableClassic.hashSize = 23;
-		pruningTableClassic.path = "/media/alex/TMP/tmp/pruningNormal.table";
+		pruningTableClassic.path =  cfg->pruiningTablesPath+"/pruningNormal.table";
 		pruningTableClassic.useMmap = false;
 		pruningTableClassic.log.forward(cerr);
 		pruningTableClassic.cfg = cfg;
 
 		log.forward(cerr);
 		redundancyTable.depth = 3;
-		//redundancyTable.path = "/media/alex/TMP/tmp/redundancy.table";
+		//redundancyTable.path = cfg->pruiningTablesPath+"/redundancy.table";
 		redundancyTable.puzzle = puzzle;
 		redundancyTable.log.forward(cerr);
 		redundancyTable.cfg = cfg;
 
 		pruningTableMasked.redundancyTableInverse.depth = 5;
-		pruningTableMasked.redundancyTableInverse.path = "/media/alex/TMP/tmp/redundancyInverse.table";
+		pruningTableMasked.redundancyTableInverse.path = cfg->pruiningTablesPath+"/redundancyInverse.table";
 		pruningTableMasked.redundancyTableInverse.inverse = true;
 		pruningTableMasked.redundancyTableInverse.puzzle = pruningTableMasked.puzzle;
 		pruningTableMasked.redundancyTableInverse.log.forward(cerr);
@@ -421,12 +420,12 @@ public:
 	const int front = 13;
 	const int back = 31;
 
-	const int topColor = Puzzle3x3().solvedState[top];
-	const int bottomColor = Puzzle3x3().solvedState[bottom];
-	const int leftColor = Puzzle3x3().solvedState[left];
-	const int rightColor = Puzzle3x3().solvedState[right];
-	const int frontColor = Puzzle3x3().solvedState[front];
-	const int backColor = Puzzle3x3().solvedState[back];
+	const int topColor = Puzzle3x3()[top];
+	const int bottomColor = Puzzle3x3()[bottom];
+	const int leftColor = Puzzle3x3()[left];
+	const int rightColor = Puzzle3x3()[right];
+	const int frontColor = Puzzle3x3()[front];
+	const int backColor = Puzzle3x3()[back];
 
 	State rotateX;
 	State rotateX2;
@@ -470,14 +469,14 @@ public:
 				if(j == 2) rot += pzl.getMove("y2");
 				if(j == 3) rot += pzl.getMove("y'");
 
-				State tst = pzl.solvedState;
+				State tst = pzl;
 				tst -= rot;
 				
 				rotationMapping[orientationToInt(tst[top], tst[front])] = rot;
 
 				vector<int> recolorMap = {0,0,0,0,0,0};
 
-				State solved = pzl.solvedState;
+				State solved = pzl;
 
 				recolorMap[tst[top]] = solved[top];
 				recolorMap[tst[bottom]] = solved[bottom];
@@ -527,7 +526,7 @@ public:
 	//getRecolorMapForMove	
 	vector<int> getRecolorMapForMove(State m){
 		Puzzle pzl = Puzzle3x3();
-		State state = Puzzle3x3().solvedState;
+		State state = Puzzle3x3();
 		state += m;
 		return recolorMapping[orientationToInt(state[top], state[front])];
 	}

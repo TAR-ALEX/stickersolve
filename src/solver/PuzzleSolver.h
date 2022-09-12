@@ -8,10 +8,12 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <fstream>
+#include <memory>
 
-#include "../util/ResultQueue.h"
-#include "../util/Logging.tpp"
-#include "../util/threadmanager.hpp"
+#include <estd/thread_safe_queue.h>
+#include <estd/ostream_proxy.hpp>
+#include <estd/thread_pool.hpp>
+#include <estd/ptr.hpp>
 #include "../solver/puzzle.h"
 #include "../pruning/redundancy.hpp"
 #include "../pruning/pruningTree.h"
@@ -23,6 +25,7 @@ using namespace std;
 class Solver {
 private:
 	int numStickers = 1;
+    estd::clone_ptr<estd::thread_pool> threadManager = estd::thread_pool();
 
 	void calculateStickerWidth();
 
@@ -34,8 +37,8 @@ private:
         int targetDepth,
         int detachDepth,
         vector<int> moves,
-        vector<vector<int>>& gSolutions,
-        mutex& gLock, volatile bool& stop,
+        shared_ptr<estd::thread_safe_queue<vector<int>>>& gSolutions,
+        volatile bool& stop,
         unsigned int numberOfSolutionsToGet = -1
     );
 
@@ -44,13 +47,13 @@ private:
         int depth, 
         int startDepth, 
         vector<int> moves, 
-        vector<vector<int>>& gSolutions, 
-        mutex& gLock, 
+        shared_ptr<estd::thread_safe_queue<vector<int>>>& gSolutions, 
         volatile bool& stop, 
         unsigned int numberOfSolutionsToGet = -1
     );
 
-	vector<vector<int>> rawSolve( 
+	void rawSolve( 
+        shared_ptr<estd::thread_safe_queue<vector<int>>>,
         State initial, 
         int depth, 
         bool inverse = false, 
@@ -62,30 +65,29 @@ private:
         int targetDepth,
         int detachDepth,
         vector<int> moves,
-        vector<vector<int>>& gSolutions,
-        mutex& gLock, volatile bool& stop,
+        shared_ptr<estd::thread_safe_queue<vector<int>>>& gSolutions,
+        volatile bool& stop,
         unsigned int numberOfSolutionsToGet = -1
     );
 
-public: // TODO: make protected
+protected:
 	virtual bool canDiscardPosition(int movesAvailable, const State& state);
 	virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves);
+    Puzzle puzzle;
+    virtual void initReverse(){}; // move to public once working
 public:
     SolverConfig* cfg = &SolverConfig::global;
 
-	Logging log;
-	Puzzle puzzle;
-    ThreadManager threadManager = ThreadManager();
+	estd::ostream_proxy log;
 
-    ResultQueue<vector<string>> asyncSolveVectors( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
-	ResultQueue<string> asyncSolveStrings( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
+    shared_ptr<estd::thread_safe_queue<vector<string>>> asyncSolveVectors( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
+	shared_ptr<estd::thread_safe_queue<string>> asyncSolveStrings( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
 
 	vector<vector<string>> solveVectors( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
 	vector<string> solveStrings( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
 	string solve( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
 	
 	virtual void init(){};
-	virtual void initReverse(){};
 };
 
 void printMoves( vector<string>& moveNames, vector<int> moves );

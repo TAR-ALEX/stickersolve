@@ -9,7 +9,7 @@
 #include <set>
 #include <boost/iostreams/device/mapped_file.hpp>
 
-#include "../util/Logging.tpp"
+#include <estd/ostream_proxy.hpp>
 #include "../solver/puzzle.h"
 #include "../solver/puzzleState.h"
 #include "../config.hpp"
@@ -30,7 +30,7 @@ public:
 	// double maxSizeInGigabytes = 0;
 	int depth = 0;
 	bool inverse = false;
-	Logging log;
+	estd::ostream_proxy log;
 	Puzzle puzzle;
 	SolverConfig* cfg = &SolverConfig::global;
 	

@@ -59,7 +59,7 @@ void PruningStates::unload() {
 
 
 void PruningStates::load() {
-	threadManager.targetThreads = cfg->targetThreads;
+	threadManager = estd::thread_pool(cfg->targetThreads);
 	if(data != nullptr){
 		return;
 	}

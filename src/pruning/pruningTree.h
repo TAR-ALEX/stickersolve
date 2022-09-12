@@ -8,13 +8,13 @@
 #include <map>
 #include <set>
 #include <mutex>
+#include <estd/ptr.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
-
-#include "../util/Logging.tpp"
+#include <estd/ostream_proxy.hpp>
 #include "../solver/puzzle.h"
 #include "../solver/puzzleState.h"
 #include "../pruning/redundancy.hpp"
-#include "../util/threadmanager.hpp"
+#include <estd/thread_pool.hpp>
 #include "../config.hpp"
 
 class Puzzle;
@@ -23,7 +23,7 @@ using namespace std;
 
 struct PruningStates {
 private:
-    ThreadManager threadManager = ThreadManager();
+    estd::clone_ptr<estd::thread_pool> threadManager = estd::thread_pool();
 	// using a mutex to access the table ended up having poor performance, the chances of race conditions are close to zero
 	// mutex tableMutex;
 	boost::iostreams::mapped_file file;
@@ -44,7 +44,7 @@ public:
 
 	RedundancyTable redundancyTableInverse;
 	Puzzle puzzle;
-	Logging log;
+	estd::ostream_proxy log;
 	bool useMmap = false;
 	int hashSize = 16;
 	int depth = 0;

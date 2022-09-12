@@ -166,6 +166,16 @@ void Puzzle::deleteMoves(string movesDenied){
 	deleteMoves(movesToBlock);
 }
 
+Puzzle& Puzzle::operator= (initializer_list<int> il){
+	state = il;
+	return *this;
+}
 
+int& Puzzle::operator[] (int i){
+	return state[i];
+}
 
+Puzzle::operator State(){
+	return state;
+}
 

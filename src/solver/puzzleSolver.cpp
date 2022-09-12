@@ -6,18 +6,18 @@
 #include <sstream>
 #include <chrono>
 #include "PuzzleSolver.h"
-#include "../util/threadmanager.hpp"
+#include <estd/thread_pool.hpp>
 
 using namespace std::chrono;
 using namespace std;
 
 
 void Solver::localInit() {
-	threadManager.targetThreads = cfg->targetThreads;
+	threadManager = estd::thread_pool(cfg->targetThreads);
 }
 
 void Solver::localInitReverse() {
-	threadManager.targetThreads = cfg->targetThreads;
+	threadManager = estd::thread_pool(cfg->targetThreads);
 	throw runtime_error(
 	string() +
 	"This has not been implemented, remove this exception to get this functionality with bugs related to restricted moves, will not work with custom move pruning"
@@ -31,7 +31,7 @@ void printMoves(vector<string>& moveNames, vector<int> moves){
   cout << endl;
 }
 
-vector<vector<int>> Solver::rawSolve( State initial, int targetDepth, bool inverse, unsigned int numberOfSolutionsToGet ) {
+void Solver::rawSolve(shared_ptr<estd::thread_safe_queue<vector<int>>> solutions, State initial, int targetDepth, bool inverse, unsigned int numberOfSolutionsToGet ) {
 	if ( inverse ) {
 		localInitReverse();
 		initReverse();
@@ -45,7 +45,7 @@ vector<vector<int>> Solver::rawSolve( State initial, int targetDepth, bool inver
 	int detachDepth = 0;
     int detachWidth = 1;
 
-    while(detachWidth < threadManager.targetThreads){
+    while(detachWidth < threadManager->getNumThreads()){
         detachWidth *= numChoices;
         detachDepth++;
         if(detachDepth >= targetDepth) {
@@ -57,36 +57,32 @@ vector<vector<int>> Solver::rawSolve( State initial, int targetDepth, bool inver
     detachWidth *= numChoices;
 
 
-	log << "Starting solver with "<<threadManager.targetThreads<<" threads\n";
+	log << "Starting solver with "<<threadManager->getNumThreads()<<" threads\n";
 	log << "detach depth = "<<detachDepth<<"\n";
 	log << "detach width = "<<detachWidth<<"\n";
 	log << "----------------------------------------------------\n";
 
 	auto start = high_resolution_clock::now();
 
-	vector<vector<int>> solutions;
     vector<int> moves;
     vector<State> ss;
     ss.push_back(initial);
-    mutex gMutex;
     volatile bool terminateEarly = false;
 
 	if ( inverse ) {
-        rawSolveMultiInverse(ss, targetDepth, detachDepth, moves, solutions, gMutex, terminateEarly, numberOfSolutionsToGet);
+        rawSolveMultiInverse(ss, targetDepth, detachDepth, moves, solutions, terminateEarly, numberOfSolutionsToGet);
 	} else {
-        rawSolveMulti(ss, targetDepth, detachDepth, moves, solutions, gMutex, terminateEarly, numberOfSolutionsToGet);
-        threadManager.waitThreads();
+        rawSolveMulti(ss, targetDepth, detachDepth, moves, solutions, terminateEarly, numberOfSolutionsToGet);
+        threadManager->wait();
 	}
 
-
+	solutions->close();
 
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<chrono::duration<double>>( stop - start );
 
 	log << "Solving took: " << duration.count() << " seconds.\n";
 	log << "----------------------------------------------------\n";
-
-	return solutions;
 }
 
 
@@ -95,8 +91,8 @@ void Solver::rawSolveMultiInverse(
         int targetDepth,
         int detachDepth,
         vector<int> moves,
-        vector<vector<int>>& gSolutions,
-        mutex& gLock, volatile bool& stop,
+        shared_ptr<estd::thread_safe_queue<vector<int>>>& gSolutions,
+        volatile bool& stop,
         unsigned int numberOfSolutionsToGet
 ){
 	if ( !puzzle.checkIfAllMovesHaveInverses() ) {
@@ -107,15 +103,20 @@ void Solver::rawSolveMultiInverse(
 			"be required and might be supported in the future." 
 		);
 	}
-	rawSolveMulti(ss, targetDepth, detachDepth, moves, gSolutions, gLock, stop, numberOfSolutionsToGet);
+	rawSolveMulti(ss, targetDepth, detachDepth, moves, gSolutions, stop, numberOfSolutionsToGet);
 	auto inverse = puzzle.buildInverseTable();
-    threadManager.waitThreads();
-	for(auto& solution : gSolutions){
-		// Flip the order
-		reverse(solution.begin(),solution.end());
-		// Flip the move
-		for(int i = 0; i < solution.size(); i++) solution[i] = inverse[solution[i]];
-	}
+    threadManager->wait();
+
+	throw runtime_error( 
+		string() + 
+		"TODO: implement reverse queue processor" 
+	);
+	// for(auto& solution : gSolutions){
+	// 	// Flip the order
+	// 	reverse(solution.begin(),solution.end());
+	// 	// Flip the move
+	// 	for(int i = 0; i < solution.size(); i++) solution[i] = inverse[solution[i]];
+	// }
 
 }
 
@@ -124,9 +125,7 @@ void Solver::rawSolveMulti(
     int targetDepth,
     int detachDepth,
     vector<int> moves,
-    vector<vector<int>>&
-    gSolutions,
-    mutex& gLock,
+    shared_ptr<estd::thread_safe_queue<vector<int>>>& gSolutions,
     volatile bool &stop,
     unsigned int numberOfSolutionsToGet
 ) {
@@ -154,29 +153,21 @@ void Solver::rawSolveMulti(
         if(stop) return;
 
         if ( ss.back() == final ) {
-            gLock.lock();
-			if ( gSolutions.size() < numberOfSolutionsToGet ) {
-				gSolutions.push_back( moves );
+			if ( gSolutions->numResults() < numberOfSolutionsToGet ) {
+				gSolutions->push( moves ); // slim chance that you may get more solutions
                 stop = true;
-                gLock.unlock();
 				continue;
 			} else {
-                gLock.unlock();
 				return;
 			}
 		}
 
         if(moves.size() >= detachDepth){
-            threadManager.requestThread();
-            thread t(
-                [&gLock, &gSolutions, &stop, ss, moves, targetDepth, numberOfSolutionsToGet, this] {
-                    rawSolveRegular(ss, targetDepth, moves.size(), moves, gSolutions, gLock, stop, numberOfSolutionsToGet);
-                    threadManager.deleteThread();
-                }
-            );
-            t.detach();
+            threadManager->schedule([&gSolutions, &stop, ss, moves, targetDepth, numberOfSolutionsToGet, this] {
+                rawSolveRegular(ss, targetDepth, moves.size(), moves, gSolutions, stop, numberOfSolutionsToGet);
+            });
         }else{
-            rawSolveMulti( ss, targetDepth, detachDepth, moves, gSolutions, gLock, stop, numberOfSolutionsToGet);
+            rawSolveMulti( ss, targetDepth, detachDepth, moves, gSolutions, stop, numberOfSolutionsToGet);
         }
         moves.back()++;
     }
@@ -184,7 +175,7 @@ void Solver::rawSolveMulti(
 
 //( vector<State> ss, int targetDepth, int startDepth, vector<int> moves, unsigned int numberOfSolutionsToGet )
 
-void Solver::rawSolveRegular(vector<State> ss, int targetDepth, int startDepth, vector<int> moves, vector<vector<int>>& solutions, mutex& gLock,volatile bool &stop, unsigned int numberOfSolutionsToGet) {
+void Solver::rawSolveRegular(vector<State> ss, int targetDepth, int startDepth, vector<int> moves, shared_ptr<estd::thread_safe_queue<vector<int>>>& solutions,volatile bool &stop, unsigned int numberOfSolutionsToGet) {
 	if ( targetDepth <= 0 ) return;
 
 	State final = puzzle.solvedState;
@@ -232,14 +223,11 @@ void Solver::rawSolveRegular(vector<State> ss, int targetDepth, int startDepth, 
 		if(stop) return;
 		
 		if ( ss.back() == final ) {
-            gLock.lock();
-			if ( solutions.size() < numberOfSolutionsToGet ) {
-				solutions.push_back( moves );
-                gLock.unlock();
-                if ( solutions.size() == numberOfSolutionsToGet ) stop = true;
+			if ( solutions->numResults() < numberOfSolutionsToGet ) {
+				solutions->push( moves );
+                if ( solutions->numResults() >= numberOfSolutionsToGet ) stop = true;
 				goto retard;
 			} else {
-                gLock.unlock();
                 stop = true;
 				goto done;
 			}
@@ -249,25 +237,83 @@ done:
 	return;
 }
 
+shared_ptr<estd::thread_safe_queue<vector<string>>> Solver::asyncSolveVectors( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet){
+	shared_ptr<estd::thread_safe_queue<vector<int>>> solutions = std::make_shared<estd::thread_safe_queue<vector<int>>>();
+	shared_ptr<estd::thread_safe_queue<vector<string>>> formattedSolutions = std::make_shared<estd::thread_safe_queue<vector<string>>>();
+	thread solver(
+		[=] {
+			rawSolve(solutions, initial.state, depth, false, numberOfSolutionsToGet);
+		}
+	);
+	solver.detach();
+	thread converter(
+		[=] {
+			try{
+				while(true){
+					vector<string> formattedSolution;
+					vector<int> elements = solutions->pop();
+					for(auto moveId: elements)
+						formattedSolution.push_back(puzzle.moveNames[moveId]);
+					formattedSolutions->push(formattedSolution);
+				}
+			}catch(...){}
+			formattedSolutions->close();
+		}
+	);
+	converter.detach();
+	return formattedSolutions;
+}
+
+shared_ptr<estd::thread_safe_queue<string>> Solver::asyncSolveStrings( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet){
+	shared_ptr<estd::thread_safe_queue<vector<int>>> solutions = std::make_shared<estd::thread_safe_queue<vector<int>>>();
+	shared_ptr<estd::thread_safe_queue<string>> formattedSolutions = std::make_shared<estd::thread_safe_queue<string>>();
+	thread solver(
+		[=] {
+			rawSolve(solutions, initial.state, depth, false, numberOfSolutionsToGet);
+		}
+	);
+	solver.detach();
+	thread converter(
+		[=] {
+			try{
+				while(true){
+					string formattedSolution;
+					vector<int> elements = solutions->pop();
+					for(int i = 0; i < elements.size(); i++){
+						if(i != 0) formattedSolution += " ";
+						formattedSolution += puzzle.moveNames[elements[i]];
+					}
+					formattedSolutions->push(formattedSolution);
+				}
+			}catch(...){}
+			formattedSolutions->close();
+		}
+	);
+	converter.detach();
+	return formattedSolutions;
+}
+
 vector<vector<string>> Solver::solveVectors(Puzzle initial, int targetDepth, unsigned int numberOfSolutionsToGet) {
-  auto solutions = rawSolve(initial.state, targetDepth, false, numberOfSolutionsToGet);
+  shared_ptr<estd::thread_safe_queue<vector<int>>> solutionsRaw = std::make_shared<estd::thread_safe_queue<vector<int>>>();
+//   auto solutionsQ = asyncSolveVectors(initial, targetDepth, numberOfSolutionsToGet);
+  rawSolve(solutionsRaw, initial.state, targetDepth, false, numberOfSolutionsToGet);
+  solutionsRaw->wait(); // not needed
+  vector<vector<string>> formattedSolutions;
+  vector<int> elements;
+  while(*solutionsRaw >> elements){
+	vector<string> formattedSolution;
+	for(auto moveId: elements)
+		formattedSolution.push_back(puzzle.moveNames[moveId]);
+	formattedSolutions.push_back(formattedSolution);
+  }
   sort(
-    solutions.begin(),
-    solutions.end(),
-    [](const vector<int> & a, const vector<int> & b){
+    formattedSolutions.begin(),
+    formattedSolutions.end(),
+    [](const vector<string> & a, const vector<string> & b){
       return a.size() < b.size();
     }
   );
-  vector<vector<string>> solutionStrings;
-  for(auto solution: solutions){
-    vector<string> solutionString;
-    for(auto moveId: solution)
-      solutionString.push_back(puzzle.moveNames[moveId]);
-    solutionStrings.push_back(solutionString);
-  }
-
-
-  return solutionStrings;
+  return formattedSolutions;
 }
 
 vector<std::string> Solver::solveStrings( Puzzle initial, int depth, unsigned int numberOfSolutionsToGet) {
