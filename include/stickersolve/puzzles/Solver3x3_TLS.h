@@ -3,7 +3,7 @@
 #ifndef SOLVER_3x3_TLS
 #define SOLVER_3x3_TLS
 
-#include "FingertricksSolver3x3.h"
+#include <stickersolve/FingertricksSolver3x3.h>
 
 using namespace std;
 
@@ -35,8 +35,8 @@ public:
 			"D", "D", "D",
 			"D", "D", "D"
 		};
-		redundancyTable.path = "../redundancyTLS.table";
-		pruningTable.path = "../pruningTLS.table";
+		redundancyTable.path = <stickersolve/redundancyTLS.table>;
+		pruningTable.path = <stickersolve/pruningTLS.table>;
 		pruningTable.depth = 7;
 		pruningTable.hashSize = 29;
 		pruningTable.puzzle = puzzle;

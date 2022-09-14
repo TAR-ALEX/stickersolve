@@ -14,11 +14,11 @@
 #include <estd/ostream_proxy.hpp>
 #include <estd/thread_pool.hpp>
 #include <estd/ptr.hpp>
-#include "../solver/puzzle.h"
-#include "../pruning/redundancy.hpp"
-#include "../pruning/pruningTree.h"
-#include "../solver/puzzleState.h"
-#include "../config.hpp"
+#include <stickersolve/solver/puzzle.h>
+#include <stickersolve/pruning/redundancy.hpp>
+#include <stickersolve/pruning/pruningTree.h>
+#include <stickersolve/solver/puzzleState.h>
+#include <stickersolve/config.hpp>
 
 using namespace std;
 

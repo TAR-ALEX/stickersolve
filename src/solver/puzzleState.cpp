@@ -4,7 +4,7 @@
 #include <cmath>
 #include <map>
 
-#include "../solver/puzzleState.h"
+#include <stickersolve/solver/puzzleState.h>
 
 using namespace std;
 

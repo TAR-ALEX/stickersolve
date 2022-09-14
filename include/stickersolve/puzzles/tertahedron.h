@@ -3,7 +3,7 @@
 #ifndef PUZZLE_TETRAHEDRON_H
 #define PUZZLE_TETRAHEDRON_H
 
-#include "../solver/puzzle.h"
+#include <stickersolve/solver/puzzle.h>
 #include <algorithm>
 #include <set>
 

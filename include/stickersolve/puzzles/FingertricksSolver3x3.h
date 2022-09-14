@@ -3,7 +3,7 @@
 #ifndef SOLVER_3x3_RUFrBD_FINGERTRICKS
 #define SOLVER_3x3_RUFrBD_FINGERTRICKS
 
-#include "Solver3x3.h"
+#include <stickersolve/Solver3x3.h>
 
 using namespace std;
 

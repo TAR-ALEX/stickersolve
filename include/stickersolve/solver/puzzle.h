@@ -11,7 +11,7 @@
 #include <map>
 #include <fstream>
 
-#include "../solver/puzzleState.h"
+#include <stickersolve/solver/puzzleState.h>
 
 using namespace std;
 

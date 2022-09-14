@@ -3,7 +3,7 @@
 #ifndef SOLVER_3x3_SLICE_FINGERTRICKS
 #define SOLVER_3x3_SLICE_FINGERTRICKS
 
-#include "Solver3x3.h"
+#include <stickersolve/Solver3x3.h>
 
 using namespace std;
 

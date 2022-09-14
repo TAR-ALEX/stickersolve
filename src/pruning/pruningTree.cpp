@@ -1,4 +1,4 @@
-#include "../pruning/pruningTree.h"
+#include <stickersolve/pruning/pruningTree.h>
 #include <sstream>
 #include <iostream>
 #include <fstream>
@@ -8,7 +8,7 @@
 
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/filesystem.hpp>
-#include "../solver/puzzle.h"
+#include <stickersolve/solver/puzzle.h>
 
 using namespace boost::iostreams;
 

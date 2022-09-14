@@ -10,9 +10,9 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include <estd/ostream_proxy.hpp>
-#include "../solver/puzzle.h"
-#include "../solver/puzzleState.h"
-#include "../config.hpp"
+#include <stickersolve/solver/puzzle.h>
+#include <stickersolve/solver/puzzleState.h>
+#include <stickersolve/config.hpp>
 
 class Puzzle;
 

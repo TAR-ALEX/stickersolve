@@ -3,7 +3,7 @@
 #ifndef SOLVER_3x3_CLL
 #define SOLVER_3x3_CLL
 
-#include "FingertricksSolver3x3.h"
+#include <stickersolve/FingertricksSolver3x3.h>
 
 using namespace std;
 
@@ -37,8 +37,8 @@ Solver3x3Cll(): FingertricksSolver3x3("U U2 U' R R2 R' F F2 F' r r' D D' D2 B B2
 			"D", "D", "D",
 			"D", "D", "D"
 		};
-		redundancyTable.path = "../redundancyCLL.table";
-		pruningTable.path = "../pruningCLL.table";
+		redundancyTable.path = <stickersolve/redundancyCLL.table>;
+		pruningTable.path = <stickersolve/pruningCLL.table>;
 		pruningTable.depth = 7;
 		pruningTable.puzzle = puzzle;
 	}

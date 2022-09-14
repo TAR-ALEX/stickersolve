@@ -9,7 +9,7 @@
 #include <sstream>
 #include <regex>
 
-#include "../solver/puzzle.h"
+#include <stickersolve/solver/puzzle.h>
 
 
 using namespace std::chrono;

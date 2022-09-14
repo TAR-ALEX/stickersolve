@@ -1,2 +1,2 @@
-#include "config.hpp"
+#include <stickersolve/config.hpp>
 SolverConfig SolverConfig::global;

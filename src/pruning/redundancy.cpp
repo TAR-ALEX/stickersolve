@@ -1,4 +1,4 @@
-#include "../pruning/pruningTree.h"
+#include <stickersolve/pruning/pruningTree.h>
 #include <sstream>
 #include <iostream>
 #include <fstream>
@@ -9,14 +9,14 @@
 
 // #include <boost/iostreams/device/mapped_file.hpp>
 
-#include "../solver/puzzle.h"
+#include <stickersolve/solver/puzzle.h>
 
 #include <set>
 #include <algorithm>    // std::reverse
 #include <stack>
 
-#include "../pruning/redundancy.hpp"
-#include "../solver/puzzle.h"
+#include <stickersolve/pruning/redundancy.hpp>
+#include <stickersolve/solver/puzzle.h>
 
 #include <unistd.h>
 

@@ -1,5 +1,5 @@
-#include "../pruning/pruningTree.h"
-#include "../solver/puzzle.h"
+#include <stickersolve/pruning/pruningTree.h>
+#include <stickersolve/solver/puzzle.h>
 #include <algorithm> // std::reverse
 #include <boost/filesystem.hpp>
 #include <chrono>

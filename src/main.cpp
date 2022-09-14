@@ -3,14 +3,14 @@
 #include <chrono>
 using namespace std::chrono;
 
-#include "solver/puzzle.h"
-#include "puzzles/Solver3x3.h"
+#include <stickersolve/solver/puzzle.h>
+#include <stickersolve/puzzles/Solver3x3.h>
 
 using namespace std;
 
 
 #include <iomanip>
-#include "solver/PuzzleSolver.h"
+#include <stickersolve/solver/PuzzleSolver.h>
 #include <algorithm>
 		
 int main( int argc, char const* argv[] ) {

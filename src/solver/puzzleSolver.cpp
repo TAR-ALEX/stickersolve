@@ -1,11 +1,11 @@
-#include "../solver/puzzle.h"
+#include <stickersolve/solver/puzzle.h>
 
 #include <unistd.h>
 #include <stack>
 #include <algorithm>
 #include <sstream>
 #include <chrono>
-#include "PuzzleSolver.h"
+#include <stickersolve/solver/PuzzleSolver.h>
 #include <estd/thread_pool.hpp>
 
 using namespace std::chrono;

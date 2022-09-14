@@ -3,7 +3,7 @@
 #ifndef SOLVER_3x3_RUFrBD
 #define SOLVER_3x3_RUFrBD
 
-#include "../solver/PuzzleSolver.h"
+#include <stickersolve/solver/PuzzleSolver.h>
 #include <regex>
 
 using namespace std;
