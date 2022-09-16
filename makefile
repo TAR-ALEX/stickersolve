@@ -1,10 +1,10 @@
-# CC=g++
-# CC_CPP=g++
-# CC_C=gcc
+CC=g++
+CC_CPP=g++
+CC_C=gcc
 
-CC=clang++
-CC_CPP=clang++
-CC_C=clang
+# CC=clang++
+# CC_CPP=clang++
+# CC_C=clang
 
 CCFLAGS=-Wall -O3 -I"${CURDIR}/include" -I"${CURDIR}/vendor/include" -I"./include" -I"./vendor/include"
 
@@ -14,10 +14,8 @@ C_CCFlags=$(CCFLAGS)
 LDFLAGS= -L"${CURDIR}/vendor/lib" -lpthread -l:libboost_system.a -l:libboost_iostreams.a -l:libboost_filesystem.a
 
 BUILD_DIR ?= ./build
-SRC_DIRS ?= ./src
 
-SOURCES := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c)
-SOURCES += $(shell find ./vendor/src -name *.cpp -or -name *.c)
+SOURCES := $(shell find ./ -name *.cpp -or -name *.c)
 
 OBJECTS := $(SOURCES:%=$(BUILD_DIR)/%.o)
 DEBUG_OBJECTS := $(SOURCES:%=$(BUILD_DIR)/%.d.o)
