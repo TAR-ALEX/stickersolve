@@ -1,21 +1,20 @@
-#include <stickersolve/pruning/pruningTree.h>
-#include <stickersolve/solver/puzzle.h>
 #include <algorithm> // std::reverse
 #include <boost/filesystem.hpp>
 #include <chrono>
 #include <estd/ptr.hpp>
 #include <map>
 #include <stack>
+#include <stickersolve/pruning/pruningTree.h>
+#include <stickersolve/solver/puzzle.h>
 #include <thread>
-#include <unistd.h>
-
-
 
 using namespace std::chrono;
 
 void PruningStates::generate() {
-    if (useMmap)
-        throw runtime_error("useMmap flag is not supported with table generation, it is slow and can kill an SSD");
+    if (cfg->useMmapForPruning)
+        throw runtime_error(
+            "useMmapForPruning flag is not supported with table generation, it is slow and can kill an SSD"
+        );
 
     int& targetDepth = this->depth;
 
@@ -23,14 +22,14 @@ void PruningStates::generate() {
     // Build the table incrementally, not currently used, keeping this here
     // for when automatic detection of a full table is implemented
     for (int i = targetDepth; i <= targetDepth; i++) {
-        log << "generating depth: " << i << endl;
+        cfg->log <<  "generating depth: " << i << endl;
         generateLevel(i);
     }
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<chrono::duration<double>>(stop - start);
-    log << "\nPruning table (" << path << ") was successfuly generated in " << duration.count() << " seconds\n";
-    log << "----------------------------------------------------------------\n";
+    cfg->log <<  "\nPruning table (" << path << ") was successfuly generated in " << duration.count() << " seconds\n";
+    cfg->log <<  "----------------------------------------------------------------\n";
 }
 
 void PruningStates::generateLevelSingleThread(
@@ -91,7 +90,7 @@ void PruningStates::generateLevelMultiThread(
             insert(ss.back(), moves.size());
 
             if (moves.size() >= detachDepth) {
-                threadManager->schedule([=] {
+                cfg->threadPool->schedule([=] {
                     generateLevelSingleThread(targetDepth, moves.size(), moves, ss, validMoves);
                 });
             } else {
@@ -123,7 +122,7 @@ void PruningStates::generateLevel(int lvl) {
     int detachDepth = 0;
     int detachWidth = 1;
 
-    while (detachWidth < threadManager->getNumThreads()) {
+    while (detachWidth < cfg->threadPool->getNumThreads()) {
         detachWidth *= numChoices;
         detachDepth++;
         if (detachDepth >= targetDepth) { break; }
@@ -132,20 +131,20 @@ void PruningStates::generateLevel(int lvl) {
     detachDepth++;
     detachWidth *= numChoices;
 
-    if (detachDepth >= targetDepth || threadManager->getNumThreads() == 1) {
+    if (detachDepth >= targetDepth || cfg->threadPool->getNumThreads() == 1) {
         generateLevelSingleThread(targetDepth, moves.size(), moves, ss, validMoves);
         return;
     }
 
-    log << "targetThreads: " << threadManager->getNumThreads() << endl;
-    log << "detachWidth: " << detachWidth << endl;
-    log << "detachDepth: " << detachDepth << endl;
+    cfg->log <<  "targetThreads: " << cfg->threadPool->getNumThreads() << endl;
+    cfg->log <<  "detachWidth: " << detachWidth << endl;
+    cfg->log <<  "detachDepth: " << detachDepth << endl;
 
 
     generateLevelMultiThread(targetDepth, detachDepth, moves, ss, validMoves);
 
 
-    threadManager->wait();
+    cfg->threadPool->wait();
 }
 
 bool PruningStates::canDiscardMoves(int movesAvailable, const vector<int>& moves) {
