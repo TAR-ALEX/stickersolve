@@ -1,10 +1,10 @@
 include "debian.txt",
 
-git "https://github.com/TAR-ALEX/estd_logging.git" master "./include" "./vendor/include",
-git "https://github.com/TAR-ALEX/clone_ptr_cpp.git" master "./include" "./vendor/include",
-git "https://github.com/TAR-ALEX/Semaphore.git" main "./include" "./vendor/include",
-git "https://github.com/TAR-ALEX/Thread-Safe-Queue.git" main "./include" "./vendor/include",
-git "https://github.com/TAR-ALEX/ThreadPool.git" main "./include" "./vendor/include",
+git "https://github.com/TAR-ALEX/estd_logging.git" master "./include/" "./vendor/include/",
+git "https://github.com/TAR-ALEX/clone_ptr_cpp.git" master "./include/" "./vendor/include/",
+git "https://github.com/TAR-ALEX/Semaphore.git" main "./include/" "./vendor/include/",
+git "https://github.com/TAR-ALEX/Thread-Safe-Queue.git" main "./include/" "./vendor/include/",
+git "https://github.com/TAR-ALEX/ThreadPool.git" main "./include/" "./vendor/include/",
 
 deb "libboost-all-dev" "./usr/include/boost/" "./vendor/include/boost/",
 deb "libboost-all-dev" "./usr/lib/x86_64-linux-gnu/" "./vendor/lib",
