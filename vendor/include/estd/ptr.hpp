@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <optional>
 #include <type_traits>
 
-#define DEFINE_BIN_OP(OPT)                                                                                             \
+#define DEFINE_BIN_OP(OPT, CLASS_NAME)                                                                                 \
     template <typename T2>                                                                                             \
     decltype(auto) operator OPT(const T2& other) {                                                                     \
         return this->value() OPT other;                                                                                \
@@ -46,11 +46,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         return this->value() OPT other;                                                                                \
     }                                                                                                                  \
     template <typename T2>                                                                                             \
-    decltype(auto) operator OPT(const clone_ptr<T2>& other) {                                                          \
+    decltype(auto) operator OPT(const CLASS_NAME<T2>& other) {                                                         \
         return this->value() OPT other.value();                                                                        \
     }                                                                                                                  \
     template <typename T2>                                                                                             \
-    decltype(auto) operator OPT(clone_ptr<T2>&& other) {                                                               \
+    decltype(auto) operator OPT(CLASS_NAME<T2>&& other) {                                                              \
         return this->value() OPT other.value();                                                                        \
     }
 
@@ -73,12 +73,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     }
 
 #if __cplusplus >= 202002L
-    #define DEFINE_EXTRA_OPS_2020 DEFINE_BIN_OP(<=>)
+    #define DEFINE_EXTRA_OPS_2020(CLASS_NAME) DEFINE_BIN_OP(<=>, CLASS_NAME)
 #else
-    #define DEFINE_EXTRA_OPS_2020
+    #define DEFINE_EXTRA_OPS_2020(CLASS_NAME)
 #endif
 
-#define DEFINE_ALL_OPS                                                                                                 \
+#define DEFINE_ALL_OPS(CLASS_NAME)                                                                                     \
     /* Iterators */                                                                                                    \
     decltype(auto) begin() { return this->value().begin(); }                                                           \
     decltype(auto) begin() const { this->value().begin(); }                                                            \
@@ -93,39 +93,36 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             return (this->get())[i];                                                                                   \
         }                                                                                                              \
     }                                                                                                                  \
-    DEFINE_BIN_OP(+)                                                                                                   \
-    DEFINE_BIN_OP(-)                                                                                                   \
-    DEFINE_BIN_OP(*)                                                                                                   \
-    DEFINE_BIN_OP(/)                                                                                                   \
-    DEFINE_BIN_OP(%)                                                                                                   \
-    DEFINE_BIN_OP(^)                                                                                                   \
-    DEFINE_BIN_OP(&)                                                                                                   \
-    DEFINE_BIN_OP(|)                                                                                                   \
-    DEFINE_BIN_OP(<)                                                                                                   \
-    DEFINE_BIN_OP(>)                                                                                                   \
+    DEFINE_BIN_OP(+, CLASS_NAME)                                                                                       \
+    DEFINE_BIN_OP(-, CLASS_NAME)                                                                                       \
+    DEFINE_BIN_OP(*, CLASS_NAME)                                                                                       \
+    DEFINE_BIN_OP(/, CLASS_NAME)                                                                                       \
+    DEFINE_BIN_OP(%, CLASS_NAME)                                                                                       \
+    DEFINE_BIN_OP(^, CLASS_NAME)                                                                                       \
+    DEFINE_BIN_OP(&, CLASS_NAME)                                                                                       \
+    DEFINE_BIN_OP(|, CLASS_NAME)                                                                                       \
+    DEFINE_BIN_OP(<, CLASS_NAME)                                                                                       \
+    DEFINE_BIN_OP(>, CLASS_NAME)                                                                                       \
                                                                                                                        \
-    DEFINE_BIN_OP(+=)                                                                                                  \
-    DEFINE_BIN_OP(-=)                                                                                                  \
-    DEFINE_BIN_OP(*=)                                                                                                  \
-    DEFINE_BIN_OP(/=)                                                                                                  \
-    DEFINE_BIN_OP(%=)                                                                                                  \
-    DEFINE_BIN_OP(^=)                                                                                                  \
-    DEFINE_BIN_OP(&=)                                                                                                  \
-    DEFINE_BIN_OP(|=)                                                                                                  \
+    DEFINE_BIN_OP(+=, CLASS_NAME)                                                                                      \
+    DEFINE_BIN_OP(-=, CLASS_NAME)                                                                                      \
+    DEFINE_BIN_OP(*=, CLASS_NAME)                                                                                      \
+    DEFINE_BIN_OP(/=, CLASS_NAME)                                                                                      \
+    DEFINE_BIN_OP(%=, CLASS_NAME)                                                                                      \
+    DEFINE_BIN_OP(^=, CLASS_NAME)                                                                                      \
+    DEFINE_BIN_OP(&=, CLASS_NAME)                                                                                      \
+    DEFINE_BIN_OP(|=, CLASS_NAME)                                                                                      \
                                                                                                                        \
-    DEFINE_BIN_OP(<<)                                                                                                  \
-    DEFINE_BIN_OP(>>)                                                                                                  \
-    DEFINE_BIN_OP(<<=)                                                                                                 \
-    DEFINE_BIN_OP(>>=)                                                                                                 \
+    DEFINE_BIN_OP(<<, CLASS_NAME)                                                                                      \
+    DEFINE_BIN_OP(>>, CLASS_NAME)                                                                                      \
+    DEFINE_BIN_OP(<<=, CLASS_NAME)                                                                                     \
+    DEFINE_BIN_OP(>>=, CLASS_NAME)                                                                                     \
                                                                                                                        \
-    DEFINE_BIN_OP(==)                                                                                                  \
-    DEFINE_BIN_OP(!=)                                                                                                  \
+    DEFINE_BIN_OP(<=, CLASS_NAME)                                                                                      \
+    DEFINE_BIN_OP(>=, CLASS_NAME)                                                                                      \
                                                                                                                        \
-    DEFINE_BIN_OP(<=)                                                                                                  \
-    DEFINE_BIN_OP(>=)                                                                                                  \
-                                                                                                                       \
-    DEFINE_BIN_OP(&&)                                                                                                  \
-    DEFINE_BIN_OP(||)                                                                                                  \
+    DEFINE_BIN_OP(&&, CLASS_NAME)                                                                                      \
+    DEFINE_BIN_OP(||, CLASS_NAME)                                                                                      \
                                                                                                                        \
     DEFINE_UNARY_OP(~)                                                                                                 \
     DEFINE_UNARY_OP(!)                                                                                                 \
@@ -152,14 +149,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     }                                                                                                                  \
                                                                                                                        \
     bool operator==(std::nullptr_t) { return this->get() == nullptr; }                                                 \
-    bool operator!=(std::nullptr_t) { return this->get() != nullptr; }                                                 \
+    template <typename T2>                                                                                             \
+    decltype(auto) operator==(T2* other) {                                                                             \
+        return this->get() == other;                                                                                   \
+    }                                                                                                                  \
+    template <typename T2>                                                                                             \
+    decltype(auto) operator==(const CLASS_NAME<T2>& other) {                                                           \
+        return this->get() == other.get();                                                                             \
+    }                                                                                                                  \
+    template <typename T2>                                                                                             \
+    decltype(auto) operator==(CLASS_NAME<T2>&& other) {                                                                \
+        return this->get() == other.get();                                                                             \
+    }                                                                                                                  \
+    template <typename T2>                                                                                             \
+    bool operator!=(T2 other) {                                                                                        \
+        return !(operator==(other));                                                                                   \
+    }                                                                                                                  \
     inline explicit operator bool() const noexcept { return this->get() != nullptr; }                                  \
     T& operator*() const { return this->value(); }     /* can throw */                                                 \
     T* operator->() const { return &(this->value()); } /* can throw */                                                 \
-    DEFINE_EXTRA_OPS_2020
+    DEFINE_EXTRA_OPS_2020(CLASS_NAME)
+// DEFINE_BIN_OP(==, CLASS_NAME)
+// DEFINE_BIN_OP(!=, CLASS_NAME)
 
 #define DEFINE_COMMON_CONSTRUCTORS(CLASS_NAME)                                                                         \
-    CLASS_NAME() {}                                                                                                    \
+    CLASS_NAME() { reset(nullptr); }                                                                                   \
     CLASS_NAME(std::nullptr_t) { reset(nullptr); }                                                                     \
     CLASS_NAME(T* other) { reset(other); }                                                                             \
     CLASS_NAME(const CLASS_NAME& other) { reset(other); }                                                              \
@@ -270,13 +284,16 @@ namespace estd {
 
         DEFINE_COMMON_CONSTRUCTORS(clone_ptr)
 
-        DEFINE_ALL_OPS
+        DEFINE_ALL_OPS(clone_ptr)
     };
 
     // Literally the same as a shared pointer, but it forwards operators and has a forwarding constructor
     template <typename T>
     class joint_ptr : public std::shared_ptr<T> {
         using Parent = std::shared_ptr<T>;
+        static_assert(
+            !std::is_array<T>::value, "Error: joint_ptr not supported on raw arrays, they are not easily copyable."
+        );
 
     public:
         template <
@@ -322,12 +339,15 @@ namespace estd {
         DEFINE_COMMON_CONSTRUCTORS(joint_ptr)
         DEFINE_CONVERSION(joint_ptr, std::shared_ptr)
 
-        DEFINE_ALL_OPS
+        DEFINE_ALL_OPS(joint_ptr);
     };
 
     template <typename T>
     class stack_ptr : public std::optional<T> {
         using Parent = std::optional<T>;
+        static_assert(
+            !std::is_array<T>::value, "Error: stack_ptr not supported on raw arrays, they are not easily copyable."
+        );
 
     public:
         template <
@@ -341,11 +361,12 @@ namespace estd {
         void reset() { Parent::reset(); }
         void reset(std::nullptr_t) { Parent::reset(); }
         void reset(const T& v) { Parent::operator=(v); }
-        void reset(T&& v) { Parent::swap(v); }
-        void reset(T* v) {
-            if (v == nullptr) Parent::operator=(std::nullopt);
-            Parent::operator=(*v);
-        }
+        void reset(T&& v) { Parent::operator=(v); }
+        void reset(T* v) = delete; // We cannot manage heap memory on stack
+        // {
+        //     if (v == nullptr) Parent::operator=(std::nullopt);
+        //     Parent::operator=(*v);
+        // }
         template <typename T2>
         void reset(const stack_ptr<T2>& other) {
             if (other.get() == nullptr) {
@@ -357,16 +378,17 @@ namespace estd {
 
         DEFINE_COMMON_CONSTRUCTORS(stack_ptr)
 
-        DEFINE_ALL_OPS
+        DEFINE_ALL_OPS(stack_ptr);
     };
 
     // Literally the same as a weak pointer, but it forwards operators and has a forwarding constructor
     template <typename T>
     class view_joint_ptr : public std::weak_ptr<T> {
         using Parent = std::weak_ptr<T>;
+
     public:
         using std::weak_ptr<T>::weak_ptr;
-        joint_ptr<T> lock() { return Parent::lock(); }
+        joint_ptr<T> lock() const noexcept { return Parent::lock(); }
     };
 
     template <typename T>
@@ -385,8 +407,9 @@ namespace estd {
         void reset() { data = nullptr; }
         void reset(std::nullptr_t) { reset(); }
         void reset(T* other) { data = other; }
-        void reset(const T& other) { data = &other; }
-
+        void reset(const T& other) = delete; // we do not allocate objects, this pointer is not a true smartp ptr
+        // { data = &other; }
+        void reset(T&& v) = delete; // we do not allocate objects, this pointer is not a true smartp ptr
         template <typename T2>
         void reset(const raw_ptr<T2>& other) {
             data = other.get();
@@ -394,7 +417,7 @@ namespace estd {
 
         DEFINE_COMMON_CONSTRUCTORS(raw_ptr)
 
-        DEFINE_ALL_OPS
+        DEFINE_ALL_OPS(raw_ptr);
     };
 
     namespace shortnames {
