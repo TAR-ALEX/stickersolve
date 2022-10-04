@@ -164,7 +164,7 @@ namespace PruningFor3x3 {
             1, 1, 1, 0, 0, 0, 1, 1, 1, // XXX X
             1, 1, 1, 1, 1, 1, 1, 1, 1, //
         };
-        vector<int> recolorMask = {0, 1, 1, 1, 1, 0};
+        vector<int> recolorMask = {0, 1, 1, 1, 1, 2};
         State preHashTransformation(State s) {
             s.recolor(recolorMask);
             return s.applyMask(puzzleMask);
