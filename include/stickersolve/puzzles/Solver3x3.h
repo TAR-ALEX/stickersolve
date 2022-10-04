@@ -1,11 +1,12 @@
 #pragma once
 
 #include <regex>
+#include <stickersolve/puzzles/Puzzle3x3.h>
 #include <stickersolve/solver/PuzzleSolver.h>
 
 using namespace std;
 
-namespace {
+namespace PruningFor3x3 {
     struct MaskCorners : public PruningStates {
     public:
         State puzzleMask = {
@@ -16,16 +17,8 @@ namespace {
             1, 0, 1, 0, 0, 0, 1, 0, 1, //
             1, 0, 1, 0, 0, 0, 1, 0, 1, //
         };
-        // map<int, int> opp = {
-        //     {0, 5},
-        //     {1, 3},
-        //     {2, 4},
-        //     {3, 1},
-        //     {4, 2},
-        //     {5, 0},
-        // };
-        vector<int> opp = {5, 3, 4, 1, 2, 0};
-        virtual State preHashTransformation(State s) {
+        int opp[6] = {5, 3, 4, 1, 2, 0};
+        inline State preHashTransformation(State s) {
             int B = s[35];
             int L = s[42];
             int D = s[51];
@@ -33,9 +26,40 @@ namespace {
 
             return s.applyMask(puzzleMask);
         }
+        bool cannotBeSolvedInLimit(int movesAvailable, const State& state) {
+            return PruningStates::cannotBeSolvedInLimit(movesAvailable, preHashTransformation(state));
+        }
+        MaskCorners(estd::joint_ptr<SolverConfig> cfg = nullptr) {
+            this->puzzle = Puzzle3x3("U U2 U' R R2 R' F F2 F'");
+            this->puzzle.solvedState = this->puzzle.solvedState.applyMask(puzzleMask);
+            this->puzzle.state = this->puzzle.solvedState;
+            this->depth = 9; // could generate to 11, but not very useful
+            this->hashSize = 25;
+            this->cfg = cfg;
+            this->path = "MaskCorners.table";
+        }
     };
     struct MaskEdges : public PruningStates {
     public:
+        vector<int> recolorMask = {0, 1, 2, 1, 2, 3};
+
+        // vector<int> recolorMask = {0, 1, 2, 1, 2, 0};
+        // --------------------
+        // solver.pruningEdges.getStats()
+        // --------------------
+        // maxDepth = 9
+        // Depth 0 has 1.
+        // Depth 1 has 9.
+        // Depth 2 has 120.
+        // Depth 3 has 1569.
+        // Depth 4 has 21071.
+        // Depth 5 has 260381.
+        // Depth 6 has 2911353.
+        // Depth 7 has 23784245.
+        // Depth 8 has 38605504.
+        // Depth 9 has 910704.
+        // Depth 10 has 470375955.
+        // 0.066495 Gb / 0.470376 Gb
         State puzzleMask = {
             0, 1, 0, 1, 0, 1, 0, 1, 0, //
             0, 1, 0, 1, 0, 1, 0, 1, 0, //
@@ -44,411 +68,181 @@ namespace {
             0, 1, 0, 1, 0, 1, 0, 1, 0, //
             0, 1, 0, 1, 0, 1, 0, 1, 0, //
         };
-        virtual State preHashTransformation(State s) { return s.applyMask(puzzleMask); }
-    };
-    struct RingRecolor : public PruningStates {
-    public:
-        vector<int> recolorMask = {0, 1, 1, 1, 1, 2};
-        virtual State preHashTransformation(State s) {
+        inline State preHashTransformation(State s) {
             s.recolor(recolorMask);
+            return s.applyMask(puzzleMask);
+        }
+        // bool cannotBeSolvedInLimit(int movesAvailable, const State& state) {
+        //     return PruningStates::cannotBeSolvedInLimit(movesAvailable, preHashTransformation(state));
+        // }
+        static inline State orient1(State s) {
+            s.recolor({4, 1, 0, 3, 5, 2});
+            static State rotate = Puzzle3x3().getMove("z'");
+            return s + rotate;
+        }
+        static inline State orient2(State s) {
+            s.recolor({0, 2, 3, 4, 1, 5});
+            static State rotate = Puzzle3x3().getMove("y'");
+            return s + rotate;
+        }
 
+        bool cannotBeSolvedInLimit(int movesAvailable, State state) {
+            State s = preHashTransformation(state);
+            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, s)) return true;
+            s = preHashTransformation(orient1(state));
+            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, s)) return true;
+            s = preHashTransformation(orient2(state));
+            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, s)) return true;
+            return false;
+        }
+        MaskEdges(estd::joint_ptr<SolverConfig> cfg = nullptr) {
+            this->puzzle = Puzzle3x3{
+                "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'  FB FB2 FB'  UD UD2 UD'  RL RL2 RL'",
+            };
+            this->puzzle = Puzzle3x3{
+                "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'",
+            };
+            this->puzzle.solvedState.recolor(recolorMask);
+            this->puzzle.solvedState = this->puzzle.solvedState.applyMask(puzzleMask);
+            this->puzzle.state = this->puzzle.solvedState;
+            this->depth = 9;
+            this->hashSize = 29;
+            this->cfg = cfg;
+            this->path = "MaskEdges.table";
+        }
+    };
+    struct Mask3Color : public PruningStates {
+    public:
+        std::vector<int> recolorMask = {0, 1, 2, 1, 2, 0};
+        inline State preHashTransformation(State s) {
+            s.recolor(recolorMask);
             return s;
         }
+        bool cannotBeSolvedInLimit(int movesAvailable, const State& state) {
+            return PruningStates::cannotBeSolvedInLimit(movesAvailable, preHashTransformation(state));
+        }
+        Mask3Color(estd::joint_ptr<SolverConfig> cfg = nullptr) {
+            this->puzzle = Puzzle3x3{
+                "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'  FB FB2 FB'  UD UD2 UD'  RL RL2 RL'",
+            };
+            this->puzzle = Puzzle3x3{
+                "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'",
+            };
+            this->puzzle.solvedState.recolor(recolorMask);
+            this->puzzle.state = this->puzzle.solvedState;
+            // this->depth = 9;
+            // this->hashSize = 34;
+            this->depth = 9;
+            this->hashSize = 31;
+            this->cfg = cfg;
+            this->path = "Mask3Color.table";
+        }
     };
-}; // namespace
-
-struct MaskedPruningStates : public PruningStates {
-public:
-    State puzzleMask;
-    virtual State preHashTransformation(State s) { return s.applyMask(puzzleMask); }
-};
-
-struct RecoloredPruningStates : public PruningStates {
-public:
-    vector<int> recolorMask;
-    virtual State preHashTransformation(State s) {
-        s.recolor(recolorMask);
+    struct MaskOppFaces : public PruningStates {
+    public:
+        // --------------------
+        // solver.pruningOppFaces.getStats()
+        // --------------------
+        // maxDepth = 9
         // Depth 0 has 1.
-        // Depth 1 has 18.
-        // Depth 2 has 295.
-        // Depth 3 has 4814.
-        // Depth 4 has 78836.
-        // Depth 5 has 1288318.
-        // Depth 6 has 20911358.
-        // Depth 7 has 329915476.
-        // Depth 8 has 4320443393.
-        // Depth 9 has 12507226675.
-        //s.recolor({0,1,2,1,2,3});
-        // Depth 0 has 1.
-        // Depth 1 has 21.
-        // Depth 2 has 359.
-        // Depth 3 has 5937.
-        // Depth 4 has 98828.
-        // Depth 5 has 1640953.
-        // Depth 6 has 27256485.
-        // Depth 7 has 445602386.
-        // Depth 8 has 5888972610.
-        // Depth 9 has 10816291604.
-
-        //return s.applyMask(puzzleMask);
-        return s;
-    }
-};
-
-class Puzzle3x3 : public Puzzle {
-public:
-    Puzzle3x3() :
-        Puzzle{
-            {
-                0, 0, 0, 0, 0, 0, 0, 0, 0, //
-                1, 1, 1, 1, 1, 1, 1, 1, 1, //
-                2, 2, 2, 2, 2, 2, 2, 2, 2, //
-                3, 3, 3, 3, 3, 3, 3, 3, 3, //
-                4, 4, 4, 4, 4, 4, 4, 4, 4, //
-                5, 5, 5, 5, 5, 5, 5, 5, 5, //
-            },
-        } {
-        // ---------------------------------------------------
-        //        Move that does nothing
-        // ---------------------------------------------------
-        // State move = {
-        //     0,  1,  2,  3,  4,  5,  6,  7,  8,  //
-        //     9,  10, 11, 12, 13, 14, 15, 16, 17, //
-        //     18, 19, 20, 21, 22, 23, 24, 25, 26, //
-        //     27, 28, 29, 30, 31, 32, 33, 34, 35, //
-        //     36, 37, 38, 39, 40, 41, 42, 43, 44, //
-        //     45, 46, 47, 48, 49, 50, 51, 52, 53  //
-        // };
-
-        {
-            State move = {
-                6,  3,  0,  7,  4,  1,  8,  5,  2,  //
-                18, 19, 20, 12, 13, 14, 15, 16, 17, //
-                27, 28, 29, 21, 22, 23, 24, 25, 26, //
-                36, 37, 38, 30, 31, 32, 33, 34, 35, //
-                9,  10, 11, 39, 40, 41, 42, 43, 44, //
-                45, 46, 47, 48, 49, 50, 51, 52, 53  //
-            };
-            this->addMove("U", move);
-            this->addMove("U2", move * 2);
-            this->addMove("U'", move * 3);
-        }
-        {
-            State move = {
-                0,  1,  11, 3,  4,  14, 6,  7,  17, //
-                9,  10, 47, 12, 13, 50, 15, 16, 53, //
-                24, 21, 18, 25, 22, 19, 26, 23, 20, //
-                8,  28, 29, 5,  31, 32, 2,  34, 35, //
-                36, 37, 38, 39, 40, 41, 42, 43, 44, //
-                45, 46, 33, 48, 49, 30, 51, 52, 27  //
-            };
-            this->addMove("R", move);
-            this->addMove("R2", move * 2);
-            this->addMove("R'", move * 3);
-        }
-        {
-            State move = {
-                0,  1,  2,  3,  4,  5,  44, 41, 38, //
-                15, 12, 9,  16, 13, 10, 17, 14, 11, //
-                6,  19, 20, 7,  22, 23, 8,  25, 26, //
-                27, 28, 29, 30, 31, 32, 33, 34, 35, //
-                36, 37, 45, 39, 40, 46, 42, 43, 47, //
-                24, 21, 18, 48, 49, 50, 51, 52, 53  //
-            };
-            this->addMove("F", move);
-            this->addMove("F2", move * 2);
-            this->addMove("F'", move * 3);
-        }
-        {
-            State move = {
-                35, 1,  2,  32, 4,  5,  29, 7,  8,  //
-                0,  10, 11, 3,  13, 14, 6,  16, 17, //
-                18, 19, 20, 21, 22, 23, 24, 25, 26, //
-                27, 28, 51, 30, 31, 48, 33, 34, 45, //
-
-                42, 39, 36, 43, 40, 37, 44, 41, 38, //
-                9,  46, 47, 12, 49, 50, 15, 52, 53  //
-            };
-            this->addMove("L", move);
-            this->addMove("L2", move * 2);
-            this->addMove("L'", move * 3);
-        }
-        {
-            State move = {
-                0,  1,  2,  3,  4,  5,  6,  7,  8, //
-
-                9,  10, 11, 12, 13, 14, 42, 43, 44, //
-                18, 19, 20, 21, 22, 23, 15, 16, 17, //
-                27, 28, 29, 30, 31, 32, 24, 25, 26, //
-                36, 37, 38, 39, 40, 41, 33, 34, 35, //
-
-                51, 48, 45, 52, 49, 46, 53, 50, 47 //
-            };
-            this->addMove("D", move);
-            this->addMove("D2", move * 2);
-            this->addMove("D'", move * 3);
-        }
-        {
-            State move = {
-                20, 23, 26, 3,  4,  5,  6,  7,  8,  //
-                9,  10, 11, 12, 13, 14, 15, 16, 17, //
-                18, 19, 53, 21, 22, 52, 24, 25, 51, //
-                33, 30, 27, 34, 31, 28, 35, 32, 29, //
-                2,  37, 38, 1,  40, 41, 0,  43, 44, //
-                45, 46, 47, 48, 49, 50, 36, 39, 42  //
-            };
-            this->addMove("B", move);
-            this->addMove("B2", move * 2);
-            this->addMove("B'", move * 3);
-        }
-        {
-            State move = {
-                0,  10, 2,  3,  13, 5,  6,  16, 8,  //
-                9,  46, 11, 12, 49, 14, 15, 52, 17, //
-                18, 19, 20, 21, 22, 23, 24, 25, 26, //
-                27, 7,  29, 30, 4,  32, 33, 1,  35, //
-                36, 37, 38, 39, 40, 41, 42, 43, 44, //
-                45, 34, 47, 48, 31, 50, 51, 28, 53  //
-            };
-            this->addMove("M'", move);
-            this->addMove("M2", move * 2);
-            this->addMove("M", move * 3);
-        }
-        {
-            State move = {
-                0,  1,  2,  43, 40, 37, 6,  7,  8,  //
-                9,  10, 11, 12, 13, 14, 15, 16, 17, //
-                18, 3,  20, 21, 4,  23, 24, 5,  26, //
-                27, 28, 29, 30, 31, 32, 33, 34, 35, //
-                36, 48, 38, 39, 49, 41, 42, 50, 44, //
-                45, 46, 47, 25, 22, 19, 51, 52, 53  //
-            };
-            this->addMove("S", move);
-            this->addMove("S2", move * 2);
-            this->addMove("S'", move * 3);
-        }
-        {
-            State move = {
-                0,  1,  2,  3,  4,  5,  6,  7,  8,  //
-                9,  10, 11, 21, 22, 23, 15, 16, 17, //
-                18, 19, 20, 30, 31, 32, 24, 25, 26, //
-                27, 28, 29, 39, 40, 41, 33, 34, 35, //
-                36, 37, 38, 12, 13, 14, 42, 43, 44, //
-                45, 46, 47, 48, 49, 50, 51, 52, 53  //
-            };
-            this->addMove("E'", move);
-            this->addMove("E2", move * 2);
-            this->addMove("E", move * 3);
-        }
-        {
-            State move = {
-                0,  10, 11, 3,  13, 14, 6,  16, 17, //
-                9,  46, 47, 12, 49, 50, 15, 52, 53, //
-                24, 21, 18, 25, 22, 19, 26, 23, 20, //
-                8,  7,  29, 5,  4,  32, 2,  1,  35, //
-                36, 37, 38, 39, 40, 41, 42, 43, 44, //
-                45, 34, 33, 48, 31, 30, 51, 28, 27  //
-            };
-
-            this->addMove("r", move);
-            this->addMove("r2", move * 2);
-            this->addMove("r'", move * 3);
-        }
-        {
-            State move = {
-                0,  1,  2,  43, 40, 37, 44, 41, 38, //
-                15, 12, 9,  16, 13, 10, 17, 14, 11, //
-                6,  3,  20, 7,  4,  23, 8,  5,  26, //
-                27, 28, 29, 30, 31, 32, 33, 34, 35, //
-                36, 48, 45, 39, 49, 46, 42, 50, 47, //
-                24, 21, 18, 25, 22, 19, 51, 52, 53  //
-            };
-            this->addMove("f", move);
-            this->addMove("f2", move * 2);
-            this->addMove("f'", move * 3);
-        }
-        {
-            State move = {
-                6,  3,  0,  7,  4,  1,  8,  5,  2,  //
-                18, 19, 20, 21, 22, 23, 15, 16, 17, //
-                27, 28, 29, 30, 31, 32, 24, 25, 26, //
-                36, 37, 38, 39, 40, 41, 33, 34, 35, //
-                9,  10, 11, 12, 13, 14, 42, 43, 44, //
-                45, 46, 47, 48, 49, 50, 51, 52, 53  //
-            };
-            this->addMove("u", move);
-            this->addMove("u2", move * 2);
-            this->addMove("u'", move * 3);
+        // Depth 1 has 6.
+        // Depth 2 has 84.
+        // Depth 3 has 1225.
+        // Depth 4 has 18174.
+        // Depth 5 has 265190.
+        // Depth 6 has 3615384.
+        // Depth 7 has 39335264.
+        // Depth 8 has 163712751.
+        // Depth 9 has 53706958.
+        // Depth 10 has 1886828611.
+        // 0.260655 Gb / 2.14748 Gb = 0.121377
+        State puzzleMask = {
+            1, 1, 1, 1, 1, 1, 1, 1, 1, // sandwitch mask
+            1, 1, 1, 0, 0, 0, 1, 1, 1, // XXX
+            1, 1, 1, 0, 0, 0, 1, 1, 1, // XXX X
+            1, 1, 1, 0, 0, 0, 1, 1, 1, // OOO O
+            1, 1, 1, 0, 0, 0, 1, 1, 1, // XXX X
+            1, 1, 1, 1, 1, 1, 1, 1, 1, //
+        };
+        vector<int> recolorMask = {0, 1, 1, 1, 1, 0};
+        State preHashTransformation(State s) {
+            s.recolor(recolorMask);
+            return s.applyMask(puzzleMask);
         }
 
-        {
-            State move = this->getMove("B");
-            move += this->getMove("S'");
-            this->addMove("b", move);
-            this->addMove("b2", move * 2);
-            this->addMove("b'", move * 3);
+        virtual void insert(State s, int moves) { PruningStates::insert(s.applyMask(puzzleMask), moves); }
+
+        static inline State orient1(State s) {
+            s.recolor({4, 1, 0, 3, 5, 2});
+            static State rotate = Puzzle3x3().getMove("z'");
+            return s + rotate;
         }
-        {
-            State move = this->getMove("D");
-            move += this->getMove("E");
-            this->addMove("d", move);
-            this->addMove("d2", move * 2);
-            this->addMove("d'", move * 3);
-        }
-        {
-            State move = this->getMove("L");
-            move += this->getMove("M");
-            this->addMove("l", move);
-            this->addMove("l2", move * 2);
-            this->addMove("l'", move * 3);
+        static inline State orient2(State s) {
+            s.recolor({0, 2, 3, 4, 1, 5});
+            static State rotate = Puzzle3x3().getMove("y'");
+            return s + rotate;
         }
 
-        {
-            State move = this->getMove("R");
-            move += this->getMove("M'");
-            move += this->getMove("L'");
-            this->addMove("x", move);
-            this->addMove("x2", move * 2);
-            this->addMove("x'", move * 3);
+        bool cannotBeSolvedInLimit(int movesAvailable, State state) {
+            State s;
+            s = preHashTransformation(state);
+            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, s)) return true;
+            s = preHashTransformation(orient1(state));
+            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, s)) return true;
+            s = preHashTransformation(orient2(state));
+            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, s)) return true;
+            return false;
         }
-        {
-            State move = this->getMove("F");
-            move += this->getMove("S");
-            move += this->getMove("B'");
-            this->addMove("z", move);
-            this->addMove("z2", move * 2);
-            this->addMove("z'", move * 3);
-        }
-        {
-            State move = this->getMove("U");
-            move += this->getMove("E'");
-            move += this->getMove("D'");
-            this->addMove("y", move);
-            this->addMove("y2", move * 2);
-            this->addMove("y'", move * 3);
-        }
-        {
-            State move = this->getMove("U") + this->getMove("D'");
-            this->addMove("UD", move);
-            this->addMove("UD2", move * 2);
-            this->addMove("UD'", move * 3);
-        }
-        {
-            State move = this->getMove("R") + this->getMove("L'");
-            this->addMove("RL", move);
-            this->addMove("RL2", move * 2);
-            this->addMove("RL'", move * 3);
-        }
-        {
-            State move = this->getMove("F") + this->getMove("B'");
-            this->addMove("FB", move);
-            this->addMove("FB2", move * 2);
-            this->addMove("FB'", move * 3);
-        }
-    }
 
-    Puzzle3x3(string allowed) : Puzzle3x3() { keepOnlyMoves(allowed); }
-};
+        MaskOppFaces(estd::joint_ptr<SolverConfig> cfg = nullptr) {
+            // this->puzzle = Puzzle3x3{
+            //     "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'  FB FB2 FB'  UD UD2 UD'  RL RL2 RL'",
+            // };
+            this->puzzle = Puzzle3x3{
+                "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'",
+            };
+            this->puzzle.solvedState.recolor(recolorMask);
+            this->puzzle.state = this->puzzle.solvedState;
+            this->depth = 8;
+            this->hashSize = 31;
+            this->cfg = cfg;
+            this->path = "MaskOppFaces.table";
+        }
+    };
+}; // namespace PruningFor3x3
 
 class Solver3x3 : public Solver {
 public:
     RedundancyTable redundancyTable;
-    RecoloredPruningStates pruningTableRecolored;
+    RedundancyTable redundancyTableInverse;
+    // RecoloredPruningStates pruningTableRecolored;
+
     PruningStates pruningTableClassic;
-    MaskCorners pruningCorners;
-    MaskEdges pruningEdges;
+    PruningFor3x3::MaskCorners pruningCorners;
+    PruningFor3x3::MaskEdges pruningEdges;
+    PruningFor3x3::Mask3Color pruning3Color;
+    PruningFor3x3::MaskOppFaces pruningOppFaces;
 
-    Solver3x3() :
-        Solver3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'"){
-
-        };
+    Solver3x3() : Solver3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'"){};
     Solver3x3(string allowedMoves) : Solver() {
         puzzle = Puzzle3x3(allowedMoves);
-
-
-        // maxDepth = 8
-        // Depth 0 has 1.
-        // Depth 1 has 15.
-        // Depth 2 has 237.
-        // Depth 3 has 3924.
-        // Depth 4 has 61753.
-        // Depth 5 has 921960.
-        // Depth 6 has 12442459.
-        // Depth 7 has 133098628.
-        // Depth 8 has 707220312.
-        // Depth 9 has 16326119895.
-        // Solving took: 12.7945 seconds.
-
-        // pruningTable.puzzleMask = {
-        //     0,0,0, 0,0,0, 0,0,0,//
-        //     0,0,0, 0,0,0, 0,0,0,//
-        //     0,0,0, 0,1,1, 0,1,1,//
-        //     0,0,0, 1,1,1, 1,1,1,//
-        //     0,0,0, 1,1,0, 1,1,0,//
-        //     0,0,0, 1,1,1, 1,1,1 //
-        // };
-
-        // pruningTable.puzzleMask = {
-        //     0,0,0, 0,0,0, 0,0,0,//
-        //     0,0,0, 0,0,0, 1,1,1,//
-        //     0,0,0, 0,0,0, 1,1,1,//
-        //     0,0,0, 0,0,0, 1,1,1,//
-        //     0,0,0, 0,0,0, 1,1,1,//
-        //     1,1,1, 1,1,1, 1,1,1 //
-        // };
-
-        // pruningTableRecolored.puzzleMask = {
-        //     1, 1, 1, 1, 1, 1, 1, 1, 1, //
-        //     0, 0, 0, 0, 0, 0, 0, 0, 0, //
-        //     0, 0, 0, 0, 0, 0, 0, 0, 0, //
-        //     0, 0, 0, 0, 0, 0, 0, 0, 0, //
-        //     0, 0, 0, 0, 0, 0, 0, 0, 0, //
-        //     1, 1, 1, 1, 1, 1, 1, 1, 1  //
-        // };
-
-        pruningCorners.puzzle = Puzzle3x3("U U2 U' R R2 R' F F2 F'");
-        pruningCorners.depth = 11;
-        pruningCorners.hashSize = 25;
-        pruningCorners.cfg = cfg;
-
-        pruningEdges.puzzle = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'    FB FB2 FB'  UD UD2 UD'  RL RL2 RL'");
-        pruningEdges.depth = 7;
-        pruningEdges.hashSize = 27;
-        pruningEdges.cfg = cfg;
-
-        pruningTableRecolored.puzzle =
-            Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'    FB FB2 FB'  UD UD2 UD'  RL RL2 RL'");
-        pruningTableRecolored.recolorMask = {0, 1, 1, 1, 1, 2};
-
-        // pruningTableRecolored.depth = 9; // 8 HTM 10 rfu
-        // pruningTableRecolored.hashSize = 34;
-        // pruningTableRecolored.path = "pruning.table";
-        // pruningTableRecolored.cfg = cfg;
-
-        pruningTableRecolored.depth = 7; // 8 HTM 10 rfu
-        pruningTableRecolored.hashSize = 30;
-        pruningTableRecolored.path = "";
-        pruningTableRecolored.cfg = cfg;
-
-        pruningTableClassic.puzzle = pruningTableRecolored.puzzle;
-
-        pruningTableClassic.depth = 5; // 8 HTM 10 rfu
-        pruningTableClassic.hashSize = 23;
-        pruningTableClassic.path = "pruningNormal.table";
-        pruningTableClassic.cfg = cfg;
 
         redundancyTable.depth = 3;
         redundancyTable.puzzle = puzzle;
         redundancyTable.cfg = cfg;
 
-        pruningTableRecolored.redundancyTableInverse.depth = 5;
-        pruningTableRecolored.redundancyTableInverse.path = "redundancyInverse.table";
-        pruningTableRecolored.redundancyTableInverse.inverse = true;
-        pruningTableRecolored.redundancyTableInverse.puzzle = pruningTableRecolored.puzzle;
-        pruningTableRecolored.redundancyTableInverse.cfg = cfg;
-        pruningTableClassic.redundancyTableInverse = pruningTableRecolored.redundancyTableInverse;
-        pruningCorners.redundancyTableInverse = pruningTableRecolored.redundancyTableInverse;
-        pruningEdges.redundancyTableInverse = pruningTableRecolored.redundancyTableInverse;
+        pruningCorners.cfg = cfg;
+        pruningEdges.cfg = cfg;
+        pruning3Color.cfg = cfg;
+        pruningTableClassic.cfg = cfg;
+        pruningOppFaces.cfg = cfg;
+
+        pruningTableClassic.puzzle = puzzle;
+
+        pruningTableClassic.depth = 7; // 8 HTM 10 rfu
+        pruningTableClassic.hashSize = 27;
+        pruningTableClassic.path = "pruningNormal.table";
+        pruningTableClassic.cfg = cfg;
     }
 
     vector<State> rotationMapping = vector<State>(36);
@@ -493,10 +287,12 @@ public:
 
     void init() {
         redundancyTable.load();
-        pruningTableRecolored.load();
+        // pruningTableRecolored.load();
         pruningTableClassic.load();
         pruningCorners.load();
         pruningEdges.load();
+        pruning3Color.load();
+        pruningOppFaces.load();
 
         Puzzle pzl = Puzzle3x3();
 
@@ -577,30 +373,16 @@ public:
     }
 
     virtual bool canDiscardPosition(int movesAvailable, const State& stateReal) {
-        if (movesAvailable >= 12) return false;
-        if (pruningCorners.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true;
-        if (pruningEdges.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true;
-
-        // if (pruningTableRecolored.cannotUseTable(movesAvailable)) return false;
-
+        if (movesAvailable <= 2) return false;
+        if (movesAvailable >= 10) return false;
         State s = rotatePuzzleSO(stateReal);
+
         if (pruningTableClassic.cannotBeSolvedInLimit(movesAvailable, s)) return true;
 
-
-
-        if (pruningTableRecolored.cannotBeSolvedInLimit(movesAvailable, s)) return true;
-
-        s += rotateX;
-        // s = recolorPuzzleSO(s);
-        s.recolor(recolorX);
-        if (pruningTableRecolored.cannotBeSolvedInLimit(movesAvailable, s)) return true;
-
-        s += rotateZ;
-        // s = recolorPuzzleSO(s);
-        s.recolor(recolorZ);
-        if (pruningTableRecolored.cannotBeSolvedInLimit(movesAvailable, s)) return true;
-
-
+        if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, s)) return true;
+        if (pruningOppFaces.cannotBeSolvedInLimit(movesAvailable, s)) return true;
+        if (pruningEdges.cannotBeSolvedInLimit(movesAvailable, s)) return true;
+        if (pruningCorners.cannotBeSolvedInLimit(movesAvailable, s)) return true;
         return false;
     }
 };

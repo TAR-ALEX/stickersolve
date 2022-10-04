@@ -154,3 +154,85 @@ Puzzle& Puzzle::operator=(initializer_list<int> il) {
 int& Puzzle::operator[](int i) { return state[i]; }
 
 Puzzle::operator State() { return state; }
+
+std::set<std::string> Puzzle::getMoves() {
+    std::set<std::string> r;
+    r.insert(moveNames.begin(), moveNames.end());
+    return r;
+}
+
+Puzzle Puzzle::makeUniqueStickers() {
+    Puzzle res = *this;
+    for (size_t i = 0; i < solvedState.size(); i++) { res.solvedState[i] = i; }
+    res.state = res.solvedState;
+    return res;
+}
+
+std::vector<std::set<int>> Puzzle::getStickerSets() {
+    std::vector<std::set<int>> result;
+    State before = makeUniqueStickers();
+    for (auto m : validMoves) {
+        State after = before + m;
+        std::set<int> set1;
+        std::set<int> set2;
+        for (size_t i = 0; i < before.size(); i++) {
+            if (before[i] == after[i]) {
+                set1.insert(i);
+            } else {
+                set2.insert(i);
+            }
+        }
+        std::vector<std::set<int>> newResult;
+        for (auto s : result) {
+            std::set<int> inter1;
+            std::set<int> inter2;
+
+            std::set_intersection(set1.begin(), set1.end(), s.begin(), s.end(), std::inserter(inter1, inter1.end()));
+            std::set_intersection(set2.begin(), set2.end(), s.begin(), s.end(), std::inserter(inter2, inter2.end()));
+
+            if (!inter1.empty()) newResult.push_back(inter1);
+            if (!inter2.empty()) newResult.push_back(inter2);
+        }
+        if (result.empty()) {
+            if (!set1.empty()) newResult.push_back(set1);
+            if (!set2.empty()) newResult.push_back(set2);
+        }
+        result = newResult;
+    }
+    return result;
+}
+
+std::map<std::set<int>, int> Puzzle::getStickerMap() {
+    std::vector<std::set<int>> sets = getStickerSets();
+    std::map<std::set<int>, int> orderedPieces;
+    for (size_t i = 0; i < puzzleOrientPermuteMask.size(); i++) {
+        if (puzzleOrientPermuteMask[i] == -1) continue;
+        for (auto s : sets) {
+            if (s.count(i)) {
+                orderedPieces[s] = puzzleOrientPermuteMask[i];
+                break;
+            }
+        }
+    }
+    return orderedPieces;
+}
+
+Puzzle Puzzle::getPermutationPuzzle() {
+    // auto sets = p.getStickerMap();
+    // for (auto [si, i] : sets) {
+    //     cout << i << ": ";
+    //     for (auto s : si) { cout << s << " "; }
+    //     cout << endl;
+    // }
+    // cout << "done\n";
+    // return 0;
+}
+Puzzle Puzzle::getOrientationPuzzle() {
+    // auto sets = p.getStickerSets();
+    // for (auto si : sets) {
+    //     for (auto s : si) { cout << s << " "; }
+    //     cout << endl;
+    // }
+    // cout << "done\n";
+    // return 0;
+}

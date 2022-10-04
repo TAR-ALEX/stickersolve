@@ -13,16 +13,25 @@
 using namespace std;
 
 class Puzzle {
-private:
+protected:
     // WARNING: This works only when number of stickers is less than 256, (dont use for redundancyTable in the future)
     vector<uint8_t> compressState(State& s);
 
-    State state;
-    State solvedState;
     vector<State> validMoves;
     vector<string> moveNames;
 
+    State puzzleOrientPermuteMask;
+
 public:
+    std::vector<std::set<int>> getStickerSets();
+    std::map<std::set<int>, int> getStickerMap();
+
+
+    State state;
+    State solvedState;
+
+    Puzzle makeUniqueStickers();
+
     vector<int> invertMoves(vector<int>);
     uint64_t getChecksum() const;
     bool checkIfAllMovesHaveInverses();
@@ -39,6 +48,7 @@ public:
 
     void keepOnlyMoves(string);
     void deleteMoves(string);
+    std::set<string> getMoves();
 
     void keepOnlyMoves(set<string>);
     void deleteMoves(set<string>);
@@ -49,6 +59,8 @@ public:
     State& getMove(int name);
     int getMoveID(string name);
 
+    Puzzle getPermutationPuzzle();
+    Puzzle getOrientationPuzzle();
 
     void applyMoves(string moves);
 

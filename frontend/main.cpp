@@ -18,10 +18,9 @@ int main(int argc, char const* argv[]) {
     try {
         Solver3x3 solver("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'");
 
-        solver.cfg->threadPool = estd::thread_pool(16);
         solver.cfg->pruiningTablesPath = "./";
 
-        Puzzle p = Puzzle3x3();
+        Puzzle p = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'");
 
         cout << p.toString() << endl;
 
@@ -38,29 +37,27 @@ int main(int argc, char const* argv[]) {
         // p.applyMoves("R' L U R2 F D L' U' L2 F2 B2 U' D2 R2 B2 U2 D'");//   R2
 
         p = {
-            W, R, W, W, W, W, W, O, W, //
-            G, W, G, G, G, G, G, G, G, //
-            R, B, R, R, R, R, R, R, R, //
-            B, W, B, B, B, B, B, B, B, //
+            W, R, W, W, W, W, W, O, W, // classic test, should get all solutions in 1 sec for 14 moves
+            G, W, G, G, G, G, G, G, G, // 14 -> 1.1 seconds.
+            R, B, R, R, R, R, R, R, R, // 15 -> 14.6 seconds
+            B, W, B, B, B, B, B, B, B, // 16 -> 192 seconds
             O, G, O, O, O, O, O, O, O, //
-            Y, Y, Y, Y, Y, Y, Y, Y, Y  //
-        };                             // z diag
+            Y, Y, Y, Y, Y, Y, Y, Y, Y  // z diag
+        };
 
         //p.applyMoves("F U' F2 D' B U R' F' L D' R' U' L U B' D2 R' F U2 D2");
+        // p.applyMoves("U2 L2 R2 B2 R2 D2 B' D2 R2 B D2 L' F2 D' L' F L' D' L");// new test
         cout << p.toString() << endl;
 
         solver.init();
+        cout << "solver.redundancyTable.getStats()";
+        cout << "\n--------------------\n";
+        cout << solver.redundancyTable.getStats();
+        cout << "\n--------------------\n";
 
         cout << "solver.pruningTableClassic.getStats()";
         cout << "\n--------------------\n";
         cout << solver.pruningTableClassic.getStats();
-        cout << "solver.pruningTable.getStats()";
-        cout << "\n--------------------\n";
-        cout << solver.pruningTableRecolored.getStats();
-        cout << "\n--------------------\n";
-        cout << "solver.redundancyTable.getStats()";
-        cout << "\n--------------------\n";
-        cout << solver.redundancyTable.getStats();
         cout << "\n--------------------\n";
         cout << "solver.pruningCorners.getStats()";
         cout << "\n--------------------\n";
@@ -70,20 +67,28 @@ int main(int argc, char const* argv[]) {
         cout << "\n--------------------\n";
         cout << solver.pruningEdges.getStats();
         cout << "\n--------------------\n";
+        cout << "solver.pruning3Color.getStats()";
+        cout << "\n--------------------\n";
+        cout << solver.pruning3Color.getStats();
+        cout << "\n--------------------\n";
+        cout << "solver.pruningOppFaces.getStats()";
+        cout << "\n--------------------\n";
+        cout << solver.pruningOppFaces.getStats();
+        cout << "\n--------------------\n";
 
-        auto solutions = solver.solve(p, 14, -1); //16
-        cout << solutions;
+        // auto solutions = solver.solve(p, 14, -1); //16
+        // cout << solutions;
 
         auto slnQ = solver.asyncSolveStrings(p, 14, -1);
 
         try {
             while (slnQ->hasNext()) { cout << slnQ->pop() << "\n"; }
-        } catch (runtime_error e) { cout << e.what() << endl; }
+        } catch (runtime_error& e) { cout << e.what() << endl; }
 
         // string tmp = "";
         // while (*slnQ >> tmp) { cout << tmp << "\n"; }
 
-        cout << slnQ->numResults() << "\n";
+        cout << slnQ->numResults() << "\n"; //140
 
         //z diag
 

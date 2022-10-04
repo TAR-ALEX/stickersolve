@@ -20,10 +20,13 @@ using namespace std;
 
 struct PruningStates {
 private:
+    RedundancyTable redundancyTableInverse;
     // using a mutex to access the table ended up having very poor performance, the chances of race conditions are close to zero
     // mutex tableMutex;
     boost::iostreams::mapped_file file;
     void performSizeCheck();
+    std::map<State, int> visited;
+    bool checkVisited(State s, int numMoves);
     void generate();
     void generateLevel(int lvl);
     void generateLevelSingleThread(
@@ -36,7 +39,7 @@ private:
     void initHashMask();
     uint8_t* data = nullptr;
     virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves);
-    virtual State preHashTransformation(State s);
+    // virtual State preHashTransformation(State s);
     vector<uint64_t> stats = vector<uint64_t>(256, 0);
 
 public:
@@ -45,22 +48,23 @@ public:
 
     virtual ~PruningStates() { unload(); }
 
-    RedundancyTable redundancyTableInverse;
+    int redundancyInverseDepth = 5;
     Puzzle puzzle;
     int hashSize = 16;
     int depth = 0;
-    // double maxSizeInGb = 0;
+
     string path = "";
     estd::joint_ptr<SolverConfig> cfg;
 
     void load();   // consumes a lot of memory
     void unload(); // frees the memory.
 
-    bool cannotBeSolvedInLimit(int movesAvailable, const State& hash);
+    bool cannotBeSolvedInLimit(int movesAvailable, const State hash);
+    uint8_t getDistance(const State hash);
     inline bool cannotUseTable(int movesAvailable) { return depth < movesAvailable; }
     inline bool canUseTable(int movesAvailable) { return !cannotUseTable(movesAvailable); }
 
-    void insert(State& hash, int moves);
+    virtual void insert(State hash, int moves);
 
     string getStats();
 };

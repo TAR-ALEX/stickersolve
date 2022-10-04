@@ -22,14 +22,14 @@ void PruningStates::generate() {
     // Build the table incrementally, not currently used, keeping this here
     // for when automatic detection of a full table is implemented
     for (int i = targetDepth; i <= targetDepth; i++) {
-        cfg->log <<  "generating depth: " << i << endl;
+        cfg->log << "generating depth: " << i << endl;
         generateLevel(i);
     }
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<chrono::duration<double>>(stop - start);
-    cfg->log <<  "\nPruning table (" << path << ") was successfuly generated in " << duration.count() << " seconds\n";
-    cfg->log <<  "----------------------------------------------------------------\n";
+    cfg->log << "\nPruning table (" << path << ") was successfuly generated in " << duration.count() << " seconds\n";
+    cfg->log << "----------------------------------------------------------------\n";
 }
 
 void PruningStates::generateLevelSingleThread(
@@ -70,6 +70,7 @@ void PruningStates::generateLevelSingleThread(
 
         if (ss.back() == puzzle.solvedState) { goto retard; }
         insert(ss.back(), moves.size());
+        // if (checkVisitedNoUpdate(ss.back(), moves.size())) { goto retard; }
     }
 done:
     return;
@@ -86,8 +87,15 @@ void PruningStates::generateLevelMultiThread(
     while (moves.back() < numChoices) {
         if (!canDiscardMoves(movesLeft, moves)) {
             ss.back() = ss.rbegin()[1] + validMoves[moves.back()];
-            if (ss.back() == puzzle.solvedState) { continue; }
+            if (ss.back() == puzzle.solvedState) {
+                moves.back()++;
+                continue;
+            }
             insert(ss.back(), moves.size());
+            if (checkVisited(ss.back(), moves.size())) {
+                moves.back()++;
+                continue;
+            }
 
             if (moves.size() >= detachDepth) {
                 cfg->threadPool->schedule([=] {
@@ -128,17 +136,17 @@ void PruningStates::generateLevel(int lvl) {
         if (detachDepth >= targetDepth) { break; }
     }
 
-    detachDepth++;
-    detachWidth *= numChoices;
+    detachDepth += 3;
+    detachWidth *= numChoices * numChoices * numChoices;
 
     if (detachDepth >= targetDepth || cfg->threadPool->getNumThreads() == 1) {
         generateLevelSingleThread(targetDepth, moves.size(), moves, ss, validMoves);
         return;
     }
 
-    cfg->log <<  "targetThreads: " << cfg->threadPool->getNumThreads() << endl;
-    cfg->log <<  "detachWidth: " << detachWidth << endl;
-    cfg->log <<  "detachDepth: " << detachDepth << endl;
+    cfg->log << "targetThreads: " << cfg->threadPool->getNumThreads() << endl;
+    cfg->log << "detachWidth: " << detachWidth << endl;
+    cfg->log << "detachDepth: " << detachDepth << endl;
 
 
     generateLevelMultiThread(targetDepth, detachDepth, moves, ss, validMoves);
@@ -150,3 +158,21 @@ void PruningStates::generateLevel(int lvl) {
 bool PruningStates::canDiscardMoves(int movesAvailable, const vector<int>& moves) {
     return redundancyTableInverse.contains(moves);
 }
+
+inline bool PruningStates::checkVisited(State s, int numMoves) {
+    // return false;
+    // auto s = preHashTransformation(state);
+    if (visited.count(s)) {
+        if (numMoves < visited[s]) {
+            visited[s] = numMoves;
+            return false;
+        }
+        return true;
+    }else{
+         visited[s] = numMoves;
+         return false;
+    }
+}
+
+//27 5.8
+//33 41

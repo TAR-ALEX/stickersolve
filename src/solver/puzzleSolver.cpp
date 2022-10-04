@@ -49,8 +49,8 @@ void Solver::rawSolve(
         if (detachDepth >= targetDepth) { break; }
     }
 
-    detachDepth++;
-    detachWidth *= numChoices;
+    detachDepth+=3;
+    detachWidth *= numChoices*numChoices*numChoices;
 
 
     cfg->log << "Starting solver with " << cfg->threadPool->getNumThreads() << " threads\n";
