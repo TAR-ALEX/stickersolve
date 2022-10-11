@@ -18,6 +18,7 @@ class Puzzle;
 
 using namespace std;
 
+template <int width = 2> // width in nibbles, must be a multiple of 4 (2 IS A SINGLE BYTE)
 struct PruningStates {
 private:
     RedundancyTable redundancyTableInverse;
@@ -68,3 +69,6 @@ public:
 
     string getStats();
 };
+
+#include "pruningTree.tpp"
+#include "pruning.tpp"

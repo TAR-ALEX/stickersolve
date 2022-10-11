@@ -7,7 +7,7 @@
 using namespace std;
 
 namespace PruningFor3x3 {
-    struct Mask3Color : public PruningStates {
+    struct Mask3Color : public PruningStates<2> {
         State recolorMask = {
             0,  1,  2,  3,  4,  3,  2,  1,  0,  //
             -1, -1, -1, 12, 13, 12, -1, -1, -1, //
@@ -31,7 +31,7 @@ namespace PruningFor3x3 {
             this->path = "Mask3Color.table";
         }
     };
-    struct MaskRing : public PruningStates {
+    struct MaskRing : public PruningStates<2> {
         State recolorMask = {
             1, 1, 1, 1, 0, 1, 1, 1, 1, //
             0, 0, 0, 2, 0, 2, 0, 0, 0, //
@@ -66,7 +66,7 @@ namespace PruningFor3x3 {
             this->path = "MaskRing10.table";
         }
     };
-    struct Mask3ColorCornersEO : public PruningStates {
+    struct Mask3ColorCornersEO : public PruningStates<2> {
         State recolorMask = {
             1, 2, 3, 4, 5, 6, 7, 8, 9, //
             0, 0, 0, 0, 0, 0, 0, 0, 0, //
@@ -138,7 +138,7 @@ namespace PruningFor3x3 {
             this->path = "Mask3ColorCornersEO.table";
         }
     };
-    struct Mask3ColorP : public PruningStates {
+    struct Mask3ColorP : public PruningStates<2> {
         State recolorMask = {
             1, 2, 3, 4, 0, 4, 3, 2, 1, //
             3, 2, 1, 5, 0, 5, 1, 2, 3, //
@@ -180,7 +180,7 @@ public:
     RedundancyTable redundancyTable;
     RedundancyTable redundancyTableInverse;
 
-    PruningStates pruningTableClassic;
+    PruningStates<2> pruningTableClassic;
     PruningFor3x3::Mask3Color pruning3Color;
     PruningFor3x3::MaskRing pruningRing;
     PruningFor3x3::Mask3ColorCornersEO testTable;
@@ -206,7 +206,7 @@ public:
         pruningTableClassic.puzzle = puzzle;
 
         pruningTableClassic.depth = 7; // 8 HTM 10 rfu
-        pruningTableClassic.hashSize = 29;
+        pruningTableClassic.hashSize = 27;
         pruningTableClassic.path = "";
         pruningTableClassic.cfg = cfg;
     }

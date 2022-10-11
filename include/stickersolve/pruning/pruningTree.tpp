@@ -10,14 +10,17 @@
 
 using namespace boost::iostreams;
 
-double PruningStates::estimateSizeInGb() {
+template <int width>
+double PruningStates<width>::estimateSizeInGb() {
     uint64_t siz = ((uint64_t)1) << hashSize;
+    if constexpr (width == 1) { siz >>= 1; }
     double actualSize = double(siz) / 1000000000.0;
     return actualSize;
 }
 
 
-void PruningStates::performSizeCheck() {
+template <int width>
+void PruningStates<width>::performSizeCheck() {
     if (estimateSizeInGb() > cfg->maxMemoryInGb) {
         stringstream ss;
         ss << "Pruning table size exceeds " << cfg->maxMemoryInGb << " gigabytes, attempted to allocate "
@@ -26,30 +29,66 @@ void PruningStates::performSizeCheck() {
     }
 }
 
-void PruningStates::insert(State state, int moves) {
-    // auto s = preHashTransformation(state);
-    auto hash = state.toHash() >> discardBits;
-    //tableMutex.lock();
-    ((volatile uint8_t&)data[hash]) = data[hash] < moves ? data[hash] : moves;
-    //tableMutex.unlock();
-}
 
-bool PruningStates::cannotBeSolvedInLimit(int movesAvailable, State state) {
-    if (depth >= movesAvailable) { //&& movesAvailable > 3
-        // auto hash = preHashTransformation(state).toHash() >> discardBits;
+template <int width>
+void PruningStates<width>::insert(State state, int moves) {
+    if constexpr (width == 2) {
         auto hash = state.toHash() >> discardBits;
-        return data[hash] > movesAvailable;
+        //tableMutex.lock();
+        ((volatile uint8_t&)data[hash]) = data[hash] < moves ? data[hash] : moves;
+        //tableMutex.unlock();
+    } else if constexpr (width == 1) {
+        auto hash = state.toHash() >> discardBits;
+        if (hash & 1) moves = moves << 4;
+        hash >>= 1;
+        ((volatile uint8_t&)data[hash]) = data[hash] < moves ? data[hash] : moves;
     }
-
-    return false;
 }
 
-uint8_t PruningStates::getDistance(const State state) {
-    auto hash = state.toHash() >> discardBits;
-    return data[hash];
+
+template <int width>
+bool PruningStates<width>::cannotBeSolvedInLimit(int movesAvailable, State state) {
+    if constexpr (width == 2) {
+        if (depth >= movesAvailable) {
+            auto hash = state.toHash() >> discardBits;
+            return data[hash] > movesAvailable;
+        }
+
+        return false;
+    } else if constexpr (width == 1) {
+        if (depth >= movesAvailable) {
+            auto hash = state.toHash() >> discardBits;
+            uint8_t val = data[hash >> 1];
+            if (hash & 1) val = val >> 4;
+            val &= 0x0F;
+            return val > movesAvailable;
+        }
+        return false;
+    } else {
+        return false;
+    }
 }
 
-void PruningStates::unload() {
+
+template <int width>
+uint8_t PruningStates<width>::getDistance(const State state) {
+    if constexpr (width == 2) {
+        auto hash = state.toHash() >> discardBits;
+        return data[hash];
+    } else if constexpr (width == 1) {
+        auto hash = state.toHash() >> discardBits;
+        uint8_t val = data[hash >> 1];
+        if (hash & 1) val = val >> 4;
+        val &= 0x0F;
+        return val;
+    } else {
+        return 0;
+    }
+}
+
+
+template <int width>
+void PruningStates<width>::unload() {
     if (data != nullptr) {
         cfg->log << "Unloading table (" << path << ") from memory\n";
         cfg->log << "----------------------------------------------------------------\n";
@@ -61,8 +100,8 @@ void PruningStates::unload() {
 }
 
 
-
-void PruningStates::load() {
+template <int width>
+void PruningStates<width>::load() {
     if (data != nullptr) { return; }
 
     std::string path = cfg->pruiningTablesPath + "/" + this->path;
@@ -71,6 +110,7 @@ void PruningStates::load() {
     performSizeCheck();
     initHashMask();
     uint64_t siz = ((uint64_t)1) << hashSize;
+    if constexpr (width == 1) { siz >>= 1; }
 
     if (this->path == "" && cfg->useMmapForPruning) {
         throw runtime_error("error: cannot have use a memory mapped file without specifying a file name or path.");
@@ -187,11 +227,14 @@ void PruningStates::load() {
     cfg->log << "----------------------------------------------------------------\n";
 }
 
-string PruningStates::getStats() {
+
+template <int width>
+string PruningStates<width>::getStats() {
     std::string path = cfg->pruiningTablesPath + "/" + this->path;
     if (this->path == "") path = "";
 
     uint64_t siz = ((uint64_t)1) << hashSize;
+    if constexpr (width == 1) { siz >>= 1; }
     stringstream ss;
     ss << "maxDepth = " << depth << endl;
 
@@ -222,11 +265,15 @@ string PruningStates::getStats() {
     return ss.str();
 }
 
-void PruningStates::initHashMask() { discardBits = 64 - hashSize; }
 
-// State PruningStates::preHashTransformation(State s) { return s; }
+template <int width>
+void PruningStates<width>::initHashMask() {
+    discardBits = 64 - hashSize;
+}
 
-uint64_t PruningStates::getChecksum() {
+
+template <int width>
+uint64_t PruningStates<width>::getChecksum() {
     const uint64_t goldenRatioConstant = 0x9e3779b97f4a7c15;
     uint64_t result = 0;
 

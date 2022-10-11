@@ -23,6 +23,7 @@ protected:
     State puzzleOrientationPriority;
 
     std::vector<int> prioritizeColors(std::vector<int> in);
+
 public:
     std::vector<std::vector<int>> getStickerSets();
     std::vector<std::vector<std::vector<int>>> getStickerGroups();
@@ -76,8 +77,8 @@ public:
 
     friend class Solver;
     friend class RedundancyTable;
+    template <int width>
     friend class PruningStates;
 };
 
 void printMoves(vector<string>& moveNames, vector<int> moves);
-

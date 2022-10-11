@@ -10,7 +10,8 @@
 
 using namespace std::chrono;
 
-void PruningStates::generate() {
+template <int width>
+void PruningStates<width>::generate() {
     if (cfg->useMmapForPruning)
         throw runtime_error(
             "useMmapForPruning flag is not supported with table generation, it is slow and can kill an SSD"
@@ -32,7 +33,8 @@ void PruningStates::generate() {
     cfg->log << "----------------------------------------------------------------\n";
 }
 
-void PruningStates::generateLevelSingleThread(
+template <int width>
+void PruningStates<width>::generateLevelSingleThread(
     int targetDepth, int initialDepth, vector<int> moves, vector<State> ss, vector<State> validMoves
 ) {
     if (targetDepth <= initialDepth) return;
@@ -76,7 +78,8 @@ done:
     return;
 }
 
-void PruningStates::generateLevelMultiThread(
+template <int width>
+void PruningStates<width>::generateLevelMultiThread(
     int targetDepth, int detachDepth, vector<int> moves, vector<State> ss, vector<State> validMoves
 ) {
     int numChoices = validMoves.size();
@@ -109,8 +112,8 @@ void PruningStates::generateLevelMultiThread(
     }
 }
 
-
-void PruningStates::generateLevel(int lvl) {
+template <int width>
+void PruningStates<width>::generateLevel(int lvl) {
     auto& targetDepth = lvl;
     if (targetDepth <= 0) return;
 
@@ -155,11 +158,13 @@ void PruningStates::generateLevel(int lvl) {
     cfg->threadPool->wait();
 }
 
-bool PruningStates::canDiscardMoves(int movesAvailable, const vector<int>& moves) {
+template <int width>
+bool PruningStates<width>::canDiscardMoves(int movesAvailable, const vector<int>& moves) {
     return redundancyTableInverse.contains(moves);
 }
 
-inline bool PruningStates::checkVisited(State s, int numMoves) {
+template <int width>
+inline bool PruningStates<width>::checkVisited(State s, int numMoves) {
     // return false;
     // auto s = preHashTransformation(state);
     if (visited.count(s)) {
