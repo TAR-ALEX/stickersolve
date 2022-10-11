@@ -7,7 +7,7 @@
 using namespace std;
 
 namespace PruningFor3x3 {
-    struct Mask3Color : public PruningStates<2> {
+    struct Mask3Color : public PruningStates<1> {
         State recolorMask = {
             0,  1,  2,  3,  4,  3,  2,  1,  0,  //
             -1, -1, -1, 12, 13, 12, -1, -1, -1, //
@@ -180,7 +180,7 @@ public:
     RedundancyTable redundancyTable;
     RedundancyTable redundancyTableInverse;
 
-    PruningStates<2> pruningTableClassic;
+    PruningStates<1> pruningTableClassic;
     PruningFor3x3::Mask3Color pruning3Color;
     PruningFor3x3::MaskRing pruningRing;
     PruningFor3x3::Mask3ColorCornersEO testTable;

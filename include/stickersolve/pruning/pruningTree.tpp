@@ -39,9 +39,14 @@ void PruningStates<width>::insert(State state, int moves) {
         //tableMutex.unlock();
     } else if constexpr (width == 1) {
         auto hash = state.toHash() >> discardBits;
-        if (hash & 1) moves = moves << 4;
-        hash >>= 1;
-        ((volatile uint8_t&)data[hash]) = data[hash] < moves ? data[hash] : moves;
+        uint8_t val = data[hash >> 1];
+        uint8_t left = val >> 4;
+        uint8_t right = val & 0xF;
+        if ((hash & 1) && moves < left) {
+            ((volatile uint8_t&)data[hash >> 1]) = (moves << 4) | right;
+        }else if (!(hash & 1) && moves < right) {
+            ((volatile uint8_t&)data[hash >> 1]) = (left << 4) | moves;
+        }
     }
 }
 
@@ -209,7 +214,14 @@ void PruningStates<width>::load() {
                      << " Gb in memory...\n\n";
             data = new uint8_t[siz];
         }
-        for (uint64_t i = 0; i < siz; i++) data[i] = depth + 1;
+
+        for (uint64_t i = 0; i < siz; i++) {
+            if constexpr (width >= 2) {
+                data[i] = depth + 1;
+            } else if constexpr (width == 1) {
+                data[i] = (depth + 1) | ((depth + 1) << 4);
+            }
+        }
 
         generate();
 
@@ -234,7 +246,6 @@ string PruningStates<width>::getStats() {
     if (this->path == "") path = "";
 
     uint64_t siz = ((uint64_t)1) << hashSize;
-    if constexpr (width == 1) { siz >>= 1; }
     stringstream ss;
     ss << "maxDepth = " << depth << endl;
 
@@ -244,7 +255,14 @@ string PruningStates<width>::getStats() {
         if (stats[i]) needsStats = false;
 
     if (needsStats) {
-        for (uint64_t i = 0; i < siz; i++) { stats[data[i]]++; } //count actual stats
+        if constexpr (width == 2) {
+            for (uint64_t i = 0; i < siz; i++) { stats[data[i]]++; } //count actual stats
+        } else if constexpr (width == 1) {
+            for (uint64_t i = 0; i < siz >> 1; i++) {
+                stats[data[i] >> 4]++;
+                stats[data[i] & 0xF]++;
+            }
+        }
         fstream file(path, std::ios::binary | std::ios::in | std::ios::out);
         uint64_t checksum = getChecksum();
         file.write((char*)&checksum, sizeof(checksum));
@@ -260,6 +278,8 @@ string PruningStates<width>::getStats() {
     if (stats[depth + 1]) ss << "Depth " << depth + 1 << " has " << stats[depth + 1] << "." << endl;
 
     double spaceInTable = double(sum) / 1000000000.0;
+    if constexpr (width == 1) spaceInTable /= 2;
+
     ss << spaceInTable << " Gb / " << estimateSizeInGb() << " Gb = " << spaceInTable / estimateSizeInGb() << endl;
 
     return ss.str();
