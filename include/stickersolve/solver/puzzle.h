@@ -20,12 +20,14 @@ protected:
     vector<State> validMoves;
     vector<string> moveNames;
 
-    State puzzleOrientPermuteMask;
+    State puzzleOrientationPriority;
 
+    std::vector<int> prioritizeColors(std::vector<int> in);
 public:
-    std::vector<std::set<int>> getStickerSets();
-    std::map<std::set<int>, int> getStickerMap();
+    std::vector<std::vector<int>> getStickerSets();
+    std::vector<std::vector<std::vector<int>>> getStickerGroups();
 
+    std::map<std::pair<int, std::vector<int>>, std::vector<int>> getStickerMap();
 
     State state;
     State solvedState;
@@ -58,9 +60,13 @@ public:
     State& getMove(string name);
     State& getMove(int name);
     int getMoveID(string name);
+    std::string getMoveName(int id);
+    std::string getMoveName(State mov);
 
-    Puzzle getPermutationPuzzle();
-    Puzzle getOrientationPuzzle();
+    Puzzle getPermutationPuzzle(); // delete
+    Puzzle getOrientationPuzzle(); // delete
+    State getPieceState(State s);
+    Puzzle getPiecePuzzle();
 
     void applyMoves(string moves);
 
@@ -74,3 +80,4 @@ public:
 };
 
 void printMoves(vector<string>& moveNames, vector<int> moves);
+

@@ -70,6 +70,8 @@ protected:
     virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves);
     Puzzle puzzle;
     virtual void initReverse(){}; // move to public once working
+    virtual State preSolveTransform(State s1) { return s1; }
+
 public:
     estd::joint_ptr<SolverConfig> cfg = new SolverConfig();
 

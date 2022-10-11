@@ -46,15 +46,15 @@ namespace estd {
 			return *this;
 		}
 
-		ostream_proxy() {}
+		ostream_proxy(): std::ostream(nullptr) {}
 
-		ostream_proxy(std::initializer_list<std::ostream*> ostrms) {
+		ostream_proxy(std::initializer_list<std::ostream*> ostrms): std::ostream(nullptr) {
 			for (auto& ostrm : ostrms) this->forward(ostrm);
 		}
 
-		ostream_proxy(const ostream_proxy& other) { this->fwd = other.fwd; }
+		ostream_proxy(const ostream_proxy& other): std::ostream(nullptr) { this->fwd = other.fwd; }
 
-		ostream_proxy(ostream_proxy&& other) { this->fwd = other.fwd; }
+		ostream_proxy(ostream_proxy&& other): std::ostream(nullptr) { this->fwd = other.fwd; }
 
 		template <typename T>
 		ostream_proxy& operator<<(T s) {

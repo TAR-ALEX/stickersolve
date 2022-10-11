@@ -59,6 +59,16 @@ int Puzzle::getMoveID(string name) {
     return -1;
 }
 
+std::string Puzzle::getMoveName(int id) { return moveNames[id]; }
+
+std::string Puzzle::getMoveName(State mov) {
+    for (int i = 0; i < validMoves.size(); i++) {
+        if (validMoves[i] == mov) return moveNames[i];
+    }
+    return "";
+}
+
+
 State& Puzzle::getMove(int id) { return validMoves[id]; }
 
 State& Puzzle::getMove(string name) { return validMoves[getMoveID(name)]; }
@@ -168,24 +178,24 @@ Puzzle Puzzle::makeUniqueStickers() {
     return res;
 }
 
-std::vector<std::set<int>> Puzzle::getStickerSets() {
-    std::vector<std::set<int>> result;
+std::vector<std::vector<int>> Puzzle::getStickerSets() {
+    std::vector<std::vector<int>> result;
     State before = makeUniqueStickers();
     for (auto m : validMoves) {
         State after = before + m;
-        std::set<int> set1;
-        std::set<int> set2;
+        std::vector<int> set1;
+        std::vector<int> set2;
         for (size_t i = 0; i < before.size(); i++) {
             if (before[i] == after[i]) {
-                set1.insert(i);
+                set1.push_back(i);
             } else {
-                set2.insert(i);
+                set2.push_back(i);
             }
         }
-        std::vector<std::set<int>> newResult;
+        std::vector<std::vector<int>> newResult;
         for (auto s : result) {
-            std::set<int> inter1;
-            std::set<int> inter2;
+            std::vector<int> inter1;
+            std::vector<int> inter2;
 
             std::set_intersection(set1.begin(), set1.end(), s.begin(), s.end(), std::inserter(inter1, inter1.end()));
             std::set_intersection(set2.begin(), set2.end(), s.begin(), s.end(), std::inserter(inter2, inter2.end()));
@@ -202,22 +212,198 @@ std::vector<std::set<int>> Puzzle::getStickerSets() {
     return result;
 }
 
-std::map<std::set<int>, int> Puzzle::getStickerMap() {
-    std::vector<std::set<int>> sets = getStickerSets();
-    std::map<std::set<int>, int> orderedPieces;
-    for (size_t i = 0; i < puzzleOrientPermuteMask.size(); i++) {
-        if (puzzleOrientPermuteMask[i] == -1) continue;
-        for (auto s : sets) {
-            if (s.count(i)) {
-                orderedPieces[s] = puzzleOrientPermuteMask[i];
-                break;
+std::vector<int> rotateVector(std::vector<int> in, size_t shift) {
+    std::vector<int> out;
+    size_t idx = shift;
+    for (size_t i = 0; i < in.size(); i++) { out.push_back(in[(idx + i) % in.size()]); }
+    return out;
+}
+
+/// @brief get unique sticker grops by piece type
+/// @return
+std::vector<std::vector<std::vector<int>>> Puzzle::getStickerGroups() {
+    auto joinTwoStates = [](State one, State two) {
+        State result;
+        for (size_t i = 0; i < one.size(); i++) {
+            int val = one[i];
+            if (val == -1) val = two[i];
+            result.push_back(val);
+        }
+        return result;
+    };
+
+    std::vector<std::vector<std::vector<int>>> result;
+
+    std::vector<std::vector<int>> pieceSets = getStickerSets();
+    State ref;
+    for (size_t i = 0; i < solvedState.size(); i++) { ref.push_back(-1); }
+    int counter = 0;
+    while (!pieceSets.empty()) {
+        auto piece = pieceSets[0];
+        for (auto sticker : piece) { ref[sticker] = counter++; }
+        //cout << ref.toString() << endl;
+        std::vector<State> tryMoves = validMoves;
+        while (!tryMoves.empty()) {
+            std::vector<State> skipedMoved;
+            int movesCauseingChanges = 0;
+            for (auto& move : tryMoves) {
+                if (ref == ref + move) {
+                    skipedMoved.push_back(move);
+                    continue;
+                }
+                movesCauseingChanges++;
+                //cout << this->getMoveName(move);
+                ref = joinTwoStates(ref, ref + move);
+                //cout << ref.toString() << endl;
+            }
+            tryMoves = skipedMoved;
+            if (movesCauseingChanges == 0) { tryMoves = {}; }
+        }
+        std::vector<std::vector<int>> leftoverPieces;
+        result.emplace_back();
+        for (auto p : pieceSets) {
+            bool isLeftover = true;
+            for (auto s : p) {
+                if (ref[s] != -1) isLeftover = false;
+            }
+            if (isLeftover) {
+                leftoverPieces.push_back(p);
+            } else {
+                result.back().push_back(p);
+            }
+        }
+        pieceSets = leftoverPieces;
+    }
+
+    for (auto& grp : result) {
+        std::sort(grp.begin(), grp.end(), [](const std::vector<int>& a, const std::vector<int>& b) {
+            int aMin = *std::min_element(a.begin(), a.end());
+            int bMin = *std::min_element(b.begin(), b.end());
+            return aMin < bMin;
+        });
+        for (auto& piece : grp) {
+            std::map<int, int> sorted;
+            for (auto& sticker : piece) { sorted[ref[sticker]] = sticker; }
+            piece.clear();
+            for (auto& s : sorted) { piece.push_back(s.second); }
+        }
+    }
+    std::sort(
+        result.begin(),
+        result.end(),
+        [](const std::vector<std::vector<int>>& a, const std::vector<std::vector<int>>& b) {
+            int aMin = *std::min_element(a[0].begin(), a[0].end());
+            int bMin = *std::min_element(b[0].begin(), b[0].end());
+            return aMin < bMin;
+        }
+    );
+
+    // TODO: delete this, this makes it easy to debug for now
+    for (auto& grp : result) {
+        for (auto& piece : grp) {
+            size_t maxWeightIdx = 0;
+            int maxWeight = -1;
+            for (size_t i = 0; i < piece.size(); i++) {
+                int newWeight = puzzleOrientationPriority[piece[i]];
+                if (newWeight > maxWeight) {
+                    maxWeight = newWeight;
+                    maxWeightIdx = i;
+                }
+            }
+            piece = rotateVector(piece, maxWeightIdx);
+        }
+    }
+
+    return result;
+}
+
+// given a piece type (corner, edge ...) and a list of colors, return the id of the piece
+std::map<std::pair<int, std::vector<int>>, std::vector<int>> Puzzle::getStickerMap() {
+    std::vector<std::vector<std::vector<int>>> pieceTypes = getStickerGroups();
+
+    std::map<std::pair<int, std::vector<int>>, std::vector<int>> result;
+    int pieceId = 0;
+    for (size_t pieceType = 0; pieceType < pieceTypes.size(); pieceType++) {
+        auto& pieces = pieceTypes[pieceType];
+        for (auto& piece : pieces) {
+            std::vector<int> colors;
+            for (auto& sticker : piece) { colors.push_back(solvedState[sticker]); }
+            if (!result.count({pieceType, colors})) {
+                vector<int> ids;
+                for (size_t pn = 0; pn < piece.size(); pn++) ids.push_back(piece[pn]);
+                result[{pieceType, colors}] = ids;
             }
         }
     }
-    return orderedPieces;
+
+    return result;
+}
+
+State Puzzle::getPieceState(State s) {
+    State result = s;
+    for (size_t i = 0; i < s.size(); i++) { result[i] = -1; }
+    std::map<std::pair<int, std::vector<int>>, std::vector<int>> m = getStickerMap();
+    std::vector<std::vector<std::vector<int>>> pieceTypes = getStickerGroups();
+
+    for (size_t pieceType = 0; pieceType < pieceTypes.size(); pieceType++) {
+        auto& pieces = pieceTypes[pieceType];
+        for (auto piece : pieces) {
+            std::vector<int> colors;
+            for (auto& sticker : piece) { colors.push_back(s[sticker]); }
+            // colors = standardizeColorCycle(colors);
+            for (size_t i = 0; i < piece.size(); i++) {
+                colors = rotateVector(colors, 1);
+                piece = rotateVector(piece, 1);
+                if (m.count({pieceType, colors})) {
+                    for(size_t pn = 0; pn < piece.size(); pn++)
+                        result[piece[pn]] = m[{pieceType, colors}][pn];
+                    break;
+                }
+            }
+            // if(!m.count(colors)) throw std::runtime_error("could not find piece in color map");
+        }
+    }
+    return result;
+}
+
+Puzzle Puzzle::getPiecePuzzle() {
+    Puzzle result = *this;
+    result.solvedState = getPieceState(solvedState);
+    result.state = getPieceState(state);
+    return result;
+}
+
+#include <stickersolve/puzzles/Solver3x3.h>
+
+int main2() {
+    Puzzle3x3 p("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'");
+
+    auto r = p.getStickerGroups();
+    for (auto& grp : r) {
+        for (auto& piece : grp) {
+            cout << "[";
+            for (auto& sticker : piece) { cout << sticker << ' '; }
+            cout << "\e[D] ";
+        }
+        cout << endl;
+    }
+
+    auto m = p.getStickerMap();
+    for (auto [k, v] : m) {
+        cout << "[" << k.first << ": ";
+        for (auto c : k.second) cout << c << ",";
+        cout << "\e[D] = [";
+        for (auto sId : v) cout << sId << " ";
+        cout << "\e[D] " << endl;
+    }
+
+    auto pp = p.getPiecePuzzle();
+    cout << pp.toString() << endl;
+    return 0;
 }
 
 Puzzle Puzzle::getPermutationPuzzle() {
+    return state;
     // auto sets = p.getStickerMap();
     // for (auto [si, i] : sets) {
     //     cout << i << ": ";
@@ -227,7 +413,9 @@ Puzzle Puzzle::getPermutationPuzzle() {
     // cout << "done\n";
     // return 0;
 }
+
 Puzzle Puzzle::getOrientationPuzzle() {
+    return state;
     // auto sets = p.getStickerSets();
     // for (auto si : sets) {
     //     for (auto s : si) { cout << s << " "; }
@@ -236,3 +424,4 @@ Puzzle Puzzle::getOrientationPuzzle() {
     // cout << "done\n";
     // return 0;
 }
+

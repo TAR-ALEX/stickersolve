@@ -227,6 +227,7 @@ void RedundancyTable::load() {
         cfg->log << "----------------------------------------------------------------\n";
     } else {
         // create table and save it
+        puzzle = puzzle.makeUniqueStickers();
         generate();
         cfg->log << "Saving table (" << path << ").\n";
 

@@ -30,6 +30,8 @@ void Solver::rawSolve(
     bool inverse,
     unsigned int numberOfSolutionsToGet
 ) {
+    initial = preSolveTransform(initial);
+
     if (inverse) {
         localInitReverse();
         initReverse();
@@ -49,8 +51,8 @@ void Solver::rawSolve(
         if (detachDepth >= targetDepth) { break; }
     }
 
-    detachDepth+=3;
-    detachWidth *= numChoices*numChoices*numChoices;
+    detachDepth += 3;
+    detachWidth *= numChoices * numChoices * numChoices;
 
 
     cfg->log << "Starting solver with " << cfg->threadPool->getNumThreads() << " threads\n";
@@ -68,7 +70,9 @@ void Solver::rawSolve(
     if (inverse) {
         rawSolveMultiInverse(ss, targetDepth, detachDepth, moves, solutions, terminateEarly, numberOfSolutionsToGet);
     } else {
-        rawSolveMulti(ss, targetDepth, detachDepth, moves, solutions, terminateEarly, numberOfSolutionsToGet);
+        cfg->threadPool->schedule([&] {
+            rawSolveMulti(ss, targetDepth, detachDepth, moves, solutions, terminateEarly, numberOfSolutionsToGet);
+        });
         cfg->threadPool->wait();
     }
 
@@ -271,17 +275,15 @@ shared_ptr<estd::thread_safe_queue<string>> Solver::asyncSolveStrings(
     thread solver([=] { rawSolve(solutions, initial.state, depth, false, numberOfSolutionsToGet); });
     solver.detach();
     thread converter([=] {
-        try {
-            while (true) {
-                string formattedSolution;
-                vector<int> elements = solutions->pop();
-                for (int i = 0; i < elements.size(); i++) {
-                    if (i != 0) formattedSolution += " ";
-                    formattedSolution += puzzle.moveNames[elements[i]];
-                }
-                formattedSolutions->push(formattedSolution);
+        vector<int> elements;
+        while (*solutions >> elements) {
+            string formattedSolution;
+            for (int i = 0; i < elements.size(); i++) {
+                if (i != 0) formattedSolution += " ";
+                formattedSolution += puzzle.moveNames[elements[i]];
             }
-        } catch (...) {}
+            *formattedSolutions << formattedSolution;
+        }
         formattedSolutions->close();
     });
     converter.detach();

@@ -18,11 +18,11 @@ int main(int argc, char const* argv[]) {
     try {
         Solver3x3 solver("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'");
 
-        solver.cfg->pruiningTablesPath = "./";
+        solver.cfg->pruiningTablesPath = "./tables";
 
         Puzzle p = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'");
 
-        cout << p.toString() << endl;
+        // cout << p.toString() << endl;
 
         int W = 0;
         int G = 1;
@@ -33,7 +33,7 @@ int main(int argc, char const* argv[]) {
 
         int Q = 6;
 
-        // p.applyMoves("U R2 F B R B2 R U2 L B2 R U' D' R2 F R' L B2 U2 F2"); // superflip
+        // p.applyMoves("U R2 F B R B2 R U2 L B2 R U' D' R2 F R' L B2 U2 F2"); // superflip finds 1 solution in 102 seconds
         // p.applyMoves("R' L U R2 F D L' U' L2 F2 B2 U' D2 R2 B2 U2 D'");//   R2
 
         p = {
@@ -47,45 +47,20 @@ int main(int argc, char const* argv[]) {
 
         //p.applyMoves("F U' F2 D' B U R' F' L D' R' U' L U B' D2 R' F U2 D2");
         // p.applyMoves("U2 L2 R2 B2 R2 D2 B' D2 R2 B D2 L' F2 D' L' F L' D' L");// new test
-        cout << p.toString() << endl;
+        // cout << p.toString() << endl;
 
         solver.init();
-        cout << "solver.redundancyTable.getStats()";
-        cout << "\n--------------------\n";
-        cout << solver.redundancyTable.getStats();
-        cout << "\n--------------------\n";
-
-        cout << "solver.pruningTableClassic.getStats()";
-        cout << "\n--------------------\n";
-        cout << solver.pruningTableClassic.getStats();
-        cout << "\n--------------------\n";
-        cout << "solver.pruningCorners.getStats()";
-        cout << "\n--------------------\n";
-        cout << solver.pruningCorners.getStats();
-        cout << "\n--------------------\n";
-        cout << "solver.pruningEdges.getStats()";
-        cout << "\n--------------------\n";
-        cout << solver.pruningEdges.getStats();
-        cout << "\n--------------------\n";
-        cout << "solver.pruning3Color.getStats()";
-        cout << "\n--------------------\n";
-        cout << solver.pruning3Color.getStats();
-        cout << "\n--------------------\n";
-        cout << "solver.pruningOppFaces.getStats()";
-        cout << "\n--------------------\n";
-        cout << solver.pruningOppFaces.getStats();
-        cout << "\n--------------------\n";
+        cout << solver.printTableStats();
 
         // auto solutions = solver.solve(p, 14, -1); //16
         // cout << solutions;
 
         auto slnQ = solver.asyncSolveStrings(p, 14, -1);
-
         try {
             while (slnQ->hasNext()) { cout << slnQ->pop() << "\n"; }
         } catch (runtime_error& e) { cout << e.what() << endl; }
 
-        // string tmp = "";
+        string tmp = "";
         // while (*slnQ >> tmp) { cout << tmp << "\n"; }
 
         cout << slnQ->numResults() << "\n"; //140

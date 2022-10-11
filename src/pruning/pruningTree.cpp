@@ -141,7 +141,6 @@ void PruningStates::load() {
         redundancyTableInverse.cfg = cfg;
         redundancyTableInverse.inverse = true;
         redundancyTableInverse.depth = redundancyInverseDepth;
-        redundancyTableInverse.puzzle.keepOnlyMoves(puzzle.getMoves());
         redundancyTableInverse.load();
         if (cfg->useMmapForPruning) {
             uint64_t checksum = getChecksum();
