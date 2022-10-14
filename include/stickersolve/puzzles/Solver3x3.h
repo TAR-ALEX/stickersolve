@@ -9,11 +9,11 @@ using namespace std;
 namespace PruningFor3x3 {
     struct Mask3Color : public PruningStates<1> {
         State recolorMask = {
-            0,  1,  2,  3,  -1,  3,  2,  1,  0,  //
-            -1, -1, -1, 12, -1, 12, -1, -1, -1, //
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, //
-            -1, -1, -1, 12, -1, 12, -1, -1, -1, //
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, //
+            0,  1,  2,  3,  -1, 3,  2,  1,  0,  //
+            27, 28, 29, 12, -1, 12, 29, 28, 27, //
+            18, 19, 20, 21, -1, 21, 20, 19, 18, //
+            27, 28, 29, 12, -1, 12, 29, 28, 27, //
+            18, 19, 20, 21, -1, 21, 20, 19, 18, //
             0,  1,  2,  3,  -1, 3,  2,  1,  0,  //
         };
         // virtual State preInsertTransformation(State s){
@@ -30,9 +30,11 @@ namespace PruningFor3x3 {
             return PruningStates::cannotBeSolvedInLimit(movesAvailable, state.recolor(recolorMask));
         }
         Mask3Color(estd::joint_ptr<SolverConfig> cfg = nullptr) {
-            this->puzzle = Puzzle3x3{
-                "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'",
-            }.getPiecePuzzle();
+            this->puzzle =
+                Puzzle3x3{
+                    "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'",
+                }
+                    .getPiecePuzzle();
             this->puzzle.solvedState = recolorMask;
             this->puzzle.state = this->puzzle.solvedState;
             this->depth = 9;
@@ -41,7 +43,7 @@ namespace PruningFor3x3 {
             this->path = "Mask3Color-nosym.table";
         }
     };
-     struct Mask3ColorB : public PruningStates<0> {
+    struct Mask3ColorB : public PruningStates<0> {
         State recolorMask = {
             0,  1,  2,  3,  4,  3,  2,  1,  0,  //
             -1, -1, -1, 12, 13, 12, -1, -1, -1, //
@@ -296,10 +298,10 @@ public:
         if (movesAvailable <= 2) return false;
 
         if (pruningTableClassic.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true;
-        
-        if (movesAvailable >= 8 && pruning3ColorB.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; // 
+
+        if (movesAvailable >= 8 && pruning3ColorB.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; //
         if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; // 10.7 [4.29]
-        if (pruningRing.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; // 9.69
+        if (pruningRing.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true;   // 9.69
 
         if (testTable.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; // 10.35 [7.41]
 
