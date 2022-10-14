@@ -17,9 +17,9 @@ public:
     friend State& operator+=(State& left, const State& right);
     friend State& operator-=(State& left, const State& right);
     State recolor(const vector<int>& colorMap) const {
-        State result(size());
+        State result = *this;
         for (size_t i = 0; i < size(); i++) {
-            result[i] = colorMap[(*this)[i]];
+            if ((*this)[i] >= 0 && (*this)[i] < colorMap.size()) result[i] = colorMap[(*this)[i]];
         }
         return result;
     }
@@ -30,6 +30,7 @@ public:
         *this = recolor(colorMap);
     }
     bool isNOP();
+    State getNOP();
     State applyMask(State m) {
         State delta(size());
         for (size_t i = 0; i < size(); i++) {
@@ -61,3 +62,5 @@ public:
     string toString();
     uint64_t toHash() const;
 };
+
+#include <stickersolve/solver/puzzleState.tpp>

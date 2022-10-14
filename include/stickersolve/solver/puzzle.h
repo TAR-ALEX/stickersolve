@@ -20,7 +20,7 @@ protected:
     vector<State> validMoves;
     vector<string> moveNames;
 
-    State puzzleOrientationPriority;
+    // State puzzleOrientationPriority;
 
     std::vector<int> prioritizeColors(std::vector<int> in);
 
@@ -64,12 +64,11 @@ public:
     std::string getMoveName(int id);
     std::string getMoveName(State mov);
 
-    Puzzle getPermutationPuzzle(); // delete
-    Puzzle getOrientationPuzzle(); // delete
     State getPieceState(State s);
     Puzzle getPiecePuzzle();
 
     void applyMoves(string moves);
+    State getUniqueSymetric(State s) {return s;}
 
     string toString();
 
@@ -82,3 +81,5 @@ public:
 };
 
 void printMoves(vector<string>& moveNames, vector<int> moves);
+
+#include <stickersolve/solver/puzzle.tpp>

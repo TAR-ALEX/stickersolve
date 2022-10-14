@@ -1,3 +1,5 @@
+#pragma once
+
 #include <algorithm>
 #include <chrono>
 #include <estd/thread_pool.hpp>
@@ -159,7 +161,7 @@ void Solver::rawSolveMulti(
             }
         }
 
-        if (moves.size() >= detachDepth) {
+        if ((int)moves.size() >= detachDepth) {
             cfg->threadPool->schedule([&gSolutions, &stop, ss, moves, targetDepth, numberOfSolutionsToGet, this] {
                 rawSolveRegular(ss, targetDepth, moves.size(), moves, gSolutions, stop, numberOfSolutionsToGet);
             });
@@ -191,18 +193,18 @@ void Solver::rawSolveRegular(
 
     // basically a counting algorithm with carry rippled over.
     for (;;) {
-        if (moves.size() < targetDepth) {
+        if ((int)moves.size() < targetDepth) {
             moves.push_back(0);
             ss.emplace_back();
         } else {
             moves.back()++;
         }
 
-        while (moves.back() >= numChoices) {
+        while ((int)moves.back() >= numChoices) {
         retard:
             ss.pop_back();
             moves.pop_back();
-            if (moves.size() <= startDepth) { goto done; }
+            if ((int)moves.size() <= startDepth) { goto done; }
             moves.back()++;
         }
         int movesLeft = targetDepth - moves.size();
@@ -278,7 +280,7 @@ shared_ptr<estd::thread_safe_queue<string>> Solver::asyncSolveStrings(
         vector<int> elements;
         while (*solutions >> elements) {
             string formattedSolution;
-            for (int i = 0; i < elements.size(); i++) {
+            for (size_t i = 0; i < elements.size(); i++) {
                 if (i != 0) formattedSolution += " ";
                 formattedSolution += puzzle.moveNames[elements[i]];
             }
@@ -340,7 +342,7 @@ string Solver::solve(Puzzle initial, int depth, unsigned int numberOfSolutionsTo
 
     int lastSize = 0;
     for (auto solution : solutions) {
-        if (solution.size() > lastSize) {
+        if ((int)solution.size() > lastSize) {
             lastSize = solution.size();
             ss << "\nSOLUTIONS OF LENGTH " << lastSize << ":\n";
         }

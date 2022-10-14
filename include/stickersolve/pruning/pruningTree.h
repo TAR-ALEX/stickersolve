@@ -19,7 +19,7 @@ class Puzzle;
 using namespace std;
 
 template <int width = 2> // width in nibbles, must be a multiple of 4 (2 IS A SINGLE BYTE)
-struct PruningStates {
+class PruningStates {
 private:
     RedundancyTable redundancyTableInverse;
     // using a mutex to access the table ended up having very poor performance, the chances of race conditions are close to zero
@@ -40,7 +40,8 @@ private:
     void initHashMask();
     uint8_t* data = nullptr;
     virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves);
-    // virtual State preHashTransformation(State s);
+    inline virtual State preInsertTransformation(State s) {return s;};
+    inline virtual State preLookupTransformation(State s) {return s;};
     vector<uint64_t> stats = vector<uint64_t>(256, 0);
 
 public:
@@ -60,8 +61,8 @@ public:
     void load();   // consumes a lot of memory
     void unload(); // frees the memory.
 
-    bool cannotBeSolvedInLimit(int movesAvailable, const State hash);
-    uint8_t getDistance(const State hash);
+    bool cannotBeSolvedInLimit(int movesAvailable, State hash);
+    uint8_t getDistance(State hash);
     inline bool cannotUseTable(int movesAvailable) { return depth < movesAvailable; }
     inline bool canUseTable(int movesAvailable) { return !cannotUseTable(movesAvailable); }
 
@@ -70,5 +71,4 @@ public:
     string getStats();
 };
 
-#include "pruningTree.tpp"
-#include "pruning.tpp"
+#include <stickersolve/pruning/pruningTree.tpp>

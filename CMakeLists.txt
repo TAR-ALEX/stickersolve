@@ -4,8 +4,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 project(stickersolve)
 
-# set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-# set(CMAKE_CXX_FLAGS_DEBUG "-pg -g")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-O3 -pg -g") # gprof stickersolve gmon.out
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 if(WIN32)

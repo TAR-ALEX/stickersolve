@@ -1,3 +1,4 @@
+#pragma once
 #include <algorithm> // std::reverse
 #include <boost/filesystem.hpp>
 #include <chrono>
@@ -9,13 +10,12 @@
 #include <stack>
 #include <stdexcept>
 #include <stickersolve/pruning/pruningTree.h>
-#include <stickersolve/pruning/redundancy.hpp>
 #include <stickersolve/solver/puzzle.h>
 // #include <boost/iostreams/device/mapped_file.hpp>
 
 using namespace std::chrono;
 
-void RedundancyTable::generate() {
+inline void RedundancyTable::generate() {
     int& targetDepth = this->depth;
 
     if (targetDepth <= 0) return;
@@ -31,7 +31,7 @@ void RedundancyTable::generate() {
     stack<State> ss;
     ss.push(puzzle.solvedState);
 
-    for (int i = 0; i < puzzle.solvedState.size(); i++) ss.top()[i] = i;
+    for (size_t i = 0; i < puzzle.solvedState.size(); i++) ss.top()[i] = i;
 
     states.insert(puzzle.compressState(ss.top()));
 
@@ -55,7 +55,7 @@ void RedundancyTable::generate() {
             //if(redundancyTree.contains(moves)) goto retard;
 
 
-            if (moves.size() >= depth) {
+            if ((int)moves.size() >= depth) {
                 if (states.count(puzzle.compressState(ss.top()))) {
                     //printMoves(moveNames, moves);
                     stats.back()++;
@@ -85,7 +85,7 @@ void RedundancyTable::generate() {
             ss.push(ss.top() + validMoves[moves.back()]);
 
 
-            if (moves.size() >= depth && states.count(puzzle.compressState(ss.top()))) {
+            if ((int)moves.size() >= depth && states.count(puzzle.compressState(ss.top()))) {
                 //printMoves(moveNames, moves);
                 stats.back()++;
                 insert(moves);
@@ -110,19 +110,19 @@ void RedundancyTable::generate() {
 
 
 
-bool RedundancyTable::contains(const vector<int>& e) const {
+inline bool RedundancyTable::contains(const vector<int>& e) const {
     auto hash = lastMovesToHash(e);
     return data[hash];
 }
 
-uint64_t RedundancyTable::lastMovesToHash(const vector<int>& e) const {
+inline uint64_t RedundancyTable::lastMovesToHash(const vector<int>& e) const {
     uint64_t hash = 0;
 
     int i = 0;
 
-    if (e.size() > depth) { i = e.size() - depth; }
+    if ((int)e.size() > depth) { i = (int)e.size() - depth; }
 
-    for (; i < e.size(); i++) {
+    for (; i < (int)e.size(); i++) {
         hash *= puzzle.validMoves.size() + 1;
         hash += e[i] + 1;
     }
@@ -130,12 +130,12 @@ uint64_t RedundancyTable::lastMovesToHash(const vector<int>& e) const {
     return hash;
 }
 
-void RedundancyTable::insert(const vector<int>& e) {
+inline void RedundancyTable::insert(const vector<int>& e) {
     auto hash = lastMovesToHash(e);
     data[hash] = 1;
 }
 
-void RedundancyTable::unload() {
+inline void RedundancyTable::unload() {
     if (data != nullptr) {
         cfg->log << "Unloading table (" << path << ") from memory\n";
         cfg->log << "----------------------------------------------------------------\n";
@@ -144,12 +144,12 @@ void RedundancyTable::unload() {
     }
 }
 
-double RedundancyTable::estimateSizeInGb() {
+inline double RedundancyTable::estimateSizeInGb() {
     double actualSize = pow(double(puzzle.validMoves.size() + 1), double(depth)) / 1000000000.0;
     return actualSize;
 }
 
-void RedundancyTable::performSizeCheck() {
+inline void RedundancyTable::performSizeCheck() {
     if (estimateSizeInGb() > cfg->maxMemoryInGb) {
         stringstream ss;
         ss << "error: redundancy table (" << path << ") size exceeds " << cfg->maxMemoryInGb
@@ -158,7 +158,7 @@ void RedundancyTable::performSizeCheck() {
     }
 }
 
-string RedundancyTable::getStats() {
+inline string RedundancyTable::getStats() {
     stringstream ss;
     //uint64_t siz = ( ( uint64_t ) 1 ) << hashSize;
     uint64_t total = 0;
@@ -169,7 +169,7 @@ string RedundancyTable::getStats() {
     return ss.str();
 }
 
-void RedundancyTable::load() {
+inline void RedundancyTable::load() {
     if (data != nullptr) {
         // 		cfg->log <<  "Skipping loading table (" << path << ") - aleready in memory\n";
         // 		cfg->log <<  "----------------------------------------------------------------\n";
@@ -245,7 +245,7 @@ void RedundancyTable::load() {
     }
 }
 
-uint64_t RedundancyTable::getChecksum() {
+inline uint64_t RedundancyTable::getChecksum() {
     const uint64_t goldenRatioConstant = 0x9e3779b97f4a7c15;
     uint64_t result = 0;
 

@@ -90,3 +90,5 @@ public:
 };
 
 void printMoves(vector<string>& moveNames, vector<int> moves);
+
+#include <stickersolve/solver/puzzleSolver.tpp>

@@ -19,23 +19,6 @@ public:
                 5, 5, 5, 5, 5, 5, 5, 5, 5, //
             },
         } {
-        // this->puzzleOrientationPriority = {
-        //     0,  1,  2,  3,  20, 4,  5,  6,  7,  //
-        //     -1, -1, -1, 8,  20, 9,  -1, -1, -1, //
-        //     -1, -1, -1, -1, 20, -1, -1, -1, -1, //
-        //     -1, -1, -1, 10, 20, 11, -1, -1, -1, //
-        //     -1, -1, -1, -1, 20, -1, -1, -1, -1, //
-        //     12, 13, 14, 15, 20, 16, 17, 18, 19, //
-        // };
-        this->puzzleOrientationPriority = {
-            1, 1, 1, 1, 1, 1, 1, 1, 1, //
-            0, 0, 0, 1, 1, 1, 0, 0, 0, //
-            0, 0, 0, 0, 1, 0, 0, 0, 0, //
-            0, 0, 0, 1, 0, 1, 0, 0, 0, //
-            0, 0, 0, 0, 0, 0, 0, 0, 0, //
-            1, 1, 1, 1, 0, 1, 1, 1, 1, //
-        };
-
         // ---------------------------------------------------
         //        Move that does nothing
         // ---------------------------------------------------
@@ -277,8 +260,40 @@ public:
 
     Puzzle3x3(string allowed) : Puzzle3x3() { keepOnlyMoves(allowed); }
 
+    Puzzle3x3 getPiecePuzzle() {
+        Puzzle3x3 result = *this;
+        result.solvedState = getPieceState(solvedState);
+        result.state = getPieceState(state);
+        return result;
+    }
+
     //rotatePuzzleToStandardOrientation
     State rotatePuzzleSO() { return this->state; }
     //recolorPuzzleToStandardOrientation
     State recolorPuzzleSO() { return this->state; }
+
+    State getUniqueSymetric(State s) {
+        // return s;
+        // static int counter = 0;
+        // if(counter <= 100)
+        //     std::cout << "in sym " << counter++ << "\n";
+        // Thank you http://kociemba.org for documenting this
+        static State S_URF3 = Puzzle3x3().getMove("x") + Puzzle3x3().getMove("y");
+        static State S_F2 = Puzzle3x3().getMove("z2"); // check axis 4 times
+        static State S_U4 = Puzzle3x3().getMove("y");  // do a z
+        // static State S_LR2; // needs recolor
+        State minState = s;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 2; j++) {
+                for (int k = 0; k < 4; k++) {
+                    State symetry = (S_URF3 * i) + (S_F2 * j) + (S_U4 * k);
+                    symetry = (s - symetry).recolor(symetry);
+                    //cout << symetry.toString() << endl;
+
+                    if(symetry < minState) minState = symetry;
+                }
+            }
+        }
+        return minState;
+    }
 };

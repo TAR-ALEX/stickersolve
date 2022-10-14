@@ -1,3 +1,5 @@
+#pragma once
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -13,7 +15,7 @@
 using namespace std::chrono;
 using namespace std;
 
-bool Puzzle::checkIfAllMovesHaveInverses() {
+inline bool Puzzle::checkIfAllMovesHaveInverses() {
     for (auto move : validMoves) {
         bool hasInverse = false;
 
@@ -31,58 +33,58 @@ bool Puzzle::checkIfAllMovesHaveInverses() {
 }
 
 
-string Puzzle::toString() {
+inline string Puzzle::toString() {
     string result = "[";
-    for (int i = 0; i < state.size(); i++) {
+    for (size_t i = 0; i < state.size(); i++) {
         if (i != 0) { result += ", "; }
         result += to_string(state[i]);
     }
     return result + "]";
 }
 
-Puzzle::Puzzle() {}
-Puzzle::Puzzle(State s) {
+inline Puzzle::Puzzle() {}
+inline Puzzle::Puzzle(State s) {
     solvedState = s;
     state = s;
 }
 
-void Puzzle::addMove(string name, State move) {
+inline void Puzzle::addMove(string name, State move) {
     validMoves.push_back(move);
     moveNames.push_back(name);
 }
 
-int Puzzle::getMoveID(string name) {
-    for (int i = 0; i < moveNames.size(); i++) {
+inline int Puzzle::getMoveID(string name) {
+    for (size_t i = 0; i < moveNames.size(); i++) {
         if (moveNames[i] == name) return i;
     }
 
     return -1;
 }
 
-std::string Puzzle::getMoveName(int id) { return moveNames[id]; }
+inline std::string Puzzle::getMoveName(int id) { return moveNames[id]; }
 
-std::string Puzzle::getMoveName(State mov) {
-    for (int i = 0; i < validMoves.size(); i++) {
+inline std::string Puzzle::getMoveName(State mov) {
+    for (size_t i = 0; i < validMoves.size(); i++) {
         if (validMoves[i] == mov) return moveNames[i];
     }
     return "";
 }
 
 
-State& Puzzle::getMove(int id) { return validMoves[id]; }
+inline State& Puzzle::getMove(int id) { return validMoves[id]; }
 
-State& Puzzle::getMove(string name) { return validMoves[getMoveID(name)]; }
+inline State& Puzzle::getMove(string name) { return validMoves[getMoveID(name)]; }
 
-vector<uint8_t> Puzzle::compressState(State& s) {
+inline vector<uint8_t> Puzzle::compressState(State& s) {
     vector<uint8_t> result;
-    for (int i = 0; i < s.size(); i++) { result.push_back((uint8_t)(s[i])); }
+    for (size_t i = 0; i < s.size(); i++) { result.push_back((uint8_t)(s[i])); }
     return result;
 }
 
-map<int, int> Puzzle::buildInverseTable() {
+inline map<int, int> Puzzle::buildInverseTable() {
     map<int, int> result;
-    for (int i = 0; i < validMoves.size(); i++) {
-        for (int j = 0; j < validMoves.size(); j++) {
+    for (size_t i = 0; i < validMoves.size(); i++) {
+        for (size_t j = 0; j < validMoves.size(); j++) {
             if ((validMoves[i] + validMoves[j]).isNOP()) {
                 result.insert({i, j});
                 break;
@@ -92,32 +94,32 @@ map<int, int> Puzzle::buildInverseTable() {
     return result;
 }
 
-uint64_t Puzzle::getChecksum() const {
+inline uint64_t Puzzle::getChecksum() const {
     const uint64_t goldenRatioConstant = 0x9e3779b97f4a7c15;
     uint64_t result = 0;
 
     result ^= solvedState.toHash();
 
-    for (int i = 0; i < validMoves.size(); i++) {
+    for (size_t i = 0; i < validMoves.size(); i++) {
         result ^= validMoves[i].toHash() * ((goldenRatioConstant << i) | (goldenRatioConstant >> (64 - i)));
     }
 
     return result;
 }
 
-void Puzzle::applyMoves(string str) {
+inline void Puzzle::applyMoves(string str) {
     if (state.size() != solvedState.size()) { state = solvedState; }
     std::regex regex{R"([\s]+)"}; // split on space
     std::sregex_token_iterator it{str.begin(), str.end(), regex, -1};
     std::vector<std::string> moves{it, {}};
 
-    for (int i = 0; i < moves.size(); i++) { this->state += getMove(moves[i]); }
+    for (size_t i = 0; i < moves.size(); i++) { this->state += getMove(moves[i]); }
 }
 
-void Puzzle::keepOnlyMoves(set<string> keep) {
+inline void Puzzle::keepOnlyMoves(set<string> keep) {
     vector<string> newMoveNames;
     vector<State> newMoveSates;
-    for (int i = 0; i < validMoves.size(); i++) {
+    for (size_t i = 0; i < validMoves.size(); i++) {
         if (keep.count(moveNames[i])) {
             newMoveNames.push_back(moveNames[i]);
             newMoveSates.push_back(validMoves[i]);
@@ -127,10 +129,10 @@ void Puzzle::keepOnlyMoves(set<string> keep) {
     validMoves = newMoveSates;
 }
 
-void Puzzle::deleteMoves(set<string> discard) {
+inline void Puzzle::deleteMoves(set<string> discard) {
     vector<string> newMoveNames;
     vector<State> newMoveSates;
-    for (int i = 0; i < validMoves.size(); i++) {
+    for (size_t i = 0; i < validMoves.size(); i++) {
         if (!discard.count(moveNames[i])) {
             newMoveNames.push_back(moveNames[i]);
             newMoveSates.push_back(validMoves[i]);
@@ -140,45 +142,45 @@ void Puzzle::deleteMoves(set<string> discard) {
     validMoves = newMoveSates;
 }
 
-void Puzzle::deleteMove(string m) { deleteMoves({m}); }
+inline void Puzzle::deleteMove(string m) { deleteMoves({m}); }
 
-void Puzzle::keepOnlyMoves(string allowedMoves) {
+inline void Puzzle::keepOnlyMoves(string allowedMoves) {
     std::regex regex{R"([\s]+)"}; // split on space
     std::sregex_token_iterator it{allowedMoves.begin(), allowedMoves.end(), regex, -1};
     std::set<std::string> movesToInit{it, {}};
     keepOnlyMoves(movesToInit);
 }
 
-void Puzzle::deleteMoves(string movesDenied) {
+inline void Puzzle::deleteMoves(string movesDenied) {
     std::regex regex{R"([\s]+)"}; // split on space
     std::sregex_token_iterator it{movesDenied.begin(), movesDenied.end(), regex, -1};
     std::set<std::string> movesToBlock{it, {}};
     deleteMoves(movesToBlock);
 }
 
-Puzzle& Puzzle::operator=(initializer_list<int> il) {
+inline Puzzle& Puzzle::operator=(initializer_list<int> il) {
     state = il;
     return *this;
 }
 
-int& Puzzle::operator[](int i) { return state[i]; }
+inline int& Puzzle::operator[](int i) { return state[i]; }
 
-Puzzle::operator State() { return state; }
+inline Puzzle::operator State() { return state; }
 
-std::set<std::string> Puzzle::getMoves() {
+inline std::set<std::string> Puzzle::getMoves() {
     std::set<std::string> r;
     r.insert(moveNames.begin(), moveNames.end());
     return r;
 }
 
-Puzzle Puzzle::makeUniqueStickers() {
+inline Puzzle Puzzle::makeUniqueStickers() {
     Puzzle res = *this;
     for (size_t i = 0; i < solvedState.size(); i++) { res.solvedState[i] = i; }
     res.state = res.solvedState;
     return res;
 }
 
-std::vector<std::vector<int>> Puzzle::getStickerSets() {
+inline std::vector<std::vector<int>> Puzzle::getStickerSets() {
     std::vector<std::vector<int>> result;
     State before = makeUniqueStickers();
     for (auto m : validMoves) {
@@ -212,7 +214,7 @@ std::vector<std::vector<int>> Puzzle::getStickerSets() {
     return result;
 }
 
-std::vector<int> rotateVector(std::vector<int> in, size_t shift) {
+inline std::vector<int> rotateVector(std::vector<int> in, size_t shift) {
     std::vector<int> out;
     size_t idx = shift;
     for (size_t i = 0; i < in.size(); i++) { out.push_back(in[(idx + i) % in.size()]); }
@@ -221,7 +223,7 @@ std::vector<int> rotateVector(std::vector<int> in, size_t shift) {
 
 /// @brief get unique sticker grops by piece type
 /// @return
-std::vector<std::vector<std::vector<int>>> Puzzle::getStickerGroups() {
+inline std::vector<std::vector<std::vector<int>>> Puzzle::getStickerGroups() {
     auto joinTwoStates = [](State one, State two) {
         State result;
         for (size_t i = 0; i < one.size(); i++) {
@@ -299,30 +301,29 @@ std::vector<std::vector<std::vector<int>>> Puzzle::getStickerGroups() {
     );
 
     // TODO: delete this, this makes it easy to debug for now
-    for (auto& grp : result) {
-        for (auto& piece : grp) {
-            size_t maxWeightIdx = 0;
-            int maxWeight = -1;
-            for (size_t i = 0; i < piece.size(); i++) {
-                int newWeight = puzzleOrientationPriority[piece[i]];
-                if (newWeight > maxWeight) {
-                    maxWeight = newWeight;
-                    maxWeightIdx = i;
-                }
-            }
-            piece = rotateVector(piece, maxWeightIdx);
-        }
-    }
+    // for (auto& grp : result) {
+    //     for (auto& piece : grp) {
+    //         size_t maxWeightIdx = 0;
+    //         int maxWeight = -1;
+    //         for (size_t i = 0; i < piece.size(); i++) {
+    //             int newWeight = puzzleOrientationPriority[piece[i]];
+    //             if (newWeight > maxWeight) {
+    //                 maxWeight = newWeight;
+    //                 maxWeightIdx = i;
+    //             }
+    //         }
+    //         piece = rotateVector(piece, maxWeightIdx);
+    //     }
+    // }
 
     return result;
 }
 
 // given a piece type (corner, edge ...) and a list of colors, return the id of the piece
-std::map<std::pair<int, std::vector<int>>, std::vector<int>> Puzzle::getStickerMap() {
+inline std::map<std::pair<int, std::vector<int>>, std::vector<int>> Puzzle::getStickerMap() {
     std::vector<std::vector<std::vector<int>>> pieceTypes = getStickerGroups();
 
     std::map<std::pair<int, std::vector<int>>, std::vector<int>> result;
-    int pieceId = 0;
     for (size_t pieceType = 0; pieceType < pieceTypes.size(); pieceType++) {
         auto& pieces = pieceTypes[pieceType];
         for (auto& piece : pieces) {
@@ -339,7 +340,7 @@ std::map<std::pair<int, std::vector<int>>, std::vector<int>> Puzzle::getStickerM
     return result;
 }
 
-State Puzzle::getPieceState(State s) {
+inline State Puzzle::getPieceState(State s) {
     State result = s;
     for (size_t i = 0; i < s.size(); i++) { result[i] = -1; }
     std::map<std::pair<int, std::vector<int>>, std::vector<int>> m = getStickerMap();
@@ -355,8 +356,7 @@ State Puzzle::getPieceState(State s) {
                 colors = rotateVector(colors, 1);
                 piece = rotateVector(piece, 1);
                 if (m.count({pieceType, colors})) {
-                    for(size_t pn = 0; pn < piece.size(); pn++)
-                        result[piece[pn]] = m[{pieceType, colors}][pn];
+                    for (size_t pn = 0; pn < piece.size(); pn++) result[piece[pn]] = m[{pieceType, colors}][pn];
                     break;
                 }
             }
@@ -366,62 +366,9 @@ State Puzzle::getPieceState(State s) {
     return result;
 }
 
-Puzzle Puzzle::getPiecePuzzle() {
+inline Puzzle Puzzle::getPiecePuzzle() {
     Puzzle result = *this;
     result.solvedState = getPieceState(solvedState);
     result.state = getPieceState(state);
     return result;
 }
-
-#include <stickersolve/puzzles/Solver3x3.h>
-
-int main2() {
-    Puzzle3x3 p("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'");
-
-    auto r = p.getStickerGroups();
-    for (auto& grp : r) {
-        for (auto& piece : grp) {
-            cout << "[";
-            for (auto& sticker : piece) { cout << sticker << ' '; }
-            cout << "\e[D] ";
-        }
-        cout << endl;
-    }
-
-    auto m = p.getStickerMap();
-    for (auto [k, v] : m) {
-        cout << "[" << k.first << ": ";
-        for (auto c : k.second) cout << c << ",";
-        cout << "\e[D] = [";
-        for (auto sId : v) cout << sId << " ";
-        cout << "\e[D] " << endl;
-    }
-
-    auto pp = p.getPiecePuzzle();
-    cout << pp.toString() << endl;
-    return 0;
-}
-
-Puzzle Puzzle::getPermutationPuzzle() {
-    return state;
-    // auto sets = p.getStickerMap();
-    // for (auto [si, i] : sets) {
-    //     cout << i << ": ";
-    //     for (auto s : si) { cout << s << " "; }
-    //     cout << endl;
-    // }
-    // cout << "done\n";
-    // return 0;
-}
-
-Puzzle Puzzle::getOrientationPuzzle() {
-    return state;
-    // auto sets = p.getStickerSets();
-    // for (auto si : sets) {
-    //     for (auto s : si) { cout << s << " "; }
-    //     cout << endl;
-    // }
-    // cout << "done\n";
-    // return 0;
-}
-

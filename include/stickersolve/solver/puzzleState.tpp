@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cmath>
 #include <iostream>
 #include <map>
@@ -25,6 +27,7 @@ State operator+(State left, State right) {
 
 State operator*(State left, int right) {
     auto result = left;
+    if(right == 0) return left.getNOP();
     for (int i = 1; i < right; i++) { result += left; }
     return result;
 }
@@ -55,9 +58,16 @@ State operator!(State t) {
 }
 
 bool State::isNOP() {
-    for (size_t i = 0; i < this->size(); i++)
+    for (int i = 0; (size_t)i < this->size(); i++)
         if (this->operator[](i) != i) return false;
     return true;
+}
+
+State State::getNOP() {
+    State result(size());
+    for (int i = 0; (size_t)i < this->size(); i++)
+        result[i] = i;
+    return result;
 }
 
 uint64_t State::toHash() const {
