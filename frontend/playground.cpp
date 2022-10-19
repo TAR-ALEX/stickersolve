@@ -42,15 +42,18 @@ int main2() {
 
 int main() {
     Puzzle3x3 p("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'");
-    State puzzleMask = {
-        0,  1,  2,  3,  -1,  3,  2,  1,  0,  //
-        -1, -1, -1, 12, -1, 12, -1, -1, -1, //
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, //
-        -1, -1, -1, 12, -1, 12, -1, -1, -1, //
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, //
-        0,  1,  2,  3,  -1, 3,  2,  1,  0,  //
-    };
-    Puzzle3x3 s1 = p.getPiecePuzzle();
+    State recolorMask = {
+            0,  1,  2,  3,  4, 3,  2,  1,  0,  //
+            27, 28, 29, 12, 13, 12, 29, 28, 27, //
+            36, 37, 20, 41, 22, 41, 20, 37, 36, //
+            27, 28, 29, 12, 31, 12, 29, 28, 27, //
+            36, 37, 20, 41, 40, 41, 20, 37, 36, //
+            0,  1,  2,  3,  49, 3,  2,  1,  0,  //
+        };
+    p.solvedState = recolorMask;
+    p.state = recolorMask;
+    p.generateSymetryTable();
+    Puzzle3x3 s1 = p;
     Puzzle3x3 s2 = s1;
     s1.applyMoves("D R");
     s2.applyMoves("R D");
@@ -58,10 +61,17 @@ int main() {
     cout << s2.toString() << endl;
     cout << "s1 == s1 -> " << (s1.state == s2.state) << endl;
 
+    // s1.state = s1.state.recolor(recolorMask);
+    // s2.state = s2.state.recolor(recolorMask);
 
-    s1.state = p.getUniqueSymetric(s1).recolor(puzzleMask);
-    s2.state = p.getUniqueSymetric(s2).recolor(puzzleMask);
+    State trnsfrm = Puzzle3x3().getMove("x2") + Puzzle3x3().getMove("z");
+    // s2.state = (s2.state + trnsfrm).recolor(trnsfrm);
+    // s2.state = s2.state.recolor(recolorMask);
 
+    s1.state = p.getUniqueSymetric(s1.state);
+    s2.state = p.getUniqueSymetric(s2.state);
+
+cout << trnsfrm.toString() << endl;
     cout << s1.toString() << endl;
     cout << s2.toString() << endl;
     cout << "s1 == s1 -> " << (s1.state == s2.state) << endl;

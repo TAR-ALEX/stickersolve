@@ -272,28 +272,68 @@ public:
     //recolorPuzzleToStandardOrientation
     State recolorPuzzleSO() { return this->state; }
 
-    State getUniqueSymetric(State s) {
-        // return s;
-        // static int counter = 0;
-        // if(counter <= 100)
-        //     std::cout << "in sym " << counter++ << "\n";
-        // Thank you http://kociemba.org for documenting this
+public:
+    std::vector<std::pair<State, std::vector<int>>> symetryTable = {};
+    void generateSymetryTable() {
         static State S_URF3 = Puzzle3x3().getMove("x") + Puzzle3x3().getMove("y");
         static State S_F2 = Puzzle3x3().getMove("z2"); // check axis 4 times
         static State S_U4 = Puzzle3x3().getMove("y");  // do a z
-        // static State S_LR2; // needs recolor
-        State minState = s;
+
+        std::vector<State> rotationTables;
+        std::vector<State> stateTables;
+        State symetry;
+
+        auto checkDuplicateStates = [&] {
+            State s = stateTables.back();
+            for (size_t i = 0; i < stateTables.size() - 1; i++) {
+                if (stateTables[i] == s) return true;
+                if (solvedState == s) return true;
+            }
+            return false;
+        };
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 2; j++) {
                 for (int k = 0; k < 4; k++) {
-                    State symetry = (S_URF3 * i) + (S_F2 * j) + (S_U4 * k);
-                    symetry = (s - symetry).recolor(symetry);
-                    //cout << symetry.toString() << endl;
-
-                    if(symetry < minState) minState = symetry;
+                    rotationTables.push_back((S_URF3 * i) + (S_F2 * j) + (S_U4 * k));
+                    stateTables.push_back(solvedState + rotationTables.back());
+                    // if (checkDuplicateStates()) {
+                    //     rotationTables.pop_back();
+                    //     stateTables.pop_back();
+                    // }
                 }
             }
         }
-        return minState;
+
+        auto genRecolor = [&](State from, State to) {
+            std::vector<int> recolorMask;
+
+            for (size_t i = 0; i < from.size(); i++) {
+                if ((int)recolorMask.size() < from[i] + 1) recolorMask.resize(from[i] + 1, -1);
+                if (from[i] < 0) throw std::runtime_error("negative values");
+                if (recolorMask[from[i]] != -1 && recolorMask[from[i]] != to[i])
+                    throw std::runtime_error(
+                        "conflicting values for recolor from[" + std::to_string(i) + "] = " + std::to_string(from[i]) + ", " +
+                        "to[" + std::to_string(i) + "] = " + std::to_string(to[i])
+                    );
+                recolorMask[from[i]] = to[i];
+            }
+            return recolorMask;
+        };
+        symetryTable.clear();
+        for (size_t i = 0; i < stateTables.size(); i++) {
+            symetryTable.push_back({rotationTables[i], genRecolor(stateTables[i], solvedState)});
+        }
+    }
+
+public:
+    State getUniqueSymetric(State s) {
+        State min = s;
+        State tst;
+        for (size_t i = 0; i < symetryTable.size(); i++) {
+            auto [t, r] = symetryTable[i];
+            tst = s.recolor(r)+t;
+            if (tst < min) min = tst;
+        }
+        return min;
     }
 };

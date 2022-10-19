@@ -57,6 +57,7 @@ int main() {
 
         auto slnQ = solver.asyncSolveStrings(p, 16, -1);
         try {
+            // while (slnQ->hasNext()) { slnQ->pop(); }
             while (slnQ->hasNext()) { cout << slnQ->pop() << "\n"; }
         } catch (runtime_error& e) { cout << e.what() << endl; }
 

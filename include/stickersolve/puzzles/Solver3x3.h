@@ -7,40 +7,60 @@
 using namespace std;
 
 namespace PruningFor3x3 {
+
+// --------------------
+// pruning3Color.getStats()
+// --------------------
+// maxDepth = 10
+// Depth 0 has 1.
+// Depth 1 has 1.
+// Depth 2 has 4.
+// Depth 3 has 41.
+// Depth 4 has 467.
+// Depth 5 has 5944.
+// Depth 6 has 76240.
+// Depth 7 has 975216.
+// Depth 8 has 12447938.
+// Depth 9 has 155024032.
+// Depth 10 has 1517943133.
+// Depth 11 has 2608494279.
+// 0.843237 Gb / 2.14748 Gb = 0.392663
+
     struct Mask3Color : public PruningStates<1> {
+        Puzzle3x3 sym;
         State recolorMask = {
-            0,  1,  2,  3,  -1, 3,  2,  1,  0,  //
-            27, 28, 29, 12, -1, 12, 29, 28, 27, //
-            18, 19, 20, 21, -1, 21, 20, 19, 18, //
-            27, 28, 29, 12, -1, 12, 29, 28, 27, //
-            18, 19, 20, 21, -1, 21, 20, 19, 18, //
-            0,  1,  2,  3,  -1, 3,  2,  1,  0,  //
+            0,  1,  2,  3,  4, 3,  2,  1,  0,  //
+            27, 28, 29, 12, 4, 12, 29, 28, 27, //
+            36, 37, 20, 41, 4, 41, 20, 37, 36, //
+            27, 28, 29, 12, 4, 12, 29, 28, 27, //
+            36, 37, 20, 41, 4, 41, 20, 37, 36, //
+            0,  1,  2,  3,  4, 3,  2,  1,  0,  //
         };
-        // virtual State preInsertTransformation(State s){
-        //     static auto pzl = Puzzle3x3();
+        // virtual State preInsertTransformation(State s) {
         //     // return s.recolor(recolorMask);
-        //     return pzl.getUniqueSymetric(s).recolor(recolorMask);
+        //     return sym.getUniqueSymetric(s.recolor(recolorMask));
         // }
-        // virtual State preLookupTransformation(State s){
-        //     static auto pzl = Puzzle3x3();
+        // virtual State preLookupTransformation(State s) {
         //     // return s.recolor(recolorMask);
-        //     return pzl.getUniqueSymetric(s).recolor(recolorMask);
+        //     return sym.getUniqueSymetric(s.recolor(recolorMask));
         // }
-        bool cannotBeSolvedInLimit(int movesAvailable, const State& state) {
+        bool cannotBeSolvedInLimit(int movesAvailable, const State& state) {   
+            // return PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(state.recolor(recolorMask)));
             return PruningStates::cannotBeSolvedInLimit(movesAvailable, state.recolor(recolorMask));
         }
         Mask3Color(estd::joint_ptr<SolverConfig> cfg = nullptr) {
-            this->puzzle =
-                Puzzle3x3{
-                    "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'",
-                }
-                    .getPiecePuzzle();
-            this->puzzle.solvedState = recolorMask;
-            this->puzzle.state = this->puzzle.solvedState;
+            sym = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'").getPiecePuzzle();
+            sym.solvedState = recolorMask;
+            sym.state = recolorMask;
+            this->puzzle = sym;
+            sym.generateSymetryTable();
+            // this->depth = 10;
+            // this->hashSize = 32;
             this->depth = 9;
             this->hashSize = 30;
             this->cfg = cfg;
-            this->path = "Mask3Color-nosym.table";
+            // this->path = "Mask3Color-sym.table";
+            this->path = "Mask3Color.table";
         }
     };
     struct Mask3ColorB : public PruningStates<0> {
@@ -300,10 +320,10 @@ public:
         if (pruningTableClassic.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true;
 
         if (movesAvailable >= 8 && pruning3ColorB.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; //
-        if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; // 10.7 [4.29]
         if (pruningRing.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true;   // 9.69
 
         if (testTable.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; // 10.35 [7.41]
+        if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; // 10.7 [4.29]
 
         return false;
     }

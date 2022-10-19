@@ -19,16 +19,23 @@ public:
     State recolor(const vector<int>& colorMap) const {
         State result = *this;
         for (size_t i = 0; i < size(); i++) {
-            if ((*this)[i] >= 0 && (*this)[i] < colorMap.size()) result[i] = colorMap[(*this)[i]];
+            if ((*this)[i] >= 0 && (*this)[i] < (int)colorMap.size()) result[i] = colorMap[(*this)[i]];
         }
         return result;
     }
-    void inverseRecolor(const vector<int>& colorMapInv) {
-        vector<int> colorMap;
-        colorMap.resize(colorMapInv.size());
-        for (size_t i = 0; i < colorMapInv.size(); i++) { colorMap[colorMapInv[i]] = i; }
-        *this = recolor(colorMap);
+    State recolor(map<int, int>& colorMap) const {
+        State result = *this;
+        for (size_t i = 0; i < size(); i++) {
+            if ((*this)[i] >= 0 && (*this)[i] < (int)colorMap.size()) result[i] = colorMap[(*this)[i]];
+        }
+        return result;
     }
+    // void inverseRecolor(const vector<int>& colorMapInv) {
+    //     vector<int> colorMap;
+    //     colorMap.resize(colorMapInv.size());
+    //     for (size_t i = 0; i < colorMapInv.size(); i++) { colorMap[colorMapInv[i]] = i; }
+    //     *this = recolor(colorMap);
+    // }
     bool isNOP();
     State getNOP();
     State applyMask(State m) {

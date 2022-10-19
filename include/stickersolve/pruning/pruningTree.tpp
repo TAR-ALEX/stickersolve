@@ -380,7 +380,7 @@ void PruningStates<width>::generateLevelSingleThread(
     int numChoices = validMoves.size();
 
     for (;;) {
-        if ((int) moves.size() < targetDepth) {
+        if ((int)moves.size() < targetDepth) {
             moves.push_back(0);
             ss.emplace_back();
         } else {
@@ -396,6 +396,7 @@ void PruningStates<width>::generateLevelSingleThread(
         }
 
         int movesLeft = targetDepth - moves.size();
+
         for (;;) {
             if (moves.back() >= numChoices) goto retard;
 
@@ -405,12 +406,20 @@ void PruningStates<width>::generateLevelSingleThread(
             }
 
             ss.back() = ss.rbegin()[1] + validMoves[moves.back()];
+            // if (ss.back() == puzzle.solvedState) {
+            //     moves.back()++;
+            //     continue;
+            // }
+
             break;
         }
 
-        if (ss.back() == puzzle.solvedState) { goto retard; }
+        //State s1 = preInsertTransformation(ss.back());
         insert(preInsertTransformation(ss.back()), moves.size());
-        // if (checkVisitedNoUpdate(ss.back(), moves.size())) { goto retard; }
+        // if (checkVisited(s1)) {
+        //     moves.back()++;
+        //     goto advance;
+        // }
     }
 done:
     return;
@@ -450,6 +459,41 @@ void PruningStates<width>::generateLevelMultiThread(
         moves.back()++;
     }
 }
+
+// template <int width>
+// std::set<std::vector<uint8_t>> PruningStates<width>::generateUniqueStates(
+//     int targetDepth, int detachDepth, vector<int> moves, vector<State> ss, vector<State> validMoves
+// ) {
+//     int numChoices = validMoves.size();
+
+//     moves.push_back(0);
+//     ss.emplace_back();
+//     int movesLeft = targetDepth - moves.size();
+//     while (moves.back() < numChoices) {
+//         if (!canDiscardMoves(movesLeft, moves)) {
+//             ss.back() = ss.rbegin()[1] + validMoves[moves.back()];
+//             if (ss.back() == puzzle.solvedState) { // is this needed? solved state can be stored as depth zero
+//                 moves.back()++;
+//                 continue;
+//             }
+//             State trnsfrm = preInsertTransformation(ss.back());
+//             if (checkVisited(trnsfrm, moves.size())) {
+//                 moves.back()++;
+//                 continue;
+//             }
+//             insert(trnsfrm, moves.size());
+
+//             if ((int)moves.size() >= detachDepth) {
+//                 cfg->threadPool->schedule([=] {
+//                     generateLevelSingleThread(targetDepth, moves.size(), moves, ss, validMoves);
+//                 });
+//             } else {
+//                 generateLevelMultiThread(targetDepth, detachDepth, moves, ss, validMoves);
+//             }
+//         }
+//         moves.back()++;
+//     }
+// }
 
 template <int width>
 void PruningStates<width>::generateLevel(int lvl) {
@@ -503,9 +547,16 @@ bool PruningStates<width>::canDiscardMoves(int movesAvailable, const vector<int>
 }
 
 template <int width>
-inline bool PruningStates<width>::checkVisited(State s, int numMoves) {
+inline bool PruningStates<width>::checkVisited(State su) {
+    auto s = puzzle.compressState(su);
+    return visited.count(s);
+}
+
+template <int width>
+inline bool PruningStates<width>::checkVisited(State su, int numMoves) {
     // return false;
     // auto s = preHashTransformation(state);
+    auto s = puzzle.compressState(su);
     if (visited.count(s)) {
         if (numMoves < visited[s]) {
             visited[s] = numMoves;
