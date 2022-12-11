@@ -15,7 +15,7 @@ using namespace std;
 class Puzzle {
 protected:
     // WARNING: This works only when number of stickers is less than 256, (dont use for redundancyTable in the future)
-    vector<uint8_t> compressState(State& s);
+    vector<uint8_t> compressState(const State& s);
 
     vector<State> validMoves;
     vector<string> moveNames;

@@ -26,20 +26,16 @@ private:
     // mutex tableMutex;
     boost::iostreams::mapped_file file;
     void performSizeCheck();
-    std::map<std::vector<uint8_t>, int> visited;
+    int visited2depth;
+    std::map<State, uint8_t> visited2;
+    // std::set<State> visited2;
     bool checkVisited(State s, int numMoves);
-    bool checkVisited(State s);
     void generate();
     void generateLevel(int lvl);
-    void generateLevelSingleThread(
-        int targetDepth, int initialDepth, vector<int> moves, vector<State> ss, vector<State> validMoves
+    void genLev(
+        int targetDepth, int initialDepth, State state, vector<State>& validMoves
     );
-    void generateLevelMultiThread(
-        int targetDepth, int detachDepth, vector<int> moves, vector<State> ss, vector<State> validMoves
-    );
-    std::set<std::vector<uint8_t>> generateUniqueStates(
-        int targetDepth, int detachDepth, vector<int> moves, vector<State> ss, vector<State> validMoves
-    );
+    void generateUniqueStates(std::map<State, uint8_t>& states, int depth);
     uint64_t discardBits = 64;
     void initHashMask();
     uint8_t* data = nullptr;

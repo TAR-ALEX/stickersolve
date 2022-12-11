@@ -66,6 +66,10 @@ public:
 
         for (auto e : strs) push_back(mapping[e]);
     }
+    // State(const vector<uint8_t>& compr) {
+    //    reserve(compr.size());
+    //    for(const uint8_t& e: compr) push_back(e);
+    // }
     string toString();
     uint64_t toHash() const;
 };

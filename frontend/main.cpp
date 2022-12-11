@@ -55,7 +55,7 @@ int main() {
         // auto solutions = solver.solve(p, 14, -1); //16
         // cout << solutions;
 
-        auto slnQ = solver.asyncSolveStrings(p, 16, -1);
+        auto slnQ = solver.asyncSolveStrings(p, 14, -1);
         try {
             // while (slnQ->hasNext()) { slnQ->pop(); }
             while (slnQ->hasNext()) { cout << slnQ->pop() << "\n"; }

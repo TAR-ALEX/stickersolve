@@ -75,7 +75,7 @@ inline State& Puzzle::getMove(int id) { return validMoves[id]; }
 
 inline State& Puzzle::getMove(string name) { return validMoves[getMoveID(name)]; }
 
-inline vector<uint8_t> Puzzle::compressState(State& s) {
+inline vector<uint8_t> Puzzle::compressState(const State& s) {
     vector<uint8_t> result;
     for (size_t i = 0; i < s.size(); i++) { result.push_back((uint8_t)(s[i])); }
     return result;

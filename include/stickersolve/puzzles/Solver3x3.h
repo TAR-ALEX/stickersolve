@@ -36,17 +36,17 @@ namespace PruningFor3x3 {
             36, 37, 20, 41, 4, 41, 20, 37, 36, //
             0,  1,  2,  3,  4, 3,  2,  1,  0,  //
         };
-        // virtual State preInsertTransformation(State s) {
-        //     // return s.recolor(recolorMask);
-        //     return sym.getUniqueSymetric(s.recolor(recolorMask));
-        // }
+        virtual State preInsertTransformation(State s) {
+            // return s.recolor(recolorMask);
+            return sym.getUniqueSymetric(s.recolor(recolorMask));
+        }
         // virtual State preLookupTransformation(State s) {
         //     // return s.recolor(recolorMask);
         //     return sym.getUniqueSymetric(s.recolor(recolorMask));
         // }
         bool cannotBeSolvedInLimit(int movesAvailable, const State& state) {   
-            // return PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(state.recolor(recolorMask)));
-            return PruningStates::cannotBeSolvedInLimit(movesAvailable, state.recolor(recolorMask));
+            return PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(state.recolor(recolorMask)));
+            // return PruningStates::cannotBeSolvedInLimit(movesAvailable, state.recolor(recolorMask));
         }
         Mask3Color(estd::joint_ptr<SolverConfig> cfg = nullptr) {
             sym = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'").getPiecePuzzle();
@@ -59,8 +59,8 @@ namespace PruningFor3x3 {
             this->depth = 9;
             this->hashSize = 30;
             this->cfg = cfg;
-            // this->path = "Mask3Color-sym.table";
-            this->path = "Mask3Color.table";
+            this->path = "Mask3Color-sym2.table";
+            // this->path = "Mask3Color.table";
         }
     };
     struct Mask3ColorB : public PruningStates<0> {
@@ -200,6 +200,8 @@ namespace PruningFor3x3 {
             this->hashSize = 32;
             this->cfg = cfg;
             this->path = "Mask3ColorCornersEO.table";
+            //old = 138.008 seconds
+            //new = 519.932 seconds
         }
     };
     struct Mask3ColorP : public PruningStates<2> {
@@ -319,7 +321,7 @@ public:
 
         if (pruningTableClassic.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true;
 
-        if (movesAvailable >= 8 && pruning3ColorB.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; //
+        // if (movesAvailable >= 8 && pruning3ColorB.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; //
         if (pruningRing.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true;   // 9.69
 
         if (testTable.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; // 10.35 [7.41]

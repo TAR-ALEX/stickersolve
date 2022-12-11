@@ -16,6 +16,6 @@ public:
     bool useMmapForPruning = false;
     SolverConfig() {
         int hwt = (int)std::thread::hardware_concurrency();
-        if (hwt != 0) threadPool = estd::thread_pool{hwt};
+        if (hwt != 0) threadPool = estd::thread_pool{hwt+1};
     }
 };
