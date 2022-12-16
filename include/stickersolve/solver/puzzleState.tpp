@@ -38,7 +38,7 @@ State operator-(State left, State right) {
     for (size_t i = 0; i < left.size(); i++) { delta[right[i]] = left[i]; }
 
     return delta;
-    return left + (!right);
+    // return left + (!right);
 }
 
 State& operator+=(State& left, const State& right) {

@@ -45,8 +45,10 @@ int main() {
             Y, Y, Y, Y, Y, Y, Y, Y, Y  // z diag
         };
 
-        //p.applyMoves("F U' F2 D' B U R' F' L D' R' U' L U B' D2 R' F U2 D2");
-        // p.applyMoves("U2 L2 R2 B2 R2 D2 B' D2 R2 B D2 L' F2 D' L' F L' D' L");// new test
+        // p.applyMoves("R U2 R2 L2 D L' F' R' L D2 R2 L2 U' L F L'"); // 6 flip
+        // p.applyMoves("R D R2 U2 F' L F' L2 U R2 L2 F2 L2 F2 U2 F2 D L2 B' U2");// 1 solution 17
+        // p.applyMoves("R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'"); // nperm
+        // p.applyMoves("D' L' D' L U2 R' F2 L2 U' L' D' F D' F' U L U2 R' U'"); // depth 18 done in 70.64 s
         // cout << p.toString() << endl;
 
         solver.init();
@@ -56,27 +58,18 @@ int main() {
         // cout << solutions;
 
         auto slnQ = solver.asyncSolveStrings(p, 14, -1);
+        // ofstream ff("all_superflip.txt");
         try {
             // while (slnQ->hasNext()) { slnQ->pop(); }
             while (slnQ->hasNext()) { cout << slnQ->pop() << "\n"; }
+            // while (slnQ->hasNext()) { auto sol = slnQ->pop(); ff << sol << "\n";cout << sol << "\n";}
         } catch (runtime_error& e) { cout << e.what() << endl; }
 
         string tmp = "";
         // while (*slnQ >> tmp) { cout << tmp << "\n"; }
 
         cout << slnQ->numResults() << "\n"; //140
-
-        //z diag
-
-        //14 -> 1.1 seconds.
-        //15 -> 14.6 seconds
-        //16 -> 192 seconds
-
-        //14 -> 1.1 seconds.
-        //15 -> 12.9 seconds
-        //16 -> 165 seconds
-
-        //14.3 sec
+        
         return 0;
     } catch (runtime_error& e) {
         cout << e.what();

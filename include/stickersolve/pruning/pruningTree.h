@@ -27,15 +27,15 @@ private:
     boost::iostreams::mapped_file file;
     void performSizeCheck();
     int visited2depth;
-    std::map<State, uint8_t> visited2;
-    // std::set<State> visited2;
+    // std::map<State, uint8_t> visited2;
+    std::set<State> visited2;
     bool checkVisited(State s, int numMoves);
     void generate();
     void generateLevel(int lvl);
     void genLev(
-        int targetDepth, int initialDepth, State state, vector<State>& validMoves
+        int targetDepth, int initialDepth, State state, vector<int> moves, vector<State>& validMoves
     );
-    void generateUniqueStates(std::map<State, uint8_t>& states, int depth);
+    void generateUniqueStates(std::set<State>& dups, std::deque<std::pair<State, std::vector<int>>>& detach, int depth);
     uint64_t discardBits = 64;
     void initHashMask();
     uint8_t* data = nullptr;

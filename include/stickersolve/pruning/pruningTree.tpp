@@ -372,28 +372,36 @@ void PruningStates<width>::generate() {
 }
 
 template <int width>
-void PruningStates<width>::generateUniqueStates(std::map<State, uint8_t>& states, int depth) {
-    states[puzzle.solvedState] = 0;
+void PruningStates<width>::generateUniqueStates(std::set<State>& states, std::deque<std::pair<State, std::vector<int>>>& detach, int depth) {
+    states.insert(puzzle.solvedState);
     insert(puzzle.solvedState, 0);
-
-    std::map<State, uint8_t> tmp;
+    if(detach.empty()) detach.push_back({puzzle.solvedState,{}});
 
     std::vector<State> validMoves = puzzle.validMoves;
     for (auto& move : validMoves) move = !move;
 
-    for (auto& start : states) {
-        for (auto& move : validMoves) {
-            State end = preInsertTransformation(start.first + move);
-            if (!tmp.count(end)) tmp[end] = depth;
-            insert(end, depth);
+    size_t detachOriginalSize = detach.size();
+
+    for (size_t i = 0; i < detachOriginalSize; i++){
+        auto& start = detach.front();
+        for (size_t j = 0; j < validMoves.size(); j++) {
+            auto& move = validMoves[j];
+            State end = (start.first + move);//preInsertTransformation
+            State trnsfrm = preInsertTransformation(end);
+
+            
+            if (!states.count(trnsfrm)) {
+                states.insert(trnsfrm);
+                std::vector<int> moves = start.second;
+                moves.push_back(j);
+                detach.push_back({end,moves});
+                insert(trnsfrm, depth);
+            }
+           
         }
+        detach.pop_front();
     }
 
-    while (!tmp.empty()) {
-        auto it = tmp.begin();
-        states.insert(*it);
-        tmp.erase(it);
-    }
 }
 
 // template <int width>
@@ -413,8 +421,8 @@ void PruningStates<width>::generateUniqueStates(std::map<State, uint8_t>& states
 // }
 
 template <int width>
-void PruningStates<width>::genLev(int targetDepth, int initialDepth, State start, vector<State>& validMoves) {
-    vector<int> moves;
+void PruningStates<width>::genLev(int targetDepth, int initialDepth, State start, vector<int> moves, vector<State>& validMoves) {
+    
     moves.reserve(targetDepth - initialDepth);
     stack<State> ss;
     ss.push(start);
@@ -431,7 +439,7 @@ void PruningStates<width>::genLev(int targetDepth, int initialDepth, State start
         if (canDiscardMoves(targetDepth - currentDepth, moves)) { goto retardNoPop; }
         ss.push(ss.top() + validMoves[moves.back()]);
         transformedState = preInsertTransformation(ss.top());
-        if (visited2.count(transformedState)) goto retard;
+        //if (visited2.count(transformedState)) goto retard;
         insert(transformedState, currentDepth);
         if (currentDepth >= targetDepth) { goto retard; }
         //goto advance;
@@ -454,7 +462,7 @@ void PruningStates<width>::genLev(int targetDepth, int initialDepth, State start
         if (canDiscardMoves(targetDepth - currentDepth, moves)) { goto retardNoPop; }
         ss.push(ss.top() + validMoves[moves.back()]);
         transformedState = preInsertTransformation(ss.top());
-        if (visited2.count(transformedState)) continue; // goto retard
+        //if (visited2.count(transformedState)) continue; // goto retard
         insert(transformedState, currentDepth);
 
         if (currentDepth < targetDepth) goto advance;
@@ -482,11 +490,13 @@ void PruningStates<width>::generateLevel(int lvl) {
 
     visited2depth = 0;
 
+
+    std::deque<std::pair<State, std::vector<int>>> detach{};
     while (visited2.size() * numChoices < size_t((cfg->maxMemoryInGb / 100.0) * 1000000000.0 / 100.0)
     ) { // assume a single scramble is 100 bytes
-        if (visited2depth >= targetDepth - 5) { break; }
+        if (visited2depth >= targetDepth - 3) { break; }
         visited2depth++;
-        generateUniqueStates(visited2, visited2depth);
+        generateUniqueStates(visited2, detach, visited2depth);
         cfg->log << "visited2.depth(): " << visited2depth << endl;
         cfg->log << "visited2.size(): " << visited2.size() << endl;
     }
@@ -494,12 +504,11 @@ void PruningStates<width>::generateLevel(int lvl) {
     cfg->threadPool->schedule([&]() {
         uint64_t percent = 0;
         long t = 0;
-        for (auto& state : visited2) {
-            if (state.second == visited2depth)
-                cfg->threadPool->schedule([&]() { genLev(targetDepth, visited2depth, state.first, validMoves); });
+        for (auto& state : detach) {
+            cfg->threadPool->schedule([&]() { genLev(targetDepth, visited2depth, state.first, state.second, validMoves); });
             t++;
-            if(t*100/visited2.size() > percent){
-                percent = t*100/visited2.size();
+            if(t*100/detach.size() > percent){
+                percent = t*100/detach.size();
                 cfg->log << percent << "%\n";
                 cfg->log << t << "\n";
                 cfg->log << "genLev(" << targetDepth << ", " << visited2depth << ")\n";
