@@ -69,31 +69,28 @@ void PruningStates<width>::insert(State state, int moves) {
 
 
 template <int width>
-bool PruningStates<width>::cannotBeSolvedInLimit(int movesAvailable, State state) {
+int PruningStates<width>::cannotBeSolvedInLimit(int movesAvailable, State state) {
     state = preLookupTransformation(state);
-    if constexpr (width == 2) {
-        if (depth >= movesAvailable) {
+    if (depth >= movesAvailable) {
+        if constexpr (width == 2) {
             auto hash = state.toHash() >> discardBits;
-            return data[hash] > movesAvailable;
-        }
-    } else if constexpr (width == 1) {
-        if (depth >= movesAvailable) {
+            if (data[hash] > movesAvailable) return 1;
+        } else if constexpr (width == 1) {
             auto hash = state.toHash() >> discardBits;
             uint8_t val = data[hash >> 1];
             if (hash & 1) val = val >> 4;
             val &= 0x0F;
-            return val > movesAvailable;
-        }
-    } else if constexpr (width == 0) {
-        if (depth >= movesAvailable) {
+            if (val > movesAvailable) return 1;
+        } else if constexpr (width == 0) {
             auto hash = state.toHash() >> discardBits;
             auto idx = hash >> 3;
             auto bitNum = hash & 0b111; // 111 binary
             auto bitMask = 1 << bitNum;
-            return (data[idx] & bitMask) == 0; // if not in the table we cannot solve it
+            if ((data[idx] & bitMask) == 0) return 1; // if not in the table we cannot solve it
         }
+        return -1;
     }
-    return false;
+    return 0; // cant use table
 }
 
 
@@ -401,7 +398,6 @@ void PruningStates<width>::generateUniqueStates(std::set<State>& states, std::de
         }
         detach.pop_front();
     }
-
 }
 
 // template <int width>
@@ -422,8 +418,7 @@ void PruningStates<width>::generateUniqueStates(std::set<State>& states, std::de
 
 template <int width>
 void PruningStates<width>::genLev(int targetDepth, int initialDepth, State start, vector<int> moves, vector<State>& validMoves) {
-    
-    moves.reserve(targetDepth - initialDepth);
+    moves.reserve(targetDepth);
     stack<State> ss;
     ss.push(start);
 
@@ -523,9 +518,4 @@ void PruningStates<width>::generateLevel(int lvl) {
 template <int width>
 bool PruningStates<width>::canDiscardMoves(int movesAvailable, const vector<int>& moves) {
     return redundancyTableInverse.contains(moves);
-}
-
-template <int width>
-inline bool PruningStates<width>::checkVisited(State su, int numMoves) {
-    return visited2.count(su);
 }

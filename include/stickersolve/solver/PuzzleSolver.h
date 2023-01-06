@@ -20,32 +20,13 @@ using namespace std;
 
 class Solver {
 private:
+    volatile bool terminateEarly = false;
     int numStickers = 1;
 
     void calculateStickerWidth();
 
     virtual void localInit();
     virtual void localInitReverse();
-
-    void rawSolveMulti(
-        vector<State> ss,
-        int targetDepth,
-        int detachDepth,
-        vector<int> moves,
-        shared_ptr<estd::thread_safe_queue<vector<int>>>& gSolutions,
-        volatile bool& stop,
-        unsigned int numberOfSolutionsToGet = -1
-    );
-
-    void rawSolveRegular(
-        vector<State> ss,
-        int depth,
-        int startDepth,
-        vector<int> moves,
-        shared_ptr<estd::thread_safe_queue<vector<int>>>& gSolutions,
-        volatile bool& stop,
-        unsigned int numberOfSolutionsToGet = -1
-    );
 
     void rawSolve(
         shared_ptr<estd::thread_safe_queue<vector<int>>>,
@@ -54,25 +35,32 @@ private:
         bool inverse = false,
         unsigned int numberOfSolutionsToGet = -1
     );
-
-    void rawSolveMultiInverse(
-        vector<State> ss,
+    template<bool removeSymetry = false>
+    void generateUniqueStates(
+        State initial, std::set<State>& states, std::deque<std::pair<State, std::vector<int>>>& detach, int depth, int targetDepth
+    );
+    void genLev(
+        shared_ptr<estd::thread_safe_queue<vector<int>>> solutions,
         int targetDepth,
-        int detachDepth,
+        int initialDepth,
+        State state,
         vector<int> moves,
-        shared_ptr<estd::thread_safe_queue<vector<int>>>& gSolutions,
+        vector<State>& validMoves,
         volatile bool& stop,
         unsigned int numberOfSolutionsToGet = -1
     );
 
 protected:
+    Puzzle puzzle; // reference puzzle that the solver is capable of solving, only used for getting the moves
+    inline virtual State preInsertTransformation(State s) { return s; };//TODO: delete this
     virtual bool canDiscardPosition(int movesAvailable, const State& state);
     virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves);
-    Puzzle puzzle;
     virtual void initReverse(){}; // move to public once working
     virtual State preSolveTransform(State s1) { return s1; }
 
 public:
+    std::function<void(int)> progressCallback = [](int){};
+    inline void cancel() {terminateEarly = true;}
     estd::joint_ptr<SolverConfig> cfg = new SolverConfig();
 
     shared_ptr<estd::thread_safe_queue<vector<string>>> asyncSolveVectors(

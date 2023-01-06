@@ -264,6 +264,7 @@ public:
         Puzzle3x3 result = *this;
         result.solvedState = getPieceState(solvedState);
         result.state = getPieceState(state);
+        result.generateSymetryTable();
         return result;
     }
 

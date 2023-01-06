@@ -25,6 +25,110 @@ void printMoves(vector<string>& moveNames, vector<int> moves) {
     cout << endl;
 }
 
+template<bool removeSymetry>
+void Solver::generateUniqueStates(
+    State initial, std::set<State>& states, std::deque<std::pair<State, std::vector<int>>>& detach, int depth, int targetDepth
+) {
+    states.insert(initial);
+    if (detach.empty()) detach.push_back({initial, {}});
+
+    std::vector<State> validMoves = puzzle.validMoves;
+
+    size_t detachOriginalSize = detach.size();
+
+    for (size_t i = 0; i < detachOriginalSize; i++) {
+        auto& start = detach.front();
+        for (size_t j = 0; j < validMoves.size(); j++) {
+            if(terminateEarly) return;
+            auto& move = validMoves[j];
+            std::vector<int> moves = start.second;
+            moves.push_back(j);
+            if (canDiscardMoves(targetDepth - depth, moves)) { continue; }
+            State end = (start.first + move);
+            State trnsfrm;
+            if constexpr(removeSymetry){
+                trnsfrm = preInsertTransformation(end);
+            }else{
+                trnsfrm = end;
+            }
+
+
+            if (!states.count(trnsfrm)) {
+                states.insert(trnsfrm);
+                detach.push_back({end, moves});
+            }
+        }
+        detach.pop_front();
+    }
+}
+
+void Solver::genLev(
+    shared_ptr<estd::thread_safe_queue<vector<int>>> solutions,
+    int targetDepth,
+    int initialDepth,
+    State start,
+    vector<int> moves,
+    vector<State>& validMoves,
+    volatile bool& stop,
+    unsigned int numberOfSolutionsToGet
+) {
+    // if(targetDepth < initialDepth) return;
+    State final = puzzle.solvedState;
+    moves.reserve(targetDepth);
+    stack<State> ss;
+    ss.push(start);
+
+    int numChoices = validMoves.size();
+
+    int currentDepth = initialDepth;
+
+    for (;;) {
+    advance:
+        if (stop) return;
+        moves.push_back(0);
+        currentDepth++;
+        if (canDiscardMoves(targetDepth - currentDepth, moves)) { goto retardNoPop; }
+        ss.push(ss.top() + validMoves[moves.back()]);
+        if (canDiscardPosition(targetDepth - currentDepth, ss.top())) { goto retard; }
+        if (ss.top() == final) {
+            if (solutions->numResults() < numberOfSolutionsToGet) {
+                solutions->push(moves);
+                if (solutions->numResults() >= numberOfSolutionsToGet) stop = true;
+            }
+        }
+        if (currentDepth >= targetDepth) { goto retard; }
+        //goto advance;
+    }
+
+    for (;;) {
+    retard:
+        ss.pop();
+    retardNoPop:
+        moves.back()++; // first that doesn't break criteria
+
+        if (moves.back() >= numChoices) {
+            moves.pop_back();
+            currentDepth--;
+
+            if (currentDepth <= initialDepth) return;
+
+            continue; // goto retard;
+        }
+        if (canDiscardMoves(targetDepth - currentDepth, moves)) { goto retardNoPop; }
+        ss.push(ss.top() + validMoves[moves.back()]);
+        if (canDiscardPosition(targetDepth - currentDepth, ss.top())) { goto retard; }
+        if (ss.top() == final) {
+            if (solutions->numResults() < numberOfSolutionsToGet) {
+                solutions->push(moves);
+                if (solutions->numResults() >= numberOfSolutionsToGet) stop = true;
+            }
+        }
+
+        if (currentDepth < targetDepth) goto advance;
+        //goto retard;
+    }
+}
+
 void Solver::rawSolve(
     shared_ptr<estd::thread_safe_queue<vector<int>>> solutions,
     State initial,
@@ -44,203 +148,72 @@ void Solver::rawSolve(
 
     int numChoices = puzzle.validMoves.size();
 
-    int detachDepth = 0;
-    int detachWidth = 1;
+    std::deque<std::pair<State, std::vector<int>>> detach{};
+    std::set<State> visited2{};
+    size_t visited2depth = 0;
 
-    while (detachWidth < cfg->threadPool->getNumThreads()) {
-        detachWidth *= numChoices;
-        detachDepth++;
-        if (detachDepth >= targetDepth) { break; }
-    }
-
-    detachDepth += 3;
-    detachWidth *= numChoices * numChoices * numChoices;
 
 
     cfg->log << "Starting solver with " << cfg->threadPool->getNumThreads() << " threads\n";
-    cfg->log << "detach depth = " << detachDepth << "\n";
-    cfg->log << "detach width = " << detachWidth << "\n";
-    cfg->log << "----------------------------------------------------\n";
+
 
     auto start = high_resolution_clock::now();
 
     vector<int> moves;
     vector<State> ss;
     ss.push_back(initial);
-    volatile bool terminateEarly = false;
-
-    if (inverse) {
-        rawSolveMultiInverse(ss, targetDepth, detachDepth, moves, solutions, terminateEarly, numberOfSolutionsToGet);
-    } else {
-        cfg->threadPool->schedule([&] {
-            rawSolveMulti(ss, targetDepth, detachDepth, moves, solutions, terminateEarly, numberOfSolutionsToGet);
-        });
-        cfg->threadPool->wait();
+    terminateEarly = false;
+    while (visited2.size() * numChoices < size_t((cfg->maxMemoryInGb / 100.0) * 1000000000.0 / 100.0)
+    ) { // assume a single scramble is 100 bytes
+        if (visited2depth >= targetDepth - 3) { break; }
+        visited2depth++;
+        if(numberOfSolutionsToGet == 1){
+            generateUniqueStates<true>(initial, visited2, detach, visited2depth, targetDepth);
+        }else{
+            generateUniqueStates<false>(initial, visited2, detach, visited2depth, targetDepth);
+        }
+        cfg->log << "visited2.depth(): " << visited2depth << endl;
+        cfg->log << "visited2.size(): " << visited2.size() << endl;
     }
 
-    solutions->close();
+    // cfg->log << "detach depth = " << visited2depth << "\n";
+    // cfg->log << "detach width = " << detach.size() << "\n";
+    cfg->log << "----------------------------------------------------\n";
+
+    cfg->threadPool->schedule([&]() {
+        uint64_t percent = 0;
+        long t = 0;
+        for (auto& state : detach) {
+            if(terminateEarly) break;
+            cfg->threadPool->schedule([&]() {
+                genLev(
+                    solutions,
+                    targetDepth,
+                    visited2depth,
+                    state.first,
+                    state.second,
+                    puzzle.validMoves,
+                    terminateEarly,
+                    numberOfSolutionsToGet
+                );
+            });
+            t++;
+            if (t * 99 / detach.size() > percent) {
+                percent = t * 99 / detach.size();
+                progressCallback(percent);
+            }
+        }
+    });
+
+    cfg->threadPool->wait();
+    progressCallback(100);
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<chrono::duration<double>>(stop - start);
 
     cfg->log << "Solving took: " << duration.count() << " seconds.\n";
     cfg->log << "----------------------------------------------------\n";
-}
-
-
-void Solver::rawSolveMultiInverse(
-    vector<State> ss,
-    int targetDepth,
-    int detachDepth,
-    vector<int> moves,
-    shared_ptr<estd::thread_safe_queue<vector<int>>>& gSolutions,
-    volatile bool& stop,
-    unsigned int numberOfSolutionsToGet
-) {
-    if (!puzzle.checkIfAllMovesHaveInverses()) {
-        throw runtime_error(
-            string() + "The provided puzzle does not have inverses for every single move, " +
-            "this makes it a bad candidate for generator scrambles, a separate pruning table would " +
-            "be required and might be supported in the future."
-        );
-    }
-    rawSolveMulti(ss, targetDepth, detachDepth, moves, gSolutions, stop, numberOfSolutionsToGet);
-    // auto inverse = puzzle.buildInverseTable();
-    cfg->threadPool->wait();
-
-    throw runtime_error(string() + "TODO: implement reverse queue processor");
-    // for(auto& solution : gSolutions){
-    // 	// Flip the order
-    // 	reverse(solution.begin(),solution.end());
-    // 	// Flip the move
-    // 	for(int i = 0; i < solution.size(); i++) solution[i] = inverse[solution[i]];
-    // }
-}
-
-void Solver::rawSolveMulti(
-    vector<State> ss,
-    int targetDepth,
-    int detachDepth,
-    vector<int> moves,
-    shared_ptr<estd::thread_safe_queue<vector<int>>>& gSolutions,
-    volatile bool& stop,
-    unsigned int numberOfSolutionsToGet
-) {
-    if (targetDepth <= 0) return;
-
-    State final = puzzle.solvedState;
-
-
-    int numChoices = puzzle.validMoves.size();
-
-    moves.push_back(0);
-    ss.emplace_back();
-    int movesLeft = targetDepth - moves.size();
-    while (moves.back() < numChoices) {
-        if (canDiscardMoves(movesLeft, moves)) {
-            moves.back()++;
-            continue;
-        }
-
-        ss.back() = ss.rbegin()[1] + puzzle.validMoves[moves.back()];
-
-        if (canDiscardPosition(movesLeft, ss.back())) {
-            moves.back()++;
-            continue;
-        }
-
-        if (stop) return;
-
-        if (ss.back() == final) {
-            if (gSolutions->numResults() < numberOfSolutionsToGet) {
-                gSolutions->push(moves); // slim chance that you may get more solutions
-                stop = true;
-                continue;
-            } else {
-                return;
-            }
-        }
-
-        if ((int)moves.size() >= detachDepth) {
-            cfg->threadPool->schedule([&gSolutions, &stop, ss, moves, targetDepth, numberOfSolutionsToGet, this] {
-                rawSolveRegular(ss, targetDepth, moves.size(), moves, gSolutions, stop, numberOfSolutionsToGet);
-            });
-        } else {
-            rawSolveMulti(ss, targetDepth, detachDepth, moves, gSolutions, stop, numberOfSolutionsToGet);
-        }
-        moves.back()++;
-    }
-}
-
-//( vector<State> ss, int targetDepth, int startDepth, vector<int> moves, unsigned int numberOfSolutionsToGet )
-
-void Solver::rawSolveRegular(
-    vector<State> ss,
-    int targetDepth,
-    int startDepth,
-    vector<int> moves,
-    shared_ptr<estd::thread_safe_queue<vector<int>>>& solutions,
-    volatile bool& stop,
-    unsigned int numberOfSolutionsToGet
-) {
-    if (targetDepth <= 0) return;
-
-    State final = puzzle.solvedState;
-
-    moves.reserve(targetDepth);
-
-    int numChoices = puzzle.validMoves.size();
-
-    // basically a counting algorithm with carry rippled over.
-    for (;;) {
-        if ((int)moves.size() < targetDepth) {
-            moves.push_back(0);
-            ss.emplace_back();
-        } else {
-            moves.back()++;
-        }
-
-        while ((int)moves.back() >= numChoices) {
-        retard:
-            ss.pop_back();
-            moves.pop_back();
-            if ((int)moves.size() <= startDepth) { goto done; }
-            moves.back()++;
-        }
-        int movesLeft = targetDepth - moves.size();
-        for (;;) {
-            if (moves.back() >= numChoices) goto retard;
-
-            if (canDiscardMoves(movesLeft, moves)) {
-                moves.back()++;
-                continue;
-            }
-
-            ss.back() = ss.rbegin()[1] + puzzle.validMoves[moves.back()];
-
-            if (canDiscardPosition(movesLeft, ss.back())) {
-                moves.back()++;
-                continue;
-            }
-
-            break;
-        }
-
-        if (stop) return;
-
-        if (ss.back() == final) {
-            if (solutions->numResults() < numberOfSolutionsToGet) {
-                solutions->push(moves);
-                if (solutions->numResults() >= numberOfSolutionsToGet) stop = true;
-                goto retard;
-            } else {
-                stop = true;
-                goto done;
-            }
-        }
-    }
-done:
-    return;
+    solutions->close();
 }
 
 shared_ptr<estd::thread_safe_queue<vector<string>>> Solver::asyncSolveVectors(

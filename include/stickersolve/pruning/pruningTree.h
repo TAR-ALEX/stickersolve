@@ -29,7 +29,6 @@ private:
     int visited2depth;
     // std::map<State, uint8_t> visited2;
     std::set<State> visited2;
-    bool checkVisited(State s, int numMoves);
     void generate();
     void generateLevel(int lvl);
     void genLev(
@@ -61,7 +60,7 @@ public:
     void load();   // consumes a lot of memory
     void unload(); // frees the memory.
 
-    bool cannotBeSolvedInLimit(int movesAvailable, State hash);
+    int cannotBeSolvedInLimit(int movesAvailable, State hash);
     uint8_t getDistance(State hash);
     inline bool cannotUseTable(int movesAvailable) { return depth < movesAvailable; }
     inline bool canUseTable(int movesAvailable) { return !cannotUseTable(movesAvailable); }

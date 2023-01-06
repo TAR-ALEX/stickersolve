@@ -20,20 +20,20 @@ protected:
     vector<State> validMoves;
     vector<string> moveNames;
 
-    // State puzzleOrientationPriority;
-
-    std::vector<int> prioritizeColors(std::vector<int> in);
-
 public:
+    //returns sets of stickers that always move together
     std::vector<std::vector<int>> getStickerSets();
+    //returns sets of stickers that always move together grouped by piece type, (interchangable sets are in one group)
     std::vector<std::vector<std::vector<int>>> getStickerGroups();
-
+    //returns a map that can map each piece type to unique stickers
     std::map<std::pair<int, std::vector<int>>, std::vector<int>> getStickerMap();
+    //returns the puzzle where each sticker has a unique number ascending order based on the solved state. 
+    //(if it is impossible to identify a unique sticker, will give the same id, 
+    //in this case the puzzle can have more than one solved state, and is not invertable)
+    Puzzle makeUniqueStickers();
 
     State state;
-    State solvedState;
-
-    Puzzle makeUniqueStickers();
+    State solvedState;  
 
     vector<int> invertMoves(vector<int>);
     uint64_t getChecksum() const;
@@ -68,7 +68,7 @@ public:
     Puzzle getPiecePuzzle();
 
     void applyMoves(string moves);
-    State getUniqueSymetric(State s) {return s;}
+    virtual State getUniqueSymetric(State s) {return s;}
 
     string toString();
 

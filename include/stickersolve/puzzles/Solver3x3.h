@@ -29,7 +29,7 @@ namespace PruningFor3x3 {
         virtual State preInsertTransformation(State s) {
             return sym.getUniqueSymetric(s);
         }
-        bool cannotBeSolvedInLimit(int movesAvailable, const State& state) {   
+        int cannotBeSolvedInLimit(int movesAvailable, const State& state) {   
             // return PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(state.recolor(recolorMask)));
             return PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(state));
             // return PruningStates::cannotBeSolvedInLimit(movesAvailable, state.recolor(recolorMask));
@@ -59,7 +59,7 @@ namespace PruningFor3x3 {
         virtual State preInsertTransformation(State s) {
             return sym.getUniqueSymetric(s);
         }
-        bool cannotBeSolvedInLimit(int movesAvailable, const State& state) {   
+        int cannotBeSolvedInLimit(int movesAvailable, const State& state) {   
             return PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(state.recolor(recolorMask)));
         }
         Mask3Color(estd::joint_ptr<SolverConfig> cfg = nullptr) {
@@ -87,19 +87,21 @@ namespace PruningFor3x3 {
         virtual State preInsertTransformation(State s) {
             return sym.getUniqueSymetric(s);
         }
-        bool cannotBeSolvedInLimit(int movesAvailable, const State& state) {
+        int cannotBeSolvedInLimit(int movesAvailable, const State& state) {
             static auto rotX = Puzzle3x3().getMove("x");
             static auto rotXp = Puzzle3x3().getMove("x'");
             static auto rotZ = Puzzle3x3().getMove("z");
             static auto rotZp = Puzzle3x3().getMove("z'");
             State tmp = state;
-
-            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(tmp.recolor(recolorMask)))) return true;
+            switch(PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(tmp.recolor(recolorMask)))){
+                case 1: return 1;
+                case 0: return 0;
+            }
             tmp = (state + rotX).recolor(rotXp);
-            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(tmp.recolor(recolorMask)))) return true;
+            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(tmp.recolor(recolorMask))) == 1) return 1;
             tmp = (state + rotZ).recolor(rotZp);
-            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(tmp.recolor(recolorMask)))) return true;
-            return false;
+            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(tmp.recolor(recolorMask))) == 1) return 1;
+            return -1;
         }
         MaskRing(estd::joint_ptr<SolverConfig> cfg = nullptr) {
             sym = Puzzle3x3{
@@ -137,7 +139,7 @@ public:
         // for(auto m: puzzle.getMoves()) cout << m << " "; cout << endl;
         cout << puzzle.toString() << endl;
 
-        redundancyTable.depth = 3;
+        redundancyTable.depth = 3;//3
         redundancyTable.puzzle = puzzle;
         redundancyTable.cfg = cfg;
 
@@ -155,7 +157,7 @@ public:
 
     void init() {
         redundancyTable.load();
-        pruningTableClassic.load();
+        // pruningTableClassic.load();
         pruning3Color.load();
         // pruning3ColorB.load();
         // pruningRing.load();
@@ -171,11 +173,16 @@ public:
             ss << "\n--------------------\n";
         };
         printStat("redundancyTable.getStats()", redundancyTable.getStats());
-        printStat("pruningTableClassic.getStats()", pruningTableClassic.getStats());
+        // printStat("pruningTableClassic.getStats()", pruningTableClassic.getStats());
         printStat("pruning3Color.getStats()", pruning3Color.getStats());
         printStat("testTable.getStats()", testTable.getStats());
 
         return ss.str();
+    }
+    Puzzle3x3 sym = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'").getPiecePuzzle();
+
+    virtual State preInsertTransformation(State s) {
+        return sym.getUniqueSymetric(s);
     }
 
     virtual State preSolveTransform(State s1) {
@@ -191,16 +198,12 @@ public:
     virtual bool canDiscardPosition(int movesAvailable, const State& stateReal) {
         if (movesAvailable <= 2) return false;
 
-        if (pruningTableClassic.canUseTable(movesAvailable)){
-            if (pruningTableClassic.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true;
-        }else{
-            if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; // 10.7 [4.29]
-            // if (movesAvailable >= 8 && pruning3ColorB.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; //
-            if (testTable.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; // 10.35 [7.41]
-            
-            // if (pruningRing.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true;   // 9.69
-            // if (testTable.cannotBeSolvedInLimit(movesAvailable, stateReal)) return true; // 10.35 [7.41]
-        }
+        // switch (pruningTableClassic.cannotBeSolvedInLimit(movesAvailable, stateReal)) {
+        //     case 1: return true;
+        //     case 0:
+                if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, stateReal) == 1) return true; // 10.7 [4.29]
+                if (testTable.cannotBeSolvedInLimit(movesAvailable, stateReal) == 1) return true;     // 10.35 [7.41]
+        // }
 
         return false;
     }
