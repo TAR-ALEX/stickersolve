@@ -156,6 +156,19 @@ public:
     }
 
     void init() {
+        int progress1 = 0;
+        int progress2 = 0;
+
+        pruning3Color.progressCallback = [&](int p){
+            progress1 = p;
+            tableProgressCallback((progress1 + progress2)/2);
+        };
+        testTable.progressCallback = [&](int p){
+            progress2 = p;
+            tableProgressCallback((progress1 + progress2)/2);
+        };
+        
+
         redundancyTable.load();
         // pruningTableClassic.load();
         pruning3Color.load();

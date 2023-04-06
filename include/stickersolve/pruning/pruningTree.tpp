@@ -167,14 +167,27 @@ void PruningStates<width>::load() {
             }
             infile.read((char*)stats.data(), sizeof(stats.data()) * stats.size());
 
-
-            if (!(infile.read((char*)data, siz))) { // read up to the size of the buffer
-                if (!infile.eof()) {
-                    stringstream ss;
-                    ss << "error: table (" << path << ") is not of the exact length.";
-                    throw runtime_error(ss.str());
+            progressCallback(0);
+            for (int percent = 0; percent < 100; percent++) {
+                size_t lastLoadedSize = siz*(percent)/100;
+                size_t loadedSize = siz*(percent+1)/100;
+                if (!(infile.read((char*)data+lastLoadedSize, loadedSize-lastLoadedSize))) { 
+                    if (!infile.eof()) {
+                        stringstream ss;
+                        ss << "error: table (" << path << ") is not of the exact length.";
+                        throw runtime_error(ss.str());
+                    }
                 }
+                progressCallback(percent+1);
             }
+
+            // if (!(infile.read((char*)data, siz))) { // read up to the size of the buffer
+            //     if (!infile.eof()) {
+            //         stringstream ss;
+            //         ss << "error: table (" << path << ") is not of the exact length.";
+            //         throw runtime_error(ss.str());
+            //     }
+            // }
         } else {
             cfg->log << "Pruning table (" << path
                      << ") exists, opening it as a memory mapped file (size=" << estimateSizeInGb() << "Gb)...\n";
@@ -255,6 +268,7 @@ void PruningStates<width>::load() {
         generate();
 
         if (!cfg->useMmapForPruning && this->path != "") {
+            boost::filesystem::create_directories(cfg->pruiningTablesPath);
             cfg->log << "\nSaving table (" << path << ").\n";
             ofstream file(path, std::ios::binary);
             uint64_t checksum = getChecksum();
@@ -263,6 +277,7 @@ void PruningStates<width>::load() {
             file.write((char*)data, siz);
             file.close();
         }
+        this->progressCallback(100);
     }
 
     cfg->log << "----------------------------------------------------------------\n";
@@ -369,32 +384,33 @@ void PruningStates<width>::generate() {
 }
 
 template <int width>
-void PruningStates<width>::generateUniqueStates(std::set<State>& states, std::deque<std::pair<State, std::vector<int>>>& detach, int depth) {
+void PruningStates<width>::generateUniqueStates(
+    std::set<State>& states, std::deque<std::pair<State, std::vector<int>>>& detach, int depth
+) {
     states.insert(puzzle.solvedState);
     insert(puzzle.solvedState, 0);
-    if(detach.empty()) detach.push_back({puzzle.solvedState,{}});
+    if (detach.empty()) detach.push_back({puzzle.solvedState, {}});
 
     std::vector<State> validMoves = puzzle.validMoves;
     for (auto& move : validMoves) move = !move;
 
     size_t detachOriginalSize = detach.size();
 
-    for (size_t i = 0; i < detachOriginalSize; i++){
+    for (size_t i = 0; i < detachOriginalSize; i++) {
         auto& start = detach.front();
         for (size_t j = 0; j < validMoves.size(); j++) {
             auto& move = validMoves[j];
-            State end = (start.first + move);//preInsertTransformation
+            State end = (start.first + move); //preInsertTransformation
             State trnsfrm = preInsertTransformation(end);
 
-            
+
             if (!states.count(trnsfrm)) {
                 states.insert(trnsfrm);
                 std::vector<int> moves = start.second;
                 moves.push_back(j);
-                detach.push_back({end,moves});
+                detach.push_back({end, moves});
                 insert(trnsfrm, depth);
             }
-           
         }
         detach.pop_front();
     }
@@ -417,7 +433,9 @@ void PruningStates<width>::generateUniqueStates(std::set<State>& states, std::de
 // }
 
 template <int width>
-void PruningStates<width>::genLev(int targetDepth, int initialDepth, State start, vector<int> moves, vector<State>& validMoves) {
+void PruningStates<width>::genLev(
+    int targetDepth, int initialDepth, State start, vector<int> moves, vector<State>& validMoves
+) {
     moves.reserve(targetDepth);
     stack<State> ss;
     ss.push(start);
@@ -500,13 +518,16 @@ void PruningStates<width>::generateLevel(int lvl) {
         uint64_t percent = 0;
         long t = 0;
         for (auto& state : detach) {
-            cfg->threadPool->schedule([&]() { genLev(targetDepth, visited2depth, state.first, state.second, validMoves); });
+            cfg->threadPool->schedule([&]() {
+                genLev(targetDepth, visited2depth, state.first, state.second, validMoves);
+            });
             t++;
-            if(t*100/detach.size() > percent){
-                percent = t*100/detach.size();
-                cfg->log << percent << "%\n";
-                cfg->log << t << "\n";
-                cfg->log << "genLev(" << targetDepth << ", " << visited2depth << ")\n";
+            if (t * 99 / detach.size() > percent) {
+                percent = t * 99 / detach.size();
+                this->progressCallback(percent);
+                // cfg->log << percent << "%\n";
+                // cfg->log << t << "\n";
+                // cfg->log << "genLev(" << targetDepth << ", " << visited2depth << ")\n";
             }
         }
         cfg->log << "done\n";

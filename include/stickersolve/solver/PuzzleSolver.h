@@ -25,8 +25,8 @@ private:
 
     void calculateStickerWidth();
 
-    virtual void localInit();
-    virtual void localInitReverse();
+    void localInit();
+    void localInitReverse();
 
     void rawSolve(
         shared_ptr<estd::thread_safe_queue<vector<int>>>,
@@ -60,6 +60,7 @@ protected:
 
 public:
     std::function<void(int)> progressCallback = [](int){};
+    std::function<void(int)> tableProgressCallback = [](int){};
     inline void cancel() {terminateEarly = true;}
     estd::joint_ptr<SolverConfig> cfg = new SolverConfig();
 

@@ -25,9 +25,13 @@ void printMoves(vector<string>& moveNames, vector<int> moves) {
     cout << endl;
 }
 
-template<bool removeSymetry>
+template <bool removeSymetry>
 void Solver::generateUniqueStates(
-    State initial, std::set<State>& states, std::deque<std::pair<State, std::vector<int>>>& detach, int depth, int targetDepth
+    State initial,
+    std::set<State>& states,
+    std::deque<std::pair<State, std::vector<int>>>& detach,
+    int depth,
+    int targetDepth
 ) {
     states.insert(initial);
     if (detach.empty()) detach.push_back({initial, {}});
@@ -39,16 +43,16 @@ void Solver::generateUniqueStates(
     for (size_t i = 0; i < detachOriginalSize; i++) {
         auto& start = detach.front();
         for (size_t j = 0; j < validMoves.size(); j++) {
-            if(terminateEarly) return;
+            if (terminateEarly) return;
             auto& move = validMoves[j];
             std::vector<int> moves = start.second;
             moves.push_back(j);
             if (canDiscardMoves(targetDepth - depth, moves)) { continue; }
             State end = (start.first + move);
             State trnsfrm;
-            if constexpr(removeSymetry){
+            if constexpr (removeSymetry) {
                 trnsfrm = preInsertTransformation(end);
-            }else{
+            } else {
                 trnsfrm = end;
             }
 
@@ -167,9 +171,9 @@ void Solver::rawSolve(
     ) { // assume a single scramble is 100 bytes
         if (visited2depth >= targetDepth - 3) { break; }
         visited2depth++;
-        if(numberOfSolutionsToGet == 1){
+        if (numberOfSolutionsToGet == 1) {
             generateUniqueStates<true>(initial, visited2, detach, visited2depth, targetDepth);
-        }else{
+        } else {
             generateUniqueStates<false>(initial, visited2, detach, visited2depth, targetDepth);
         }
         cfg->log << "visited2.depth(): " << visited2depth << endl;
@@ -184,7 +188,7 @@ void Solver::rawSolve(
         uint64_t percent = 0;
         long t = 0;
         for (auto& state : detach) {
-            if(terminateEarly) break;
+            if (terminateEarly) break;
             cfg->threadPool->schedule([&]() {
                 genLev(
                     solutions,

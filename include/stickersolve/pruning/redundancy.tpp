@@ -229,6 +229,7 @@ inline void RedundancyTable::load() {
         // create table and save it
         puzzle = puzzle.makeUniqueStickers();
         generate();
+        boost::filesystem::create_directories(cfg->pruiningTablesPath);
         cfg->log << "Saving table (" << path << ").\n";
 
         ofstream file(path, std::ios::binary);

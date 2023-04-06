@@ -44,6 +44,8 @@ private:
     vector<uint64_t> stats = vector<uint64_t>(256, 0);
 
 public:
+    std::function<void(int)> progressCallback = [](int){};
+
     uint64_t getChecksum();
     double estimateSizeInGb();
 

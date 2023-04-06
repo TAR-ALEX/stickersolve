@@ -50,11 +50,10 @@ int main() {
         // p.applyMoves("R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'"); // nperm
         p.applyMoves("D' L' D' L U2 R' F2 L2 U' L' D' F D' F' U L U2 R' U'"); // depth 18 done in 70.64 s 232 s laptop
         // cout << p.toString() << endl;
-
+        solver.tableProgressCallback = [&](int p) { solver.cfg->log << "table: " << p << "%\n"; };
+        solver.progressCallback = [&](int p) { solver.cfg->log << "solver: " << p << "%\n"; };
         solver.init();
-        solver.progressCallback = [&](int p){
-                solver.cfg->log << p << "%\n";
-        };
+
 
         cout << solver.printTableStats();
 
@@ -73,7 +72,7 @@ int main() {
         // while (*slnQ >> tmp) { cout << tmp << "\n"; }
 
         cout << slnQ->numResults() << "\n"; //140
-        
+
         return 0;
     } catch (runtime_error& e) {
         cout << e.what();
