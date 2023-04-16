@@ -73,5 +73,3 @@ public:
     string toString();
     uint64_t toHash() const;
 };
-
-#include <stickersolve/solver/puzzleState.tpp>

@@ -4,14 +4,12 @@
 using namespace std::chrono;
 
 #include <stickersolve/puzzles/Solver3x3.h>
-#include <stickersolve/solver/puzzle.h>
 
 using namespace std;
 
 
 #include <algorithm>
 #include <iomanip>
-#include <stickersolve/solver/PuzzleSolver.h>
 
 int main() {
     cerr << "----------------------------------------------------------------\n";

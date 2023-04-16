@@ -22,6 +22,9 @@ include_directories(
   "./include"
   "./vendor/include"
 ) 
+
+set(CMAKE_BUILD_WITH_INSTALL_RPATH on)
+set(CMAKE_INSTALL_RPATH "./vendor/lib" "./lib")
 link_directories(${PROJECT_SOURCE_DIR}/vendor/lib)
 
 file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/include/*.h" "${PROJECT_SOURCE_DIR}/include/*.hpp" "${PROJECT_SOURCE_DIR}/include/*.cpp" "${PROJECT_SOURCE_DIR}/include/*.tpp")

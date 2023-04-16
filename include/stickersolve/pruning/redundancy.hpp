@@ -41,5 +41,3 @@ public:
 
     string getStats();
 };
-
-#include <stickersolve/pruning/redundancy.tpp>

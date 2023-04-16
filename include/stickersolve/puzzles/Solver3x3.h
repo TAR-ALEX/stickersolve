@@ -1,8 +1,8 @@
 #pragma once
 
 #include <regex>
+#include <stickersolve.h>
 #include <stickersolve/puzzles/Puzzle3x3.h>
-#include <stickersolve/solver/PuzzleSolver.h>
 
 using namespace std;
 

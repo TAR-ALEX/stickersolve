@@ -10,6 +10,7 @@
 #include <set>
 #include <stickersolve/config.hpp>
 #include <stickersolve/pruning/redundancy.hpp>
+#include <stickersolve/solver/PuzzleSolver.h>
 #include <stickersolve/solver/puzzle.h>
 #include <stickersolve/solver/puzzleState.h>
 #include <vector>
@@ -31,9 +32,7 @@ private:
     std::set<State> visited2;
     void generate();
     void generateLevel(int lvl);
-    void genLev(
-        int targetDepth, int initialDepth, State state, vector<int> moves, vector<State>& validMoves
-    );
+    void genLev(int targetDepth, int initialDepth, State state, vector<int> moves, vector<State>& validMoves);
     void generateUniqueStates(std::set<State>& dups, std::deque<std::pair<State, std::vector<int>>>& detach, int depth);
     uint64_t discardBits = 64;
     void initHashMask();
@@ -44,11 +43,12 @@ private:
     vector<uint64_t> stats = vector<uint64_t>(256, 0);
 
 public:
-    std::function<void(int)> progressCallback = [](int){};
+    std::function<void(int)> progressCallback = [](int) {};
 
     uint64_t getChecksum();
     double estimateSizeInGb();
 
+    // PruningStates(Solver* s);
     virtual ~PruningStates() { unload(); }
 
     int redundancyInverseDepth = 5;
@@ -71,5 +71,3 @@ public:
 
     string getStats();
 };
-
-#include <stickersolve/pruning/pruningTree.tpp>

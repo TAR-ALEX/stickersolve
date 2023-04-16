@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <stickersolve/solver/puzzleState.h>
+#include <stickersolve.h>
 
 using namespace std;
 
