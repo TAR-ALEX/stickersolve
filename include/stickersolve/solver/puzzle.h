@@ -68,7 +68,8 @@ public:
     Puzzle getPiecePuzzle();
 
     void applyMoves(string moves);
-    virtual State getUniqueSymetric(State s) {return s;}
+    virtual State getUniqueSymetric(const State& s) {return s;}
+    virtual State getStandardOrientation(const State& s) {return s;}
 
     string toString();
 

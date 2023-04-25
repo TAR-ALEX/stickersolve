@@ -76,6 +76,8 @@
         "valarray": "cpp",
         "variant": "cpp",
         "*.tpp": "cpp",
-        "*.h": "cpp"
+        "*.h": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp"
     }
 }

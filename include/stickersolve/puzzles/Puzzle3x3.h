@@ -267,14 +267,9 @@ public:
         result.generateSymetryTable();
         return result;
     }
-
-    //rotatePuzzleToStandardOrientation
-    State rotatePuzzleSO() { return this->state; }
-    //recolorPuzzleToStandardOrientation
-    State recolorPuzzleSO() { return this->state; }
-
 public:
     std::vector<std::pair<State, std::vector<int>>> symetryTable = {};
+    std::unordered_map<uint16_t, State> standardOrientationTable = {};
     void generateSymetryTable() {
         static State S_URF3 = Puzzle3x3().getMove("x") + Puzzle3x3().getMove("y");
         static State S_F2 = Puzzle3x3().getMove("z2"); // check axis 4 times
@@ -299,7 +294,9 @@ public:
                 for (int k = 0; k < 4; k++) {
                     for (int m = 0; m < 2; m++) {
                         rotationTables.push_back((S_URF3 * i) + (S_F2 * j) + (S_U4 * k) + (S_MIRROR_L_R * m));
-                        stateTables.push_back(solvedState + rotationTables.back());
+                        State rr = solvedState + rotationTables.back();
+                        stateTables.push_back(rr);
+                        if (m == 0) standardOrientationTable[55 * rr[4] + rr[13]] = !rotationTables.back();
                         // if (checkDuplicateStates()) {
                         //     rotationTables.pop_back();
                         //     stateTables.pop_back();
@@ -317,8 +314,9 @@ public:
                 if (from[i] < 0) throw std::runtime_error("negative values");
                 if (recolorMask[from[i]] != -1 && recolorMask[from[i]] != to[i])
                     throw std::runtime_error(
-                        "conflicting values for recolor from[" + std::to_string(from[i]) + "] = " + std::to_string(recolorMask[from[i]]) + ", " +
-                        "to[" + std::to_string(from[i]) + "] = " + std::to_string(to[i])
+                        "conflicting values for recolor from[" + std::to_string(from[i]) +
+                        "] = " + std::to_string(recolorMask[from[i]]) + ", " + "to[" + std::to_string(from[i]) +
+                        "] = " + std::to_string(to[i])
                     );
                 recolorMask[from[i]] = to[i];
             }
@@ -326,22 +324,25 @@ public:
         };
         symetryTable.clear();
         for (size_t i = 0; i < stateTables.size(); i++) {
-            try{
+            try {
                 symetryTable.push_back({rotationTables[i], genRecolor(stateTables[i], solvedState)});
                 // std::cout << "sym: " << i <<std::endl;
-            }catch(std::runtime_error& e){
+            } catch (std::runtime_error& e) {
                 // std::cout << e.what() <<std::endl;
             }
         }
     }
 
 public:
-    State getUniqueSymetric(State s) {
+    State getStandardOrientation(const State& s) {
+        return s + standardOrientationTable[55 * s[4] + s[13]];
+    }
+    State getUniqueSymetric(const State& s) {
         State min = s;
         int minVal = INT_MAX;
         State tst;
         std::vector<size_t> continueSearch = {};
-        continueSearch.reserve(symetryTable.size()/2);
+        continueSearch.reserve(symetryTable.size() / 2);
         // for (size_t i = 0; i < symetryTable.size(); i++) {
         //     auto& [t, r] = symetryTable[i];
         //     tst = s.recolor(r)+t;
@@ -352,42 +353,40 @@ public:
         for (size_t j = 0; j < symetryTable.size(); j++) {
             auto& [t, r] = symetryTable[j];
             int sticker = r[s[t[0]]];
-            if(sticker < minVal) {
+            if (sticker < minVal) {
                 minVal = sticker;
                 continueSearch.clear();
                 continueSearch.push_back(j);
-            }
-            else if(sticker == minVal){
+            } else if (sticker == minVal) {
                 continueSearch.push_back(j);
             }
         }
 
         for (size_t i = 1; i < s.size(); i++) {
             std::vector<size_t> continueSearchCpy;
-            continueSearchCpy.reserve(symetryTable.size()/2);
+            continueSearchCpy.reserve(symetryTable.size() / 2);
             std::swap(continueSearchCpy, continueSearch);
             minVal = INT_MAX;
             for (auto& srch : continueSearchCpy) {
                 auto& [t, r] = symetryTable[srch];
                 int sticker = r[s[t[i]]];
-                if(sticker < minVal) {
+                if (sticker < minVal) {
                     minVal = sticker;
                     continueSearch.clear();
                     continueSearch.push_back(srch);
-                }
-                else if(sticker == minVal){
+                } else if (sticker == minVal) {
                     continueSearch.push_back(srch);
                 }
             }
 
-            if(continueSearch.size()==1) {
+            if (continueSearch.size() == 1) {
                 auto& [t, r] = symetryTable[continueSearch[0]];
-                return s.recolor(r)+t;
+                return s.recolor(r) + t;
             }
         }
 
 
         auto& [t, r] = symetryTable[continueSearch[0]];
-        return s.recolor(r)+t;
+        return s.recolor(r) + t;
     }
 };
