@@ -14,11 +14,12 @@ using namespace std;
 int main() {
     cerr << "----------------------------------------------------------------\n";
     try {
-        Solver3x3 solver("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'");
+        // Solver3x3 solver("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'");
+        Solver3x3 solver;
 
         solver.cfg->pruiningTablesPath = "./tables";
 
-        Puzzle p = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'");
+        Puzzle p = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B' M");//M M2 M' S S2 S' E E2 E'
 
         // cout << p.toString() << endl;
 
@@ -53,7 +54,7 @@ int main() {
         solver.init();
 
 
-        cout << solver.printTableStats();
+        // cout << solver.printTableStats();
 
         // auto solutions = solver.solve(p, 14, -1); //16
         // cout << solutions;

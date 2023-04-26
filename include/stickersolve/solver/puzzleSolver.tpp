@@ -135,12 +135,22 @@ void Solver::genLev(
 
 void Solver::rawSolve(
     shared_ptr<estd::thread_safe_queue<vector<int>>> solutions,
-    State initial,
+    Puzzle ppzl,
     int targetDepth,
     bool inverse,
     unsigned int numberOfSolutionsToGet
 ) {
-    initial = preSolveTransform(initial);
+    ppzl.state = preSolveTransform(ppzl.state);
+    ppzl.solvedState = preSolveTransform(ppzl.solvedState);
+
+    puzzle = ppzl;
+    // for(auto e: puzzle.getMoves()) std::cout << e << " ";
+    // std::cout << "\n";
+    // for(auto e: ppzl.getMoves()) std::cout << e << " ";
+    // std::cout << "\n";
+    // exit(0);
+
+    State initial = puzzle.state;
 
     if (inverse) {
         localInitReverse();
@@ -227,7 +237,7 @@ shared_ptr<estd::thread_safe_queue<vector<string>>> Solver::asyncSolveVectors(
         std::make_shared<estd::thread_safe_queue<vector<int>>>();
     shared_ptr<estd::thread_safe_queue<vector<string>>> formattedSolutions =
         std::make_shared<estd::thread_safe_queue<vector<string>>>();
-    thread solver([=] { rawSolve(solutions, initial.state, depth, false, numberOfSolutionsToGet); });
+    thread solver([=] { rawSolve(solutions, initial, depth, false, numberOfSolutionsToGet); });
     solver.detach();
     thread converter([=] {
         try {
@@ -251,7 +261,7 @@ shared_ptr<estd::thread_safe_queue<string>> Solver::asyncSolveStrings(
         std::make_shared<estd::thread_safe_queue<vector<int>>>();
     shared_ptr<estd::thread_safe_queue<string>> formattedSolutions =
         std::make_shared<estd::thread_safe_queue<string>>();
-    thread solver([=] { rawSolve(solutions, initial.state, depth, false, numberOfSolutionsToGet); });
+    thread solver([=] { rawSolve(solutions, initial, depth, false, numberOfSolutionsToGet); });
     solver.detach();
     thread converter([=] {
         vector<int> elements;
@@ -259,7 +269,7 @@ shared_ptr<estd::thread_safe_queue<string>> Solver::asyncSolveStrings(
             string formattedSolution;
             for (size_t i = 0; i < elements.size(); i++) {
                 if (i != 0) formattedSolution += " ";
-                formattedSolution += puzzle.moveNames[elements[i]];
+                formattedSolution += initial.moveNames[elements[i]];
             }
             *formattedSolutions << formattedSolution;
         }
@@ -273,13 +283,13 @@ vector<vector<string>> Solver::solveVectors(Puzzle initial, int targetDepth, uns
     shared_ptr<estd::thread_safe_queue<vector<int>>> solutionsRaw =
         std::make_shared<estd::thread_safe_queue<vector<int>>>();
     //   auto solutionsQ = asyncSolveVectors(initial, targetDepth, numberOfSolutionsToGet);
-    rawSolve(solutionsRaw, initial.state, targetDepth, false, numberOfSolutionsToGet);
+    rawSolve(solutionsRaw, initial, targetDepth, false, numberOfSolutionsToGet);
     solutionsRaw->wait(); // not needed
     vector<vector<string>> formattedSolutions;
     vector<int> elements;
     while (*solutionsRaw >> elements) {
         vector<string> formattedSolution;
-        for (auto moveId : elements) formattedSolution.push_back(puzzle.moveNames[moveId]);
+        for (auto moveId : elements) formattedSolution.push_back(initial.moveNames[moveId]);
         formattedSolutions.push_back(formattedSolution);
     }
     sort(formattedSolutions.begin(), formattedSolutions.end(), [](const vector<string>& a, const vector<string>& b) {

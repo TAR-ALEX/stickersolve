@@ -9,14 +9,7 @@ using namespace std;
 namespace PruningFor3x3 {
     struct MaskPermutaion : public PruningStates<1> {
         Puzzle3x3 sym;
-        // State recolorMask = {
-        //     0,   1,  2,  3,  4,  5,  6,  7,   8, // regular permutation
-        //     6,   7,  8, 12,  4,  14, 45, 46, 47, //
-        //     8,   5,  2, 14,  4,  30, 47, 50, 53, //
-        //     2,   1,  0, 30,  4,  32, 53, 52, 51, //
-        //     0,   3,  6, 32,  4,  12, 51, 48, 45, //
-        //     45, 46, 47, 48,  4,  50, 51, 52, 53  //
-        // };
+
         State recolorMask = {
             0,  1,  2,  3,  4,  5,  6,  7,  8,  //
             9,  10, 11, 12, 13, 14, 15, 16, 17, //
@@ -32,8 +25,8 @@ namespace PruningFor3x3 {
             return PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(state));
             // return PruningStates::cannotBeSolvedInLimit(movesAvailable, state.recolor(recolorMask));
         }
-        MaskPermutaion(estd::joint_ptr<SolverConfig> cfg = nullptr) {
-            sym = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'").getPiecePuzzle();
+        void init(std::string allowed = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'", std::string prefix = "") {
+            sym = Puzzle3x3(allowed).getPiecePuzzle();
             sym.solvedState = recolorMask;
             sym.state = recolorMask;
             this->puzzle = sym;
@@ -41,8 +34,9 @@ namespace PruningFor3x3 {
             this->depth = 10;
             this->hashSize = 33;
             this->cfg = cfg;
-            this->path = "MaskPermutation.table";
+            this->path = prefix + "MaskPermutation.table";
         }
+        MaskPermutaion() { init(); }
     };
     struct Mask3Color : public PruningStates<0> {
         Puzzle3x3 sym;
@@ -60,8 +54,8 @@ namespace PruningFor3x3 {
                 movesAvailable, sym.getUniqueSymetric(state.recolor(recolorMask))
             );
         }
-        Mask3Color(estd::joint_ptr<SolverConfig> cfg = nullptr) {
-            sym = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'").getPiecePuzzle();
+        void init(std::string allowed = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'", std::string prefix = "") {
+            sym = Puzzle3x3(allowed).getPiecePuzzle();
             sym.solvedState = recolorMask;
             sym.state = recolorMask;
             this->puzzle = sym;
@@ -69,85 +63,32 @@ namespace PruningFor3x3 {
             this->depth = 11;
             this->hashSize = 35;
             this->cfg = cfg;
-            this->path = "Mask3Color.table";
+            this->path = prefix + "Mask3Color.table";
         }
-    };
-    struct MaskRing : public PruningStates<1> {
-        Puzzle3x3 sym;
-        State recolorMask = {
-            0,  1,  2,  3,  4,  3,  6,  1,  8,  //
-            9,  10, 11, 12, 13, 12, 15, 10, 17, //
-            18, 19, 20, 21, 22, 21, 24, 19, 26, //
-            27, 10, 29, 12, 31, 12, 33, 10, 35, //
-            36, 19, 38, 21, 40, 21, 42, 19, 44, //
-            45, 1,  47, 3,  49, 3,  51, 1,  53  //
-        };
-        virtual State preInsertTransformation(State s) { return sym.getUniqueSymetric(s); }
-        int cannotBeSolvedInLimit(int movesAvailable, const State& state) {
-            static auto rotX = Puzzle3x3().getMove("x");
-            static auto rotXp = Puzzle3x3().getMove("x'");
-            static auto rotZ = Puzzle3x3().getMove("z");
-            static auto rotZp = Puzzle3x3().getMove("z'");
-            State tmp = state;
-            switch (
-                PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(tmp.recolor(recolorMask)))
-            ) {
-                case 1: return 1;
-                case 0: return 0;
-            }
-            tmp = (state + rotX).recolor(rotXp);
-            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(tmp.recolor(recolorMask))) ==
-                1)
-                return 1;
-            tmp = (state + rotZ).recolor(rotZp);
-            if (PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(tmp.recolor(recolorMask))) ==
-                1)
-                return 1;
-            return -1;
-        }
-        MaskRing(estd::joint_ptr<SolverConfig> cfg = nullptr) {
-            sym = Puzzle3x3{
-                "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'",
-            };
-            sym.solvedState = recolorMask;
-            sym.state = recolorMask;
-            this->puzzle = sym;
-            sym.generateSymetryTable();
-            this->depth = 10;
-            this->hashSize = 31;
-            this->cfg = cfg;
-            this->path = "MaskRing.table";
-        }
+        Mask3Color() { init(); }
     };
 }; // namespace PruningFor3x3
 
-class Solver3x3 : public Solver {
+template <bool HAS_SLICES = false> // 0 is htm, 1 is stm, 2 is qtm
+class Solver3x3Restricted : public Solver {
+private:
+    string allowedMoves = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'";
+
 public:
     RedundancyTable redundancyTable;
     RedundancyTable redundancyTableInverse;
 
     // PruningStates<2> pruningTableClassic;
     PruningFor3x3::Mask3Color pruning3Color;
-    // PruningFor3x3::MaskRing pruningRing;
     PruningFor3x3::MaskPermutaion testTable;
 
-    // Puzzle3x3 origPuzzle;
-
-    Solver3x3() : Solver3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'"){};
-    Solver3x3(string allowedMoves) : Solver() {
-        // origPuzzle = Puzzle3x3(allowedMoves);
+    Solver3x3Restricted() : Solver() {
+        if (HAS_SLICES)
+            allowedMoves = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B' RL RL2 RL' UD UD2 UD' FB FB2 FB'";
+        else
+            allowedMoves = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'";
         puzzle = Puzzle3x3().getPiecePuzzle();
         puzzle.keepOnlyMoves(allowedMoves);
-        // for(auto m: puzzle.getMoves()) cout << m << " "; cout << endl;
-        // cout << puzzle.toString() << endl;
-
-        redundancyTable.depth = 3; //3
-        redundancyTable.puzzle = puzzle;
-        redundancyTable.cfg = cfg;
-
-        pruning3Color.cfg = cfg;
-        // pruningRing.cfg = cfg;
-        testTable.cfg = cfg;
 
         // pruningTableClassic.puzzle = puzzle;
 
@@ -157,9 +98,16 @@ public:
         // pruningTableClassic.cfg = cfg;
     }
 
+    int progress1 = 0;
+    int progress2 = 0;
+
     void init() {
-        int progress1 = 0;
-        int progress2 = 0;
+        redundancyTable.depth = 3; //3
+        redundancyTable.puzzle = puzzle;
+        redundancyTable.cfg = cfg;
+
+        pruning3Color.cfg = cfg;
+        testTable.cfg = cfg;
 
         pruning3Color.progressCallback = [&](int p) {
             progress1 = p;
@@ -170,6 +118,13 @@ public:
             tableProgressCallback((progress1 + progress2) / 2);
         };
 
+        pruning3Color.init(allowedMoves, HAS_SLICES ? "1" : "0");
+        testTable.init(allowedMoves, HAS_SLICES ? "1" : "0");
+
+        if constexpr (HAS_SLICES) {
+            pruning3Color.depth -= 2;
+            testTable.depth -= 2;
+        }
 
         redundancyTable.load();
         // pruningTableClassic.load();
@@ -199,6 +154,7 @@ public:
     virtual State preInsertTransformation(State s) { return sym.getUniqueSymetric(s); }
 
     virtual State preSolveTransform(State s1) {
+        // do more testing here compare stock piece state to new one
         State s2 = Puzzle3x3().getPieceState(s1);
         cout << s2.toString() << endl;
         return s2;
@@ -210,9 +166,32 @@ public:
 
     virtual bool canDiscardPosition(int movesAvailable, const State& stateReal) {
         if (movesAvailable <= 2) return false;
-        State so = sym.getStandardOrientation(stateReal);
-        if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, so) == 1) return true; // 10.7 [4.29]
-        if (testTable.cannotBeSolvedInLimit(movesAvailable, so) == 1) return true;     // 10.35 [7.41]
-        return false;
+        if constexpr (HAS_SLICES == 1) {
+            State so = sym.getStandardOrientation(stateReal);
+            if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, so) == 1) return true;
+            if (testTable.cannotBeSolvedInLimit(movesAvailable, so) == 1) return true;
+            return false;
+        } else if constexpr (HAS_SLICES == 0) {
+            if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, stateReal) == 1) return true;
+            if (testTable.cannotBeSolvedInLimit(movesAvailable, stateReal) == 1) return true;
+            return false;
+        }
     }
+};
+
+class Solver3x3 : public SolverAutoSelector {
+    Solver3x3Restricted<0> HTM;
+    Solver3x3Restricted<1> STM;
+    virtual void selectSolver(Puzzle initial) {
+        HTM.cfg = cfg;
+        STM.cfg = cfg;
+
+        if (initial.getMoves().count("M")) selected = &STM;
+        else
+            selected = &HTM;
+    }
+
+public:
+    // Solver3x3(std::string s) : Solver3x3() {}
+    Solver3x3() {}
 };
