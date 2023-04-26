@@ -69,7 +69,7 @@ namespace PruningFor3x3 {
     };
 }; // namespace PruningFor3x3
 
-template <bool HAS_SLICES = false> // 0 is htm, 1 is stm, 2 is qtm
+template <bool HAS_SLICES = false, bool HAS_WIDE = false, bool HAS_DOUBLE = false> // 0 is htm, 1 is stm, 2 is qtm
 class Solver3x3Restricted : public Solver {
 private:
     string allowedMoves = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'";
@@ -122,8 +122,8 @@ public:
         testTable.init(allowedMoves, HAS_SLICES ? "1" : "0");
 
         if constexpr (HAS_SLICES) {
-            pruning3Color.depth -= 2;
-            testTable.depth -= 2;
+            pruning3Color.depth -= 1;
+            testTable.depth -= 1;
         }
 
         redundancyTable.load();
