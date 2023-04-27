@@ -60,7 +60,7 @@ protected:
     virtual bool canDiscardPosition(int movesAvailable, const State& state);
     virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves);
     virtual void initReverse(){}; // move to public once working
-    virtual State preSolveTransform(State s1) { return s1; }
+    virtual Puzzle preSolveTransform(Puzzle s1) { return s1; }
 
 public:
     std::function<void(int)> progressCallback = [](int) {};
@@ -80,9 +80,20 @@ public:
     string solve(Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
 
     virtual void init(){};
+    virtual void deinit(){};
 };
 
 class SolverAutoSelector : public Solver {
+private:
+    void selectSolverCommon(Puzzle initial) {
+        estd::raw_ptr<Solver> old = selected;
+        selectSolver(initial);
+        if (old.get() != selected.get() && old) old->deinit();
+
+        selected->progressCallback = [&](int i) { progressCallback(i); };
+        selected->tableProgressCallback = [&](int i) { tableProgressCallback(i); };
+    }
+
 public:
     estd::raw_ptr<Solver> selected = nullptr;
 
@@ -94,35 +105,25 @@ public:
     shared_ptr<estd::thread_safe_queue<vector<string>>> asyncSolveVectors(
         Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1
     ) {
-        selectSolver(initial);
-        selected->progressCallback = [&](int i) { progressCallback(i); };
-        selected->tableProgressCallback = [&](int i) { tableProgressCallback(i); };
+        selectSolverCommon(initial);
         return selected->asyncSolveVectors(initial, depth, numberOfSolutionsToGet);
     }
     shared_ptr<estd::thread_safe_queue<string>> asyncSolveStrings(
         Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1
     ) {
-        selectSolver(initial);
-        selected->progressCallback = [&](int i) { progressCallback(i); };
-        selected->tableProgressCallback = [&](int i) { tableProgressCallback(i); };
+        selectSolverCommon(initial);
         return selected->asyncSolveStrings(initial, depth, numberOfSolutionsToGet);
     }
     vector<vector<string>> solveVectors(Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1) {
-        selectSolver(initial);
-        selected->progressCallback = [&](int i) { progressCallback(i); };
-        selected->tableProgressCallback = [&](int i) { tableProgressCallback(i); };
+        selectSolverCommon(initial);
         return selected->solveVectors(initial, depth, numberOfSolutionsToGet);
     }
     vector<string> solveStrings(Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1) {
-        selectSolver(initial);
-        selected->progressCallback = [&](int i) { progressCallback(i); };
-        selected->tableProgressCallback = [&](int i) { tableProgressCallback(i); };
+        selectSolverCommon(initial);
         return selected->solveStrings(initial, depth, numberOfSolutionsToGet);
     }
     string solve(Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1) {
-        selectSolver(initial);
-        selected->progressCallback = [&](int i) { progressCallback(i); };
-        selected->tableProgressCallback = [&](int i) { tableProgressCallback(i); };
+        selectSolverCommon(initial);
         return selected->solve(initial, depth, numberOfSolutionsToGet);
     }
 };

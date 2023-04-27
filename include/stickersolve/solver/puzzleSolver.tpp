@@ -140,8 +140,7 @@ void Solver::rawSolve(
     bool inverse,
     unsigned int numberOfSolutionsToGet
 ) {
-    ppzl.state = preSolveTransform(ppzl.state);
-    ppzl.solvedState = preSolveTransform(ppzl.solvedState);
+    ppzl = preSolveTransform(ppzl);
 
     puzzle = ppzl;
     // for(auto e: puzzle.getMoves()) std::cout << e << " ";

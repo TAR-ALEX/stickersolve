@@ -360,7 +360,9 @@ inline State Puzzle::getPieceState(State s) {
                     break;
                 }
             }
-            // if(!m.count(colors)) throw std::runtime_error("could not find piece in color map");
+            if (!m.count({pieceType, colors}))
+                throw std::runtime_error("mapping to unique stickers failed, could not find piece in color map, puzzle "
+                                         "state doesnt have the same sticker set as the solved state.");
         }
     }
     return result;

@@ -134,6 +134,12 @@ public:
         testTable.load();
     }
 
+    void deinit() {
+        redundancyTable.unload();
+        pruning3Color.unload();
+        testTable.unload();
+    }
+
     std::string printTableStats() {
         stringstream ss;
         auto printStat = [&](std::string name, std::string stat) {
@@ -153,11 +159,17 @@ public:
 
     virtual State preInsertTransformation(State s) { return sym.getUniqueSymetric(s); }
 
-    virtual State preSolveTransform(State s1) {
+    virtual Puzzle preSolveTransform(Puzzle input) {
         // do more testing here compare stock piece state to new one
-        State s2 = Puzzle3x3().getPieceState(s1);
-        cout << s2.toString() << endl;
-        return s2;
+        Puzzle3x3 ref = sym;
+        ref.solvedState = input.solvedState;
+        ref.state = input.state;
+
+        if (ref.getPiecePuzzle().solvedState != sym.solvedState) throw std::runtime_error("cannot use this solver");
+        // cout << ref.getPiecePuzzle().state.toString() << endl;
+        // cout << s2.toString() << endl;
+        // exit(0);
+        return ref.getPiecePuzzle();
     }
 
     virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves) {
@@ -179,16 +191,85 @@ public:
     }
 };
 
+class Solver3x3Universal : public Solver {
+private:
+    string allowedMoves = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'";
+    PruningStates<2> pruningTableClassic;
+    RedundancyTable redundancyTable;
+
+public:
+    Solver3x3Universal() : Solver() { puzzle = Puzzle3x3().getPiecePuzzle(); }
+
+    void init() {
+        pruningTableClassic.puzzle = puzzle;
+
+        pruningTableClassic.depth = 7; // 8 HTM 10 rfu
+        pruningTableClassic.hashSize = 27;
+        pruningTableClassic.path = "";
+        pruningTableClassic.cfg = cfg;
+
+        redundancyTable.depth = 3; //3
+        redundancyTable.puzzle = puzzle;
+        redundancyTable.cfg = cfg;
+
+        pruningTableClassic.progressCallback = [&](int p) { tableProgressCallback(p); };
+
+        // if constexpr (HAS_SLICES) {
+        //     pruning3Color.depth -= 1;
+        //     testTable.depth -= 1;
+        // }
+
+        redundancyTable.load();
+        pruningTableClassic.load();
+    }
+
+    void deinit() {
+        redundancyTable.unload();
+        pruningTableClassic.unload();
+    }
+
+    std::string printTableStats() {
+        stringstream ss;
+        auto printStat = [&](std::string name, std::string stat) {
+            ss << name;
+            ss << "\n--------------------\n";
+            ss << stat;
+            ss << "\n--------------------\n";
+        };
+        printStat("redundancyTable.getStats()", redundancyTable.getStats());
+        printStat("pruningTableClassic.getStats()", pruningTableClassic.getStats());
+
+        return ss.str();
+    }
+
+    virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves) {
+        return redundancyTable.contains(moves);
+    }
+
+    virtual bool canDiscardPosition(int movesAvailable, const State& stateReal) {
+        if (movesAvailable <= 2) return false;
+        if (pruningTableClassic.cannotBeSolvedInLimit(movesAvailable, stateReal) == 1) return true;
+        return false;
+    }
+};
+
 class Solver3x3 : public SolverAutoSelector {
     Solver3x3Restricted<0> HTM;
     Solver3x3Restricted<1> STM;
+    Solver3x3Universal universalSolver;
     virtual void selectSolver(Puzzle initial) {
         HTM.cfg = cfg;
         STM.cfg = cfg;
+        universalSolver.cfg = cfg;
 
-        if (initial.getMoves().count("M")) selected = &STM;
-        else
+        if (initial.getPiecePuzzle().solvedState != Puzzle3x3().getPiecePuzzle().solvedState) {
+            selected = &universalSolver;
+            // throw std::runtime_error("universal solver");
+        } else if (initial.getMoves().count("M")) {
+            selected = &STM;
+        } else {
             selected = &HTM;
+        }
     }
 
 public:
