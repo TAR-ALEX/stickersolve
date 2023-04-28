@@ -26,10 +26,11 @@ namespace PruningFor3x3 {
             // return PruningStates::cannotBeSolvedInLimit(movesAvailable, state.recolor(recolorMask));
         }
         void init(std::string allowed = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'", std::string prefix = "") {
-            sym = Puzzle3x3(allowed).getPiecePuzzle();
+            sym = Puzzle3x3().getPiecePuzzle();
             sym.solvedState = recolorMask;
             sym.state = recolorMask;
             this->puzzle = sym;
+            this->puzzle.keepOnlyMoves(allowed);
             sym.generateSymetryTable();
             this->depth = 10;
             this->hashSize = 33;
@@ -55,10 +56,11 @@ namespace PruningFor3x3 {
             );
         }
         void init(std::string allowed = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'", std::string prefix = "") {
-            sym = Puzzle3x3(allowed).getPiecePuzzle();
+            sym = Puzzle3x3().getPiecePuzzle();
             sym.solvedState = recolorMask;
             sym.state = recolorMask;
             this->puzzle = sym;
+            this->puzzle.keepOnlyMoves(allowed);
             sym.generateSymetryTable();
             this->depth = 11;
             this->hashSize = 35;
@@ -102,6 +104,7 @@ public:
     int progress2 = 0;
 
     void init() {
+        redundancyTable.unload();
         redundancyTable.depth = 3; //3
         redundancyTable.puzzle = puzzle;
         redundancyTable.cfg = cfg;
@@ -155,7 +158,7 @@ public:
 
         return ss.str();
     }
-    Puzzle3x3 sym = Puzzle3x3("U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'").getPiecePuzzle();
+    Puzzle3x3 sym = Puzzle3x3().getPiecePuzzle();
 
     virtual State preInsertTransformation(State s) { return sym.getUniqueSymetric(s); }
 
@@ -166,10 +169,12 @@ public:
         ref.state = input.state;
 
         if (ref.getPiecePuzzle().solvedState != sym.solvedState) throw std::runtime_error("cannot use this solver");
+        ref = ref.getPiecePuzzle();
+        ref.copyMoves(input);
         // cout << ref.getPiecePuzzle().state.toString() << endl;
         // cout << s2.toString() << endl;
         // exit(0);
-        return ref.getPiecePuzzle();
+        return ref;
     }
 
     virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves) {
@@ -178,12 +183,12 @@ public:
 
     virtual bool canDiscardPosition(int movesAvailable, const State& stateReal) {
         if (movesAvailable <= 2) return false;
-        if constexpr (HAS_SLICES == 1) {
+        if constexpr (HAS_SLICES || HAS_WIDE) {
             State so = sym.getStandardOrientation(stateReal);
             if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, so) == 1) return true;
             if (testTable.cannotBeSolvedInLimit(movesAvailable, so) == 1) return true;
             return false;
-        } else if constexpr (HAS_SLICES == 0) {
+        } else {
             if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, stateReal) == 1) return true;
             if (testTable.cannotBeSolvedInLimit(movesAvailable, stateReal) == 1) return true;
             return false;
@@ -201,6 +206,11 @@ public:
     Solver3x3Universal() : Solver() { puzzle = Puzzle3x3().getPiecePuzzle(); }
 
     void init() {
+        if (pruningTableClassic.puzzle.getMoves() != puzzle.getMoves() ||
+            pruningTableClassic.puzzle.solvedState != puzzle.solvedState) {
+            cout << "DEINIT\n";
+            deinit();
+        }
         pruningTableClassic.puzzle = puzzle;
 
         pruningTableClassic.depth = 7; // 8 HTM 10 rfu
@@ -213,11 +223,6 @@ public:
         redundancyTable.cfg = cfg;
 
         pruningTableClassic.progressCallback = [&](int p) { tableProgressCallback(p); };
-
-        // if constexpr (HAS_SLICES) {
-        //     pruning3Color.depth -= 1;
-        //     testTable.depth -= 1;
-        // }
 
         redundancyTable.load();
         pruningTableClassic.load();
@@ -255,18 +260,26 @@ public:
 
 class Solver3x3 : public SolverAutoSelector {
     Solver3x3Restricted<0> HTM;
+    Solver3x3Restricted<0, 1> WHTM;
     Solver3x3Restricted<1> STM;
     Solver3x3Universal universalSolver;
     virtual void selectSolver(Puzzle initial) {
         HTM.cfg = cfg;
         STM.cfg = cfg;
+        WHTM.cfg = cfg;
         universalSolver.cfg = cfg;
 
-        if (initial.getPiecePuzzle().solvedState != Puzzle3x3().getPiecePuzzle().solvedState) {
+        Puzzle3x3 ref = Puzzle3x3().getPiecePuzzle();
+        ref.solvedState = initial.solvedState;
+        ref.state = initial.state;
+
+        if (ref.getPiecePuzzle().solvedState != Puzzle3x3().getPiecePuzzle().solvedState) {
             selected = &universalSolver;
             // throw std::runtime_error("universal solver");
         } else if (initial.getMoves().count("M")) {
             selected = &STM;
+        } else if (initial.getMoves().count("r")) {
+            selected = &WHTM;
         } else {
             selected = &HTM;
         }

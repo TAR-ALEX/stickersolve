@@ -50,6 +50,7 @@ public:
     int& operator[](int i);
 
     void keepOnlyMoves(string);
+    void copyMoves(const Puzzle&);
     void deleteMoves(string);
     std::set<string> getMoves();
 

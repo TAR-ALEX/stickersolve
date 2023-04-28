@@ -178,7 +178,7 @@ void Solver::rawSolve(
     terminateEarly = false;
     while (visited2.size() * numChoices < size_t((cfg->maxMemoryInGb / 100.0) * 1000000000.0 / 100.0)
     ) { // assume a single scramble is 100 bytes
-        if (visited2depth >= targetDepth - 3) { break; }
+        if (visited2depth >= targetDepth - 3 && visited2depth != 0) { break; }
         visited2depth++;
         if (numberOfSolutionsToGet == 1) {
             generateUniqueStates<true>(initial, visited2, detach, visited2depth, targetDepth);

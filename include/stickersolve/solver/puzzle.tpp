@@ -112,7 +112,9 @@ inline void Puzzle::applyMoves(string str) {
     std::regex regex{R"([\s]+)"}; // split on space
     std::sregex_token_iterator it{str.begin(), str.end(), regex, -1};
     std::vector<std::string> moves{it, {}};
-
+    for (size_t i = 0; i < moves.size(); i++) {
+        if (getMoveID(moves[i]) == -1) throw std::runtime_error("Cannot apply moves " + moves[i]);
+    }
     for (size_t i = 0; i < moves.size(); i++) { this->state += getMove(moves[i]); }
 }
 
@@ -149,6 +151,11 @@ inline void Puzzle::keepOnlyMoves(string allowedMoves) {
     std::sregex_token_iterator it{allowedMoves.begin(), allowedMoves.end(), regex, -1};
     std::set<std::string> movesToInit{it, {}};
     keepOnlyMoves(movesToInit);
+}
+
+inline void Puzzle::copyMoves(const Puzzle& other) {
+    this->validMoves = other.validMoves;
+    this->moveNames = other.moveNames;
 }
 
 inline void Puzzle::deleteMoves(string movesDenied) {

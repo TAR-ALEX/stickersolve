@@ -127,6 +127,7 @@ void PruningStates<width>::unload() {
         delete[] data;
 
         data = nullptr;
+        progressCallback(0);
     }
 }
 
@@ -266,6 +267,9 @@ void PruningStates<width>::load() {
         }
 
         generate();
+        redundancyTableInverse.unload();
+        visited2depth = 0;
+        visited2.clear();
 
         if (!cfg->useMmapForPruning && this->path != "") {
             boost::filesystem::create_directories(cfg->pruiningTablesPath);
