@@ -1,15 +1,10 @@
-include "debian.txt",
-
 git "https://github.com/TAR-ALEX/estd_logging.git" master "./include/" "./vendor/include/",
 git "https://github.com/TAR-ALEX/clone_ptr_cpp.git" master "./include/" "./vendor/include/",
 git "https://github.com/TAR-ALEX/Semaphore.git" main "./include/" "./vendor/include/",
 git "https://github.com/TAR-ALEX/Thread-Safe-Queue.git" main "./include/" "./vendor/include/",
 git "https://github.com/TAR-ALEX/ThreadPool.git" main "./include/" "./vendor/include/",
+git "https://github.com/TAR-ALEX/estd-string-util.git" master "./include/" "./vendor/include/",
 
+deb-recurse-limit 3,
 deb "libboost-all-dev" "./usr/include/boost/" "./vendor/include/boost/",
 deb "libboost-all-dev" "./usr/lib/x86_64-linux-gnu/" "./vendor/lib",
-
-(
-tar "https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.gz" "./boost_1_79_0/boost/" "./vendor/include/boost/",
-tar "https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.gz" "./boost_1_79_0/libs/" "./vendor/src/boost/,
-)

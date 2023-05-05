@@ -4,6 +4,7 @@
 #include <stickersolve/pruning/redundancy.hpp>
 #include <stickersolve/solver/PuzzleSolver.h>
 #include <stickersolve/solver/puzzle.h>
+#include <stickersolve/SolutionSorter.h>
 
 #include <stickersolve/solver/puzzle.tpp>
 #include <stickersolve/solver/puzzleSolver.tpp>

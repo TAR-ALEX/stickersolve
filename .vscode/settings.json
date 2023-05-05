@@ -78,6 +78,10 @@
         "*.tpp": "cpp",
         "*.h": "cpp",
         "compare": "cpp",
-        "concepts": "cpp"
+        "concepts": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "ranges": "cpp"
     }
 }
