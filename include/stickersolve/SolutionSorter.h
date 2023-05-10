@@ -78,9 +78,13 @@ private:
         addMoveswithWeight(rWeights, 0, "U U' D D' R R' r r'", 1.0);
         addMoveswithWeight(rWeights, 0, "R2 r2", 2.5); // awkward to do in this grip
         addMoveswithWeight(rWeights, 0, "U2 D2", 1.7);
-        addMoveswithWeight(rWeights, 0, "F'", 2.5);
+        addMoveswithWeight(rWeights, 0, "F' F", 2.1);
+        addMoveswithWeight(rWeights, 0, "S' S", 2.1);
 
         addMoveswithWeight(rWeights, 1, "B B' F F' R' r'", 1.0);
+        addMoveswithWeight(rWeights, 1, "E E'", 2.0);
+        addMoveswithWeight(rWeights, 1, "E2 S2", 2.8);
+        addMoveswithWeight(rWeights, 0, "S' S", 2.1);
         addMoveswithWeight(rWeights, 1, "R2 r2", 1.8); // awkward to do in this grip
         addMoveswithWeight(rWeights, 1, "R r", 2.5);   // awkward to do in this grip
         addMoveswithWeight(rWeights, 1, "B2 F2", 1.7);

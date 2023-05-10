@@ -121,10 +121,38 @@ public:
             tableProgressCallback((progress1 + progress2) / 2);
         };
 
-        pruning3Color.init(allowedMoves, HAS_SLICES ? "1" : "0");
-        testTable.init(allowedMoves, HAS_SLICES ? "1" : "0");
+        int hashSize = 0;
+        for (hashSize = 0; hashSize < 64; hashSize++) {
+            double testmem = pow(2, hashSize) / 1000000000.0;
+            if (testmem > cfg->maxMemoryInGb / 2) { break; }
+        }
+
+        std::string prefix = to_string(hashSize);
+
+        prefix += HAS_SLICES ? "_slice_" : "_noslice_";
+
+        pruning3Color.init(allowedMoves, prefix);
+        testTable.init(allowedMoves, prefix);
+
+        testTable.hashSize = hashSize;
+        pruning3Color.hashSize = hashSize + 2;
 
         if constexpr (HAS_SLICES) {
+            pruning3Color.depth -= 1;
+            testTable.depth -= 1;
+        }
+
+        if (hashSize > 37) {
+            pruning3Color.depth += 1;
+            testTable.depth += 1;
+        }
+
+        if (hashSize < 32) {
+            pruning3Color.depth -= 1;
+            testTable.depth -= 1;
+        }
+
+        if (hashSize < 28) {
             pruning3Color.depth -= 1;
             testTable.depth -= 1;
         }
@@ -263,7 +291,16 @@ class Solver3x3 : public SolverAutoSelector {
     Solver3x3Restricted<0, 1> WHTM;
     Solver3x3Restricted<1> STM;
     Solver3x3Universal universalSolver;
+    double oldMaxGb = -1.0;
     virtual void selectSolver(Puzzle initial) {
+        if (cfg->maxMemoryInGb != oldMaxGb) {
+            oldMaxGb = cfg->maxMemoryInGb;
+            universalSolver.deinit();
+            HTM.deinit();
+            WHTM.deinit();
+            STM.deinit();
+        }
+
         HTM.cfg = cfg;
         STM.cfg = cfg;
         WHTM.cfg = cfg;
@@ -275,7 +312,6 @@ class Solver3x3 : public SolverAutoSelector {
 
         if (ref.getPiecePuzzle().solvedState != Puzzle3x3().getPiecePuzzle().solvedState) {
             selected = &universalSolver;
-            // throw std::runtime_error("universal solver");
         } else if (initial.getMoves().count("M")) {
             selected = &STM;
         } else if (initial.getMoves().count("r")) {
@@ -286,6 +322,10 @@ class Solver3x3 : public SolverAutoSelector {
     }
 
 public:
+
+    std::string printTableStats(){
+        // return HTM.printTableStats() + "\n" + STM.printTableStats();
+    }
     // Solver3x3(std::string s) : Solver3x3() {}
     Solver3x3() {}
 };
