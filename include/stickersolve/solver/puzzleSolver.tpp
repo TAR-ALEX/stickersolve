@@ -140,6 +140,7 @@ void Solver::rawSolve(
     bool inverse,
     unsigned int numberOfSolutionsToGet
 ) {
+    terminateEarly = false;
     ppzl = preSolveTransform(ppzl);
 
     puzzle = ppzl;
@@ -175,8 +176,9 @@ void Solver::rawSolve(
     vector<int> moves;
     vector<State> ss;
     ss.push_back(initial);
-    terminateEarly = false;
-    while (visited2.size() * numChoices < size_t((cfg->maxMemoryInGb / 100.0) * 1000000000.0 / 100.0)
+    double memlimMin = 1.0;
+    if(cfg->maxMemoryInGb > memlimMin) memlimMin = cfg->maxMemoryInGb;
+    while (visited2.size() * numChoices < size_t((memlimMin / 100.0) * 1000000000.0 / 100.0)
     ) { // assume a single scramble is 100 bytes
         if (visited2depth >= targetDepth - 3 && visited2depth != 0) { break; }
         visited2depth++;
@@ -196,6 +198,7 @@ void Solver::rawSolve(
     cfg->threadPool->schedule([&]() {
         uint64_t percent = 0;
         long t = 0;
+        std::mutex m;
         for (auto& state : detach) {
             if (terminateEarly) break;
             cfg->threadPool->schedule([&]() {
@@ -212,7 +215,7 @@ void Solver::rawSolve(
             });
             t++;
             if (t * 99 / detach.size() > percent) {
-                percent = t * 99 / detach.size();
+                percent = uint64_t(t * 99.0 / detach.size());
                 progressCallback(percent);
             }
         }

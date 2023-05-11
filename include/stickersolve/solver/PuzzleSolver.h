@@ -65,7 +65,7 @@ protected:
 public:
     std::function<void(int)> progressCallback = [](int) {};
     std::function<void(int)> tableProgressCallback = [](int) {};
-    inline void cancel() { terminateEarly = true; }
+    inline virtual void cancel() { terminateEarly = true; }
     estd::joint_ptr<SolverConfig> cfg = new SolverConfig();
 
     shared_ptr<estd::thread_safe_queue<vector<string>>> asyncSolveVectors(
@@ -99,7 +99,7 @@ public:
 
     std::function<void(int)> progressCallback = [](int) {};
     std::function<void(int)> tableProgressCallback = [](int) {};
-    virtual void cancel() { selected->cancel(); }
+    inline virtual void cancel() { selected->cancel(); }
     virtual void selectSolver(Puzzle initial) = 0;
 
     shared_ptr<estd::thread_safe_queue<vector<string>>> asyncSolveVectors(

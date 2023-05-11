@@ -103,6 +103,12 @@ public:
     int progress1 = 0;
     int progress2 = 0;
 
+    inline virtual void cancel() {
+        Solver::cancel();
+        pruning3Color.cancel();
+        testTable.cancel();
+    }
+
     void init() {
         redundancyTable.unload();
         redundancyTable.depth = 3; //3
@@ -111,6 +117,11 @@ public:
 
         pruning3Color.cfg = cfg;
         testTable.cfg = cfg;
+
+        progress1 = 0;
+        progress2 = 0;
+
+        tableProgressCallback(0);
 
         pruning3Color.progressCallback = [&](int p) {
             progress1 = p;
@@ -233,7 +244,13 @@ private:
 public:
     Solver3x3Universal() : Solver() { puzzle = Puzzle3x3().getPiecePuzzle(); }
 
+    inline virtual void cancel() {
+        Solver::cancel();
+        pruningTableClassic.cancel();
+    }
+
     void init() {
+        tableProgressCallback(0);
         if (pruningTableClassic.puzzle.getMoves() != puzzle.getMoves() ||
             pruningTableClassic.puzzle.solvedState != puzzle.solvedState) {
             cout << "DEINIT\n";
@@ -322,8 +339,7 @@ class Solver3x3 : public SolverAutoSelector {
     }
 
 public:
-
-    std::string printTableStats(){
+    std::string printTableStats() {
         // return HTM.printTableStats() + "\n" + STM.printTableStats();
     }
     // Solver3x3(std::string s) : Solver3x3() {}

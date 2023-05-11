@@ -134,7 +134,12 @@ void PruningStates<width>::unload() {
 
 template <int width>
 void PruningStates<width>::load() {
-    if (data != nullptr) { return; }
+    terminateEarly = false;
+    progressCallback(0);
+    if (data != nullptr) { 
+        progressCallback(100);
+        return; 
+    }
 
     std::string path = cfg->pruiningTablesPath + "/" + this->path;
     if (this->path == "") path = "";
@@ -267,11 +272,16 @@ void PruningStates<width>::load() {
         }
 
         generate();
+
         redundancyTableInverse.unload();
         visited2depth = 0;
         visited2.clear();
 
-        if (!cfg->useMmapForPruning && this->path != "") {
+        if(terminateEarly){
+            this->progressCallback(100);
+            unload();
+            // terminateEarly = false;
+        }else if (!cfg->useMmapForPruning && this->path != "") {
             boost::filesystem::create_directories(cfg->pruiningTablesPath);
             cfg->log << "\nSaving table (" << path << ").\n";
             ofstream file(path, std::ios::binary);
@@ -448,6 +458,8 @@ void PruningStates<width>::genLev(
 
     int currentDepth = initialDepth;
     State transformedState = start;
+
+    if (terminateEarly) return;
 
     for (;;) {
     advance:

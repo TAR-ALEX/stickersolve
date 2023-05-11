@@ -22,6 +22,7 @@ using namespace std;
 template <int width = 2> // width in nibbles, must be a multiple of 4 (2 IS A SINGLE BYTE)
 class PruningStates {
 private:
+    volatile bool terminateEarly = false;
     RedundancyTable redundancyTableInverse;
     // using a mutex to access the table ended up having very poor performance, the chances of race conditions are close to zero
     // mutex tableMutex;
@@ -47,6 +48,8 @@ public:
 
     uint64_t getChecksum();
     double estimateSizeInGb();
+
+    inline void cancel() { terminateEarly = true; }
 
     // PruningStates(Solver* s);
     virtual ~PruningStates() { unload(); }
