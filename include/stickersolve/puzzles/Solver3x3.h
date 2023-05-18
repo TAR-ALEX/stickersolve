@@ -340,6 +340,7 @@ class Solver3x3 : public SolverAutoSelector {
 
 public:
     std::string printTableStats() {
+        return "";
         // return HTM.printTableStats() + "\n" + STM.printTableStats();
     }
     // Solver3x3(std::string s) : Solver3x3() {}

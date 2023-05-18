@@ -79,6 +79,10 @@ public:
     vector<string> solveStrings(Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
     string solve(Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1);
 
+    shared_ptr<estd::thread_safe_queue<string>> asyncIncrementalSolveStrings(
+        Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1
+    );
+
     virtual void init(){};
     virtual void deinit(){};
 };
@@ -125,6 +129,13 @@ public:
     string solve(Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1) {
         selectSolverCommon(initial);
         return selected->solve(initial, depth, numberOfSolutionsToGet);
+    }
+
+    shared_ptr<estd::thread_safe_queue<string>> asyncIncrementalSolveStrings(
+        Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1
+    ) {
+        selectSolverCommon(initial);
+        return selected->asyncIncrementalSolveStrings(initial, depth, numberOfSolutionsToGet);
     }
 };
 

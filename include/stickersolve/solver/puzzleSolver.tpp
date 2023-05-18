@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <estd/string_util.h>
 #include <estd/thread_pool.hpp>
 #include <sstream>
 #include <stack>
@@ -55,6 +56,8 @@ void Solver::generateUniqueStates(
             } else {
                 trnsfrm = end;
             }
+
+            if (canDiscardPosition(targetDepth - depth, trnsfrm)) { continue; }
 
 
             if (!states.count(trnsfrm)) {
@@ -177,10 +180,10 @@ void Solver::rawSolve(
     vector<State> ss;
     ss.push_back(initial);
     double memlimMin = 1.0;
-    if(cfg->maxMemoryInGb > memlimMin) memlimMin = cfg->maxMemoryInGb;
+    if (cfg->maxMemoryInGb > memlimMin) memlimMin = cfg->maxMemoryInGb;
     while (visited2.size() * numChoices < size_t((memlimMin / 100.0) * 1000000000.0 / 100.0)
     ) { // assume a single scramble is 100 bytes
-        if (visited2depth >= targetDepth - 3 && visited2depth != 0) { break; }
+        if (int(visited2depth) >= targetDepth - 3 && visited2depth != 0) { break; }
         visited2depth++;
         if (numberOfSolutionsToGet == 1) {
             generateUniqueStates<true>(initial, visited2, detach, visited2depth, targetDepth);
@@ -352,6 +355,31 @@ string Solver::solve(Puzzle initial, int depth, unsigned int numberOfSolutionsTo
     }
 
     return ss.str();
+}
+
+shared_ptr<estd::thread_safe_queue<string>> Solver::asyncIncrementalSolveStrings(
+    Puzzle initial, int depth, unsigned int numberOfSolutionsToGet
+) {
+    std::shared_ptr<estd::thread_safe_queue<std::string>> results{new estd::thread_safe_queue<std::string>()};
+    thread solver([=] {
+        size_t startDepth = 1;
+        while (!terminateEarly) {
+            // *results << ("DEPTH " + std::to_string(startDepth));
+            auto res = asyncSolveStrings(initial, startDepth, numberOfSolutionsToGet);
+            std::string solution;
+            while (*res >> solution) {
+                if (estd::string_util::splitAll(solution, " ", false).size() == startDepth) *results << solution;
+                if (results->numResults() >= numberOfSolutionsToGet) terminateEarly = true;
+            }
+
+            startDepth++;
+            if (startDepth > (size_t)depth) terminateEarly = true;
+        }
+        results->close();
+        terminateEarly = false;
+    });
+    solver.detach();
+    return results;
 }
 
 bool Solver::canDiscardMoves(int movesAvailable, const vector<int>& moves) { return false; }
