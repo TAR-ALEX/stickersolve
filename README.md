@@ -1,10 +1,5 @@
 # stickersolve
-Install a package that has clang++ and g++
 
-Run this to get boost libraries which are a dependency of this project.
+This is the underlying framework used for [stickersolve-gui](https://github.com/TAR-ALEX/stickersolve-gui)
 
-`sudo apt-get install libboost-all-dev`
-
-Build the project with `make release`
-
-Build the project with `make` if you want it to be slower and have debugging symbols and profiler.
+Much of the same concepts apply to building it as in [stickersolve-gui](https://github.com/TAR-ALEX/stickersolve-gui), except the Qt dependencies are not needed.
