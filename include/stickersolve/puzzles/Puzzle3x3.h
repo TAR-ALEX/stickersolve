@@ -2,6 +2,7 @@
 
 #include <regex>
 #include <stickersolve/solver/PuzzleSolver.h>
+#include <boost/container/static_vector.hpp>
 
 using namespace std;
 
@@ -268,7 +269,7 @@ public:
         return result;
     }
 public:
-    std::vector<std::pair<State, std::vector<int>>> symetryTable = {};
+    std::vector<std::pair<State, State>> symetryTable = {};
     std::unordered_map<uint16_t, State> standardOrientationTable = {};
     void generateSymetryTable() {
         static State S_URF3 = Puzzle3x3().getMove("x") + Puzzle3x3().getMove("y");
@@ -307,7 +308,7 @@ public:
         }
 
         auto genRecolor = [&](State from, State to) {
-            std::vector<int> recolorMask;
+            State recolorMask;
 
             for (size_t i = 0; i < from.size(); i++) {
                 if ((int)recolorMask.size() < from[i] + 1) recolorMask.resize(from[i] + 1, -1);
@@ -341,8 +342,8 @@ public:
         State min = s;
         int minVal = INT_MAX;
         State tst;
-        std::vector<size_t> continueSearch = {};
-        continueSearch.reserve(symetryTable.size() / 2);
+        boost::container::static_vector<size_t, 100> continueSearch = {};
+        // continueSearch.reserve(symetryTable.size() / 2);
         // for (size_t i = 0; i < symetryTable.size(); i++) {
         //     auto& [t, r] = symetryTable[i];
         //     tst = s.recolor(r)+t;
@@ -362,9 +363,10 @@ public:
             }
         }
 
+        boost::container::static_vector<size_t, 100> continueSearchCpy;
         for (size_t i = 1; i < s.size(); i++) {
-            std::vector<size_t> continueSearchCpy;
-            continueSearchCpy.reserve(symetryTable.size() / 2);
+            continueSearchCpy.clear();
+            // continueSearchCpy.reserve(symetryTable.size() / 2);
             std::swap(continueSearchCpy, continueSearch);
             minVal = INT_MAX;
             for (auto& srch : continueSearchCpy) {
