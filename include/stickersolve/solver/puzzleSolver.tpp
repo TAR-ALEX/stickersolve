@@ -56,8 +56,8 @@ void Solver::generateUniqueStates(
             } else {
                 trnsfrm = end;
             }
-
-            if (canDiscardPosition(targetDepth - depth, trnsfrm)) { continue; }
+            
+            if (canDiscardPosition(targetDepth - depth, end)) { continue; }
 
 
             if (!states.count(trnsfrm)) {

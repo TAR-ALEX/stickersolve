@@ -199,7 +199,10 @@ public:
     }
     Puzzle3x3 sym = Puzzle3x3().getPiecePuzzle();
 
-    virtual State preInsertTransformation(State s) { return sym.getUniqueSymetric(s); }
+    virtual State preInsertTransformation(State s) {
+        State so = sym.getStandardOrientation(s);
+        return sym.getUniqueSymetric(so);
+    }
 
     virtual Puzzle preSolveTransform(Puzzle input) {
         // do more testing here compare stock piece state to new one
@@ -327,10 +330,10 @@ class Solver3x3 : public SolverAutoSelector {
         ref.solvedState = initial.solvedState;
         ref.state = initial.state;
 
-        auto containsAnyMove = [&](std::string moves){
+        auto containsAnyMove = [&](std::string moves) {
             auto mz = estd::string_util::splitAll(moves, " ", false);
-            for(auto& m: mz){
-                if(initial.getMoves().count(m)) return true;
+            for (auto& m : mz) {
+                if (initial.getMoves().count(m)) return true;
             }
             return false;
         };
