@@ -327,11 +327,19 @@ class Solver3x3 : public SolverAutoSelector {
         ref.solvedState = initial.solvedState;
         ref.state = initial.state;
 
+        auto containsAnyMove = [&](std::string moves){
+            auto mz = estd::string_util::splitAll(moves, " ", false);
+            for(auto& m: mz){
+                if(initial.getMoves().count(m)) return true;
+            }
+            return false;
+        };
+
         if (ref.getPiecePuzzle().solvedState != Puzzle3x3().getPiecePuzzle().solvedState) {
             selected = &universalSolver;
-        } else if (initial.getMoves().count("M")) {
+        } else if (containsAnyMove("M M2 M' E E2 E' S S2 S'")) {
             selected = &STM;
-        } else if (initial.getMoves().count("r")) {
+        } else if (containsAnyMove("r r2 r' l l2 l' u u2 u' d d2 d' f f2 f' b b2 b'")) {
             selected = &WHTM;
         } else {
             selected = &HTM;

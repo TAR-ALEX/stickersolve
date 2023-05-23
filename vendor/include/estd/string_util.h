@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fstream>
 #include <set>
 #include <sstream>
 #include <string>
@@ -60,6 +61,26 @@ namespace estd {
             if (s.substr(pos_start) == "" && !includeEmpty) return res;
             res.push_back(s.substr(pos_start));
             return res;
+        }
+
+        template<class T>
+        inline static std::string joinAll(
+            T container, std::string delimiter = " ", bool includeEmpty = true
+        ) {
+            std::string res = "";
+            for(std::string& str: container){
+                if(str == "" && !includeEmpty) continue;
+                if(res != "") res += delimiter;
+                res += str;
+            }
+            return res;
+        }
+
+        inline static std::string fileToString(std::string path) {
+            std::ifstream file(path);
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+            return buffer.str();
         }
 
         inline static std::string indent(std::string input, std::string indentation) {
