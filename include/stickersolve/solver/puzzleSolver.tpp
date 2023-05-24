@@ -56,11 +56,10 @@ void Solver::generateUniqueStates(
             } else {
                 trnsfrm = end;
             }
-            
+
             if (canDiscardPosition(targetDepth - depth, end)) { continue; }
 
-
-            if (!states.count(trnsfrm)) {
+            if (!states.count(trnsfrm) || (int(depth) >= startMaxDedupDepth && !removeSymetry)) {
                 states.insert(trnsfrm);
                 detach.push_back({end, moves});
             }
@@ -183,11 +182,12 @@ void Solver::rawSolve(
     if (cfg->maxMemoryInGb > memlimMin) memlimMin = cfg->maxMemoryInGb;
     while (visited2.size() * numChoices < size_t((memlimMin / 100.0) * 1000000000.0 / 100.0)
     ) { // assume a single scramble is 100 bytes
-        if (int(visited2depth) >= targetDepth - 3 && visited2depth != 0) { break; }
-        visited2depth++;
+        if ((int(visited2depth) >= targetDepth - 3) && visited2depth != 0) { break; }
         if (numberOfSolutionsToGet == 1) {
+            visited2depth++;
             generateUniqueStates<true>(initial, visited2, detach, visited2depth, targetDepth);
         } else {
+            visited2depth++;
             generateUniqueStates<false>(initial, visited2, detach, visited2depth, targetDepth);
         }
         cfg->log << "visited2.depth(): " << visited2depth << endl;

@@ -63,6 +63,7 @@ protected:
     virtual Puzzle preSolveTransform(Puzzle s1) { return s1; }
 
 public:
+    int startMaxDedupDepth = 3;
     std::function<void(int)> progressCallback = [](int) {};
     std::function<void(int)> tableProgressCallback = [](int) {};
     inline virtual void cancel() { terminateEarly = true; }
