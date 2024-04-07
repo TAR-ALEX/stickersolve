@@ -14,12 +14,13 @@
 #include <stickersolve/pruning/pruningTree.h>
 #include <stickersolve/solver/puzzle.h>
 #include <thread>
+#include <estd/hugepage.hpp>
 
 using namespace std::chrono;
 using namespace boost::iostreams;
 
-template <int width>
-double PruningStates<width>::estimateSizeInGb() {
+template <class Puzzle, int width, bool useSym, bool useInverse>
+double PruningStates<Puzzle, width, useSym, useInverse>::estimateSizeInGb() {
     uint64_t siz = ((uint64_t)1) << hashSize;
     if constexpr (width == 1) { siz >>= 1; }
     if constexpr (width == 0) { siz >>= 3; }
@@ -28,8 +29,8 @@ double PruningStates<width>::estimateSizeInGb() {
 }
 
 
-template <int width>
-void PruningStates<width>::performSizeCheck() {
+template <class Puzzle, int width, bool useSym, bool useInverse>
+void PruningStates<Puzzle, width, useSym, useInverse>::performSizeCheck() {
     if (estimateSizeInGb() > cfg->maxMemoryInGb) {
         stringstream ss;
         ss << "Pruning table size exceeds " << cfg->maxMemoryInGb << " gigabytes, attempted to allocate "
@@ -39,8 +40,8 @@ void PruningStates<width>::performSizeCheck() {
 }
 
 
-template <int width>
-void PruningStates<width>::insert(State state, int moves) {
+template <class Puzzle, int width, bool useSym, bool useInverse>
+void PruningStates<Puzzle, width, useSym, useInverse>::insert(State state, int moves) {
     if constexpr (width == 2) {
         auto hash = state.toHash() >> discardBits;
         //tableMutex.lock();
@@ -68,9 +69,8 @@ void PruningStates<width>::insert(State state, int moves) {
 }
 
 
-template <int width>
-int PruningStates<width>::cannotBeSolvedInLimit(int movesAvailable, State state) {
-    state = preLookupTransformation(state);
+template <class Puzzle, int width, bool useSym, bool useInverse>
+int PruningStates<Puzzle, width, useSym, useInverse>::cannotBeSolvedInLimit(int movesAvailable, State state) {
     if (depth >= movesAvailable) {
         if constexpr (width == 2) {
             auto hash = state.toHash() >> discardBits;
@@ -94,9 +94,8 @@ int PruningStates<width>::cannotBeSolvedInLimit(int movesAvailable, State state)
 }
 
 
-template <int width>
-uint8_t PruningStates<width>::getDistance(State state) {
-    state = preLookupTransformation(state);
+template <class Puzzle, int width, bool useSym, bool useInverse>
+uint8_t PruningStates<Puzzle, width, useSym, useInverse>::getDistance(State state) {
     if constexpr (width == 2) {
         auto hash = state.toHash() >> discardBits;
         return data[hash];
@@ -118,13 +117,13 @@ uint8_t PruningStates<width>::getDistance(State state) {
 }
 
 
-template <int width>
-void PruningStates<width>::unload() {
+template <class Puzzle, int width, bool useSym, bool useInverse>
+void PruningStates<Puzzle, width, useSym, useInverse>::unload() {
     if (data != nullptr) {
         cfg->log << "Unloading table (" << path << ") from memory\n";
         cfg->log << "----------------------------------------------------------------\n";
 
-        delete[] data;
+        free(data);
 
         data = nullptr;
         progressCallback(0);
@@ -132,8 +131,8 @@ void PruningStates<width>::unload() {
 }
 
 
-template <int width>
-void PruningStates<width>::load() {
+template <class Puzzle, int width, bool useSym, bool useInverse>
+void PruningStates<Puzzle, width, useSym, useInverse>::load() {
     terminateEarly = false;
     progressCallback(0);
     if (data != nullptr) { 
@@ -159,7 +158,7 @@ void PruningStates<width>::load() {
             cfg->log << "Pruning table (" << path << ") exists, loading it to memory (size=" << estimateSizeInGb()
                      << "Gb)...\n";
 
-            data = new uint8_t[siz];
+            data = reinterpret_cast<uint8_t*>(hugepage_malloc(siz));
 
             uint64_t checksum = 0;
             ifstream infile(path, std::ios::binary);
@@ -228,7 +227,7 @@ void PruningStates<width>::load() {
             }
         }
     } else {
-        redundancyTableInverse.puzzle = this->puzzle;
+        redundancyTableInverse.puzzle = this->puzzle.makeUniqueStickers();// TODO: for 3 color, it must not be the 3 color puzzle, all stickers must be unique.
         redundancyTableInverse.cfg = cfg;
         redundancyTableInverse.inverse = true;
         redundancyTableInverse.depth = redundancyInverseDepth;
@@ -258,7 +257,7 @@ void PruningStates<width>::load() {
         } else {
             cfg->log << "Creating pruning table (" << path << ") of size " << estimateSizeInGb()
                      << " Gb in memory...\n\n";
-            data = new uint8_t[siz];
+            data = reinterpret_cast<uint8_t*>(hugepage_malloc(siz));
         }
 
         for (uint64_t i = 0; i < siz; i++) {
@@ -298,8 +297,8 @@ void PruningStates<width>::load() {
 }
 
 
-template <int width>
-string PruningStates<width>::getStats() {
+template <class Puzzle, int width, bool useSym, bool useInverse>
+string PruningStates<Puzzle, width, useSym, useInverse>::getStats() {
     std::string path = cfg->pruiningTablesPath + "/" + this->path;
     if (this->path == "") path = "";
 
@@ -353,14 +352,14 @@ string PruningStates<width>::getStats() {
 }
 
 
-template <int width>
-void PruningStates<width>::initHashMask() {
+template <class Puzzle, int width, bool useSym, bool useInverse>
+void PruningStates<Puzzle, width, useSym, useInverse>::initHashMask() {
     discardBits = 64 - hashSize;
 }
 
 
-template <int width>
-uint64_t PruningStates<width>::getChecksum() {
+template <class Puzzle, int width, bool useSym, bool useInverse>
+uint64_t PruningStates<Puzzle, width, useSym, useInverse>::getChecksum() {
     const uint64_t goldenRatioConstant = 0x9e3779b97f4a7c15;
     uint64_t result = 0;
 
@@ -374,8 +373,8 @@ uint64_t PruningStates<width>::getChecksum() {
 
 
 
-template <int width>
-void PruningStates<width>::generate() {
+template <class Puzzle, int width, bool useSym, bool useInverse>
+void PruningStates<Puzzle, width, useSym, useInverse>::generate() {
     if (cfg->useMmapForPruning)
         throw runtime_error(
             "useMmapForPruning flag is not supported with table generation, it is slow and can kill an SSD"
@@ -397,8 +396,8 @@ void PruningStates<width>::generate() {
     cfg->log << "----------------------------------------------------------------\n";
 }
 
-template <int width>
-void PruningStates<width>::generateUniqueStates(
+template <class Puzzle, int width, bool useSym, bool useInverse>
+void PruningStates<Puzzle, width, useSym, useInverse>::generateUniqueStates(
     std::set<State>& states, std::deque<std::pair<State, std::vector<int>>>& detach, int depth
 ) {
     states.insert(puzzle.solvedState);
@@ -415,14 +414,27 @@ void PruningStates<width>::generateUniqueStates(
         for (size_t j = 0; j < validMoves.size(); j++) {
             auto& move = validMoves[j];
             State end = (start.first + move); //preInsertTransformation
-            State trnsfrm = preInsertTransformation(end);
+            //State trnsfrm = preInsertTransformation(end);
+            State trnsfrm;
+            if constexpr(useSym) {
+                trnsfrm = puzzle.getUniqueSymetric(end); // we cant just use preInsertTransformation as we wont cover all states
+            }else{
+                trnsfrm = end;
+            }
 
 
             if (!states.count(trnsfrm)) {
-                states.insert(trnsfrm);
                 std::vector<int> moves = start.second;
                 moves.push_back(j);
+                //if (canDiscardMoves(depth, moves)) { continue; }
+                states.insert(trnsfrm);
+                
+                
                 detach.push_back({end, moves});
+                if constexpr (useInverse){
+                    State inverse = puzzle.getUniqueSymetric(!end); 
+                    if (inverse < trnsfrm) trnsfrm = inverse; // getUniqueSymetricInverse equivalent
+                }
                 insert(trnsfrm, depth);
             }
         }
@@ -430,8 +442,8 @@ void PruningStates<width>::generateUniqueStates(
     }
 }
 
-// template <int width>
-// void PruningStates<width>::genLev(int targetDepth, int initialDepth, State start, vector<State>& validMoves) {
+// template <class Puzzle, int width, bool useSym, bool useInverse>
+// void PruningStates<Puzzle, width, useSym, useInverse>::genLev(int targetDepth, int initialDepth, State start, vector<State>& validMoves) {
 //     if(initialDepth >= targetDepth) return;
 
 //     int currentDepth = initialDepth+1;
@@ -446,8 +458,8 @@ void PruningStates<width>::generateUniqueStates(
 //     }
 // }
 
-template <int width>
-void PruningStates<width>::genLev(
+template <class Puzzle, int width, bool useSym, bool useInverse>
+void PruningStates<Puzzle, width, useSym, useInverse>::genLev(
     int targetDepth, int initialDepth, State start, vector<int> moves, vector<State>& validMoves
 ) {
     moves.reserve(targetDepth);
@@ -468,7 +480,6 @@ void PruningStates<width>::genLev(
         if (canDiscardMoves(targetDepth - currentDepth, moves)) { goto retardNoPop; }
         ss.push(ss.top() + validMoves[moves.back()]);
         transformedState = preInsertTransformation(ss.top());
-        //if (visited2.count(transformedState)) goto retard;
         insert(transformedState, currentDepth);
         if (currentDepth >= targetDepth) { goto retard; }
         //goto advance;
@@ -499,8 +510,8 @@ void PruningStates<width>::genLev(
     }
 }
 
-template <int width>
-void PruningStates<width>::generateLevel(int lvl) {
+template <class Puzzle, int width, bool useSym, bool useInverse>
+void PruningStates<Puzzle, width, useSym, useInverse>::generateLevel(int lvl) {
     auto& targetDepth = lvl;
     if (targetDepth <= 0) return;
 
@@ -552,7 +563,7 @@ void PruningStates<width>::generateLevel(int lvl) {
     cfg->threadPool->wait();
 }
 
-template <int width>
-bool PruningStates<width>::canDiscardMoves(int movesAvailable, const vector<int>& moves) {
+template <class Puzzle, int width, bool useSym, bool useInverse>
+bool PruningStates<Puzzle, width, useSym, useInverse>::canDiscardMoves(int movesAvailable, const vector<int>& moves) {
     return redundancyTableInverse.contains(moves);
 }

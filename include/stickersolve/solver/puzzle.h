@@ -27,9 +27,7 @@ public:
     std::vector<std::vector<std::vector<int>>> getStickerGroups();
     //returns a map that can map each piece type to unique stickers
     std::map<std::pair<int, std::vector<int>>, std::vector<int>> getStickerMap();
-    //returns the puzzle where each sticker has a unique number ascending order based on the solved state. 
-    //(if it is impossible to identify a unique sticker, will give the same id, 
-    //in this case the puzzle can have more than one solved state, and is not invertable)
+
     Puzzle makeUniqueStickers();
 
     State state;
@@ -66,6 +64,9 @@ public:
     std::string getMoveName(State mov);
 
     State getPieceState(State s);
+    //returns the puzzle where each sticker has a unique number ascending order based on the solved state. 
+    //(if it is impossible to identify a unique sticker, will give the same id, 
+    //in this case the puzzle can have more than one solved state, and is not invertable)
     Puzzle getPiecePuzzle();
 
     void applyMoves(string moves);
@@ -78,7 +79,7 @@ public:
 
     friend class Solver;
     friend class RedundancyTable;
-    template <int width>
+    template <class Puzzle, int width, bool useSym, bool useInverse>
     friend class PruningStates;
 };
 

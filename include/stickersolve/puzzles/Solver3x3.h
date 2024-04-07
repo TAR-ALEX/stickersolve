@@ -5,11 +5,10 @@
 #include <stickersolve/puzzles/Puzzle3x3.h>
 
 using namespace std;
-
+#define testInverse true
+#define useSym true
 namespace PruningFor3x3 {
-    struct MaskPermutaion : public PruningStates<1> {
-        Puzzle3x3 sym;
-
+    struct MaskPermutaion : public PruningStates<Puzzle3x3, 1, useSym, testInverse> {
         State recolorMask = {
             0,  1,  2,  3,  4,  5,  6,  7,  8,  //
             9,  10, 11, 12, 13, 14, 15, 16, 17, //
@@ -19,28 +18,27 @@ namespace PruningFor3x3 {
             45, 46, 47, 48, 49, 50, 51, 52, 53  //
         };
 
-        virtual State preInsertTransformation(State s) { return sym.getUniqueSymetric(s); }
         int cannotBeSolvedInLimit(int movesAvailable, const State& state) {
-            // return PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(state.recolor(recolorMask)));
-            return PruningStates::cannotBeSolvedInLimit(movesAvailable, sym.getUniqueSymetric(state));
-            // return PruningStates::cannotBeSolvedInLimit(movesAvailable, state.recolor(recolorMask));
+            if constexpr (!testInverse){
+                return PruningStates::cannotBeSolvedInLimit(movesAvailable, puzzle.getUniqueSymetric(state));
+            }else{
+                return PruningStates::cannotBeSolvedInLimit(movesAvailable, puzzle.getUniqueSymetricInverse(state));
+            }
         }
         void init(std::string allowed = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'", std::string prefix = "") {
-            sym = Puzzle3x3().getPiecePuzzle();
-            sym.solvedState = recolorMask;
-            sym.state = recolorMask;
-            this->puzzle = sym;
+            this->puzzle = Puzzle3x3().getPiecePuzzle();
+            this->puzzle.solvedState = recolorMask;
+            this->puzzle.state = recolorMask;
             this->puzzle.keepOnlyMoves(allowed);
-            sym.generateSymetryTable();
+            this->puzzle.generateSymetryTable();
             this->depth = 10;
             this->hashSize = 33;
             this->cfg = cfg;
-            this->path = prefix + "MaskPermutation.table";
+            this->path = prefix + "MaskPermutation"+(testInverse?"Inv":"")+".table";
         }
         MaskPermutaion() { init(); }
     };
-    struct Mask3Color : public PruningStates<0> {
-        Puzzle3x3 sym;
+    struct Mask3Color : public PruningStates<Puzzle3x3, 0, useSym, false> {
         State recolorMask = {
             0,  1,  2,  3,  4, 3,  2,  1,  0,  //
             27, 28, 29, 12, 4, 12, 29, 28, 27, //
@@ -49,19 +47,17 @@ namespace PruningFor3x3 {
             36, 37, 20, 41, 4, 41, 20, 37, 36, //
             0,  1,  2,  3,  4, 3,  2,  1,  0,  //
         };
-        virtual State preInsertTransformation(State s) { return sym.getUniqueSymetric(s); }
         int cannotBeSolvedInLimit(int movesAvailable, const State& state) {
             return PruningStates::cannotBeSolvedInLimit(
-                movesAvailable, sym.getUniqueSymetric(state.recolor(recolorMask))
+                movesAvailable, puzzle.getUniqueSymetric(state.recolor(recolorMask))
             );
         }
         void init(std::string allowed = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'", std::string prefix = "") {
-            sym = Puzzle3x3().getPiecePuzzle();
-            sym.solvedState = recolorMask;
-            sym.state = recolorMask;
-            this->puzzle = sym;
+            this->puzzle = Puzzle3x3().getPiecePuzzle();
+            this->puzzle.solvedState = recolorMask;
+            this->puzzle.state = recolorMask;
             this->puzzle.keepOnlyMoves(allowed);
-            sym.generateSymetryTable();
+            this->puzzle.generateSymetryTable();
             this->depth = 11;
             this->hashSize = 35;
             this->cfg = cfg;
@@ -241,7 +237,7 @@ public:
 class Solver3x3Universal : public Solver {
 private:
     string allowedMoves = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'";
-    PruningStates<2> pruningTableClassic;
+    PruningStates<Puzzle, 2, false, false> pruningTableClassic;
     RedundancyTable redundancyTable;
 
 public:
@@ -350,9 +346,8 @@ class Solver3x3 : public SolverAutoSelector {
     }
 
 public:
-    std::string printTableStats() {
-        return "";
-        // return HTM.printTableStats() + "\n" + STM.printTableStats();
+    virtual std::string printTableStats() {
+        return selected->printTableStats();
     }
     // Solver3x3(std::string s) : Solver3x3() {}
     Solver3x3() {}

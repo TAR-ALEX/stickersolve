@@ -84,6 +84,8 @@ public:
         Puzzle initial, int depth, unsigned int numberOfSolutionsToGet = -1
     );
 
+    virtual std::string printTableStats() {return "";}
+
     virtual void init(){};
     virtual void deinit(){};
 };

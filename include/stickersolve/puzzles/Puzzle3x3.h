@@ -269,7 +269,8 @@ public:
         return result;
     }
 public:
-    std::vector<std::pair<State, State>> symetryTable = {};
+    boost::container::static_vector<std::pair<State, State>, 48> symetryTable = {};
+    //std::vector<std::pair<State, State>> symetryTable = {};// transform, recolor
     std::unordered_map<uint16_t, State> standardOrientationTable = {};
     void generateSymetryTable() {
         static State S_URF3 = Puzzle3x3().getMove("x") + Puzzle3x3().getMove("y");
@@ -338,7 +339,7 @@ public:
     State getStandardOrientation(const State& s) {
         return s + standardOrientationTable[55 * s[4] + s[13]];
     }
-    State getUniqueSymetric(const State& s) {
+    State getUniqueSymetricOld(const State& s) {
         State min = s;
         int minVal = INT_MAX;
         State tst;
@@ -390,5 +391,128 @@ public:
 
         auto& [t, r] = symetryTable[continueSearch[0]];
         return s.recolor(r) + t;
+    }
+
+    //new version, faster?
+    State getUniqueSymetric(const State& s) {
+        int minVal = INT_MAX;
+
+        const size_t SEARCH_SIZE = 48;
+        int continueSearch[SEARCH_SIZE] = {};
+        size_t curSize = 0;
+        //for (size_t j = 0; j < symetryTable.size(); j++) continueSearch[j] = j;
+
+        for (size_t j = 0; j < symetryTable.size(); j++) {
+            auto& [t, r] = symetryTable[j];
+            int sticker = r[s[t[0]]];
+            if (sticker < minVal) {
+                minVal = sticker;
+                curSize = 0;
+                continueSearch[curSize] = j;
+                curSize++;
+            } else if (sticker == minVal) {
+                continueSearch[curSize] = j;
+                curSize++;
+            }
+        }
+
+        int atIndex = 0;
+//if (curSize != 1) 
+        for (size_t i = 1; i < s.size(); i++) {
+            minVal = INT_MAX;
+            atIndex = 0;
+            for (size_t j = 0; j < curSize; j++) {
+                auto& [t, r] = symetryTable[continueSearch[j]];
+                int sticker = r[s[t[i]]];
+                if (sticker < minVal) {
+                    minVal = sticker;
+                    atIndex = 0;
+                    continueSearch[atIndex] = continueSearch[j];
+                    atIndex++;
+                } else if (sticker == minVal) {
+                    continueSearch[atIndex] = continueSearch[j];
+                    atIndex++;
+                }
+            }
+            curSize = atIndex;
+            if (curSize == 1) {
+                break;
+            }
+        }
+
+        auto& [t, r] = symetryTable[continueSearch[0]];
+        return s.recolor(r) + t;
+
+    }
+
+    State getUniqueSymetricInverse(const State& s) {
+        auto s1 = getUniqueSymetric(s);
+        auto s2 = getUniqueSymetric(!s);
+        if(s2 < s1) s1 = s2;
+        return s1;
+
+        int minVal = INT_MAX;
+
+        const State sinv = !s;
+
+        const size_t SEARCH_SIZE = 48*2;
+        int continueSearch[SEARCH_SIZE] = {};
+        size_t curSize = 0;
+
+        for (size_t j = 0; j < symetryTable.size()*2; j++) {
+            auto& [t, r] = symetryTable[j%symetryTable.size()];
+            int sticker;
+            if(j < symetryTable.size()){
+                sticker = r[s[t[0]]];
+            } else {
+                sticker = r[sinv[t[0]]];
+            }
+            if (sticker < minVal) {
+                minVal = sticker;
+                curSize = 0;
+                continueSearch[curSize] = j;
+                curSize++;
+            } else if (sticker == minVal) {
+                continueSearch[curSize] = j;
+                curSize++;
+            }
+        }
+
+        int atIndex = 0;
+
+        for (size_t i = 1; i < s.size(); i++) {
+            minVal = INT_MAX;
+            atIndex = 0;
+            for (size_t j = 0; j < curSize; j++) {
+                auto& [t, r] = symetryTable[continueSearch[j]%symetryTable.size()];
+                int sticker;
+                if(continueSearch[j] < (int)symetryTable.size()){
+                    sticker = r[s[t[i]]];
+                } else {
+                    sticker = r[sinv[t[i]]];
+                }
+                if (sticker < minVal) {
+                    minVal = sticker;
+                    atIndex = 0;
+                    continueSearch[atIndex] = continueSearch[j];
+                    atIndex++;
+                } else if (sticker == minVal) {
+                    continueSearch[atIndex] = continueSearch[j];
+                    atIndex++;
+                }
+            }
+            curSize = atIndex;
+            if (curSize == 1) {
+                break;
+            }
+        }
+
+        if(continueSearch[0] < (int)symetryTable.size()){
+            auto& [t, r] = symetryTable[continueSearch[0]];
+            return s.recolor(r) + t;
+        } else {
+            auto& [t, r] = symetryTable[continueSearch[0]%symetryTable.size()];
+            return sinv.recolor(r) + t;
+        }
     }
 };

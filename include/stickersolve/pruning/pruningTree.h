@@ -19,7 +19,7 @@ class Puzzle;
 
 using namespace std;
 
-template <int width = 2> // width in nibbles, must be a multiple of 4 (2 IS A SINGLE BYTE)
+template <class Puzzle, int width = 2, bool useSym = true, bool useInverse = false> // width in nibbles, must be a multiple of 4 (2 IS A SINGLE BYTE)
 class PruningStates {
 private:
     volatile bool terminateEarly = false;
@@ -29,7 +29,6 @@ private:
     boost::iostreams::mapped_file file;
     void performSizeCheck();
     int visited2depth;
-    // std::map<State, uint8_t> visited2;
     std::set<State> visited2;
     void generate();
     void generateLevel(int lvl);
@@ -39,8 +38,16 @@ private:
     void initHashMask();
     uint8_t* data = nullptr;
     virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves);
-    inline virtual State preInsertTransformation(State s) { return s; };
-    inline virtual State preLookupTransformation(State s) { return s; };
+    inline State preInsertTransformation(State s) { 
+        if constexpr(useSym && !useInverse){
+            return puzzle.getUniqueSymetric(s);
+        }else if constexpr(useSym && useInverse){
+            return puzzle.getUniqueSymetricInverse(s);
+        }else{
+            return s;
+        }
+    };
+    inline State preLookupTransformation(State s) { return s; };
     vector<uint64_t> stats = vector<uint64_t>(256, 0);
 
 public:

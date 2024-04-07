@@ -137,6 +137,7 @@ inline void RedundancyTable::insert(const vector<int>& e) {
 
 inline void RedundancyTable::unload() {
     if (data != nullptr) {
+        stats.clear();
         cfg->log << "Unloading table (" << path << ") from memory\n";
         cfg->log << "----------------------------------------------------------------\n";
         delete[] data;
