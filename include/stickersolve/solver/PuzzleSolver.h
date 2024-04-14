@@ -55,8 +55,7 @@ private:
     );
 
 protected:
-    Puzzle puzzle; // reference puzzle that the solver is capable of solving, only used for getting the moves
-    inline virtual State preInsertTransformation(State s) { return s; }; //TODO: delete this
+    estd::clone_ptr<Puzzle> puzzle; // reference puzzle that the solver is capable of solving, used for symetry reduction if enabled
     virtual bool canDiscardPosition(int movesAvailable, const State& state);
     virtual bool canDiscardMoves(int movesAvailable, const vector<int>& moves);
     virtual void initReverse(){}; // move to public once working
@@ -102,7 +101,7 @@ private:
     }
 
 public:
-    estd::raw_ptr<Solver> selected = nullptr;
+    estd::raw_ptr<Solver> selected = nullptr; // change this in the selectSolver function
 
     std::function<void(int)> progressCallback = [](int) {};
     std::function<void(int)> tableProgressCallback = [](int) {};

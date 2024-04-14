@@ -86,7 +86,7 @@ public:
         else
             allowedMoves = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'";
         puzzle = Puzzle3x3().getPiecePuzzle();
-        puzzle.keepOnlyMoves(allowedMoves);
+        puzzle->keepOnlyMoves(allowedMoves);
 
         // pruningTableClassic.puzzle = puzzle;
 
@@ -108,7 +108,7 @@ public:
     void init() {
         redundancyTable.unload();
         redundancyTable.depth = 3; //3
-        redundancyTable.puzzle = puzzle;
+        redundancyTable.puzzle = *puzzle;
         redundancyTable.cfg = cfg;
 
         pruning3Color.cfg = cfg;
@@ -195,6 +195,7 @@ public:
     }
     Puzzle3x3 sym = Puzzle3x3().getPiecePuzzle();
 
+
     virtual State preInsertTransformation(State s) {
         State so = sym.getStandardOrientation(s);
         return sym.getUniqueSymetric(so);
@@ -250,12 +251,12 @@ public:
 
     void init() {
         tableProgressCallback(0);
-        if (pruningTableClassic.puzzle.getMoves() != puzzle.getMoves() ||
-            pruningTableClassic.puzzle.solvedState != puzzle.solvedState) {
+        if (pruningTableClassic.puzzle.getMoves() != puzzle->getMoves() ||
+            pruningTableClassic.puzzle.solvedState != puzzle->solvedState) {
             cout << "DEINIT\n";
             deinit();
         }
-        pruningTableClassic.puzzle = puzzle;
+        pruningTableClassic.puzzle = *puzzle;
 
         pruningTableClassic.depth = 7; // 8 HTM 10 rfu
         pruningTableClassic.hashSize = 27;
@@ -263,7 +264,7 @@ public:
         pruningTableClassic.cfg = cfg;
 
         redundancyTable.depth = 3; //3
-        redundancyTable.puzzle = puzzle;
+        redundancyTable.puzzle = *puzzle;
         redundancyTable.cfg = cfg;
 
         pruningTableClassic.progressCallback = [&](int p) { tableProgressCallback(p); };

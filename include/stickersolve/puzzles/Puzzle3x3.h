@@ -269,6 +269,9 @@ public:
         return result;
     }
 public:
+    clonable* clone() const{
+        return new Puzzle3x3(*this);
+    }
     boost::container::static_vector<std::pair<State, State>, 48> symetryTable = {};
     //std::vector<std::pair<State, State>> symetryTable = {};// transform, recolor
     std::unordered_map<uint16_t, State> standardOrientationTable = {};

@@ -12,7 +12,7 @@
 
 using namespace std;
 
-class Puzzle {
+class Puzzle: public estd::clonable {
 protected:
     // WARNING: This works only when number of stickers is less than 256, (dont use for redundancyTable in the future)
     vector<uint8_t> compressState(const State& s);
@@ -72,6 +72,10 @@ public:
     void applyMoves(string moves);
     virtual State getUniqueSymetric(const State& s) {return s;}
     virtual State getStandardOrientation(const State& s) {return s;}
+
+    virtual clonable* clone() const{
+        return new Puzzle(*this);
+    }
 
     string toString();
 

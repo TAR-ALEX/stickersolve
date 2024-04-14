@@ -47,7 +47,6 @@ private:
             return s;
         }
     };
-    inline State preLookupTransformation(State s) { return s; };
     vector<uint64_t> stats = vector<uint64_t>(256, 0);
 
 public:

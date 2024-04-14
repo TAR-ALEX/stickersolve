@@ -37,7 +37,9 @@ void Solver::generateUniqueStates(
     states.insert(initial);
     if (detach.empty()) detach.push_back({initial, {}});
 
-    std::vector<State> validMoves = puzzle.validMoves;
+    Puzzle* puzzlePtr = puzzle.get();
+
+    std::vector<State> validMoves = puzzlePtr->validMoves;
 
     size_t detachOriginalSize = detach.size();
 
@@ -52,7 +54,7 @@ void Solver::generateUniqueStates(
             State end = (start.first + move);
             State trnsfrm;
             if constexpr (removeSymetry) {
-                trnsfrm = preInsertTransformation(end);
+                trnsfrm = puzzlePtr->getUniqueSymetric(end);
             } else {
                 trnsfrm = end;
             }
@@ -79,7 +81,7 @@ void Solver::genLev(
     unsigned int numberOfSolutionsToGet
 ) {
     // if(targetDepth < initialDepth) return;
-    State final = puzzle.solvedState;
+    State final = puzzle->solvedState;
     moves.reserve(targetDepth);
     stack<State> ss;
     ss.push(start);
@@ -145,14 +147,16 @@ void Solver::rawSolve(
     terminateEarly = false;
     ppzl = preSolveTransform(ppzl);
 
-    puzzle = ppzl;
+    puzzle->state = ppzl.state;
+    puzzle->solvedState = ppzl.solvedState;
+    puzzle->copyMoves(ppzl);
     // for(auto e: puzzle.getMoves()) std::cout << e << " ";
     // std::cout << "\n";
     // for(auto e: ppzl.getMoves()) std::cout << e << " ";
     // std::cout << "\n";
     // exit(0);
 
-    State initial = puzzle.state;
+    State initial = puzzle->state;
 
     if (inverse) {
         localInitReverse();
@@ -162,7 +166,8 @@ void Solver::rawSolve(
         init();
     }
 
-    int numChoices = puzzle.validMoves.size();
+    std::vector<State> validMoves = puzzle->validMoves;
+    int numChoices = puzzle->validMoves.size();
 
     std::deque<std::pair<State, std::vector<int>>> detach{};
     std::set<State> visited2{};
@@ -199,9 +204,8 @@ void Solver::rawSolve(
     cfg->log << "----------------------------------------------------\n";
 
     cfg->threadPool->schedule([&]() {
-        uint64_t percent = 0;
+        std::atomic_int64_t percent = 0;
         long t = 0;
-        std::mutex m;
         for (auto& state : detach) {
             if (terminateEarly) break;
             cfg->threadPool->schedule([&]() {
@@ -211,7 +215,7 @@ void Solver::rawSolve(
                     visited2depth,
                     state.first,
                     state.second,
-                    puzzle.validMoves,
+                    validMoves,
                     terminateEarly,
                     numberOfSolutionsToGet
                 );
@@ -249,7 +253,7 @@ shared_ptr<estd::thread_safe_queue<vector<string>>> Solver::asyncSolveVectors(
             while (true) {
                 vector<string> formattedSolution;
                 vector<int> elements = solutions->pop();
-                for (auto moveId : elements) formattedSolution.push_back(puzzle.moveNames[moveId]);
+                for (auto moveId : elements) formattedSolution.push_back(puzzle->moveNames[moveId]);
                 formattedSolutions->push(formattedSolution);
             }
         } catch (...) {}
