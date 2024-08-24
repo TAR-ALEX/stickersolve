@@ -4,4 +4,6 @@
 /vendor/include/boost
 /vendor/lib
 /tables
+/stickersolve
+/tables-*
 
