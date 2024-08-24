@@ -133,6 +133,7 @@ void PruningStates<Puzzle, width, useSym, useInverse>::unload() {
 
 template <class Puzzle, int width, bool useSym, bool useInverse>
 void PruningStates<Puzzle, width, useSym, useInverse>::load() {
+    if(cfg->overrideDepth > 0) this->depth = cfg->overrideDepth;
     terminateEarly = false;
     progressCallback(0);
     if (data != nullptr) { 
@@ -441,22 +442,6 @@ void PruningStates<Puzzle, width, useSym, useInverse>::generateUniqueStates(
         detach.pop_front();
     }
 }
-
-// template <class Puzzle, int width, bool useSym, bool useInverse>
-// void PruningStates<Puzzle, width, useSym, useInverse>::genLev(int targetDepth, int initialDepth, State start, vector<State>& validMoves) {
-//     if(initialDepth >= targetDepth) return;
-
-//     int currentDepth = initialDepth+1;
-//     for(size_t i = 0; i < validMoves.size(); i++){
-//         State currentState = start + validMoves[i];
-//         State transformedState = preInsertTransformation(currentState);
-//         if(visited2.count(transformedState)) continue;
-
-//         insert(transformedState, currentDepth);
-
-//         genLev(targetDepth, currentDepth, currentState, validMoves);
-//     }
-// }
 
 template <class Puzzle, int width, bool useSym, bool useInverse>
 void PruningStates<Puzzle, width, useSym, useInverse>::genLev(

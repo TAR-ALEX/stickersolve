@@ -10,11 +10,19 @@
 
 using namespace std;
 
-string State::toString() {
+string State::toString(int newlineafter, int entryPadding) {
     string result = "[";
     for (size_t i = 0; i < size(); i++) {
         if (i != 0) { result += ", "; }
-        result += to_string((*this)[i]);
+        if(newlineafter > 0){
+            if(i % newlineafter == 0) result += "\n";
+        }
+        std::string entry = to_string((*this)[i]);
+        while(entry.size()<entryPadding) entry = " " + entry;
+        result += entry;
+    }
+    if(newlineafter > 0){
+        result += "\n";
     }
     return result + "]";
 }

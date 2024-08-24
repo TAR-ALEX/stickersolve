@@ -342,61 +342,7 @@ public:
     State getStandardOrientation(const State& s) {
         return s + standardOrientationTable[55 * s[4] + s[13]];
     }
-    State getUniqueSymetricOld(const State& s) {
-        State min = s;
-        int minVal = INT_MAX;
-        State tst;
-        boost::container::static_vector<size_t, 100> continueSearch = {};
-        // continueSearch.reserve(symetryTable.size() / 2);
-        // for (size_t i = 0; i < symetryTable.size(); i++) {
-        //     auto& [t, r] = symetryTable[i];
-        //     tst = s.recolor(r)+t;
-        //     if (tst < min) min = tst;
-        // }
 
-
-        for (size_t j = 0; j < symetryTable.size(); j++) {
-            auto& [t, r] = symetryTable[j];
-            int sticker = r[s[t[0]]];
-            if (sticker < minVal) {
-                minVal = sticker;
-                continueSearch.clear();
-                continueSearch.push_back(j);
-            } else if (sticker == minVal) {
-                continueSearch.push_back(j);
-            }
-        }
-
-        boost::container::static_vector<size_t, 100> continueSearchCpy;
-        for (size_t i = 1; i < s.size(); i++) {
-            continueSearchCpy.clear();
-            // continueSearchCpy.reserve(symetryTable.size() / 2);
-            std::swap(continueSearchCpy, continueSearch);
-            minVal = INT_MAX;
-            for (auto& srch : continueSearchCpy) {
-                auto& [t, r] = symetryTable[srch];
-                int sticker = r[s[t[i]]];
-                if (sticker < minVal) {
-                    minVal = sticker;
-                    continueSearch.clear();
-                    continueSearch.push_back(srch);
-                } else if (sticker == minVal) {
-                    continueSearch.push_back(srch);
-                }
-            }
-
-            if (continueSearch.size() == 1) {
-                auto& [t, r] = symetryTable[continueSearch[0]];
-                return s.recolor(r) + t;
-            }
-        }
-
-
-        auto& [t, r] = symetryTable[continueSearch[0]];
-        return s.recolor(r) + t;
-    }
-
-    //new version, faster?
     State getUniqueSymetric(const State& s) {
         int minVal = INT_MAX;
 
@@ -420,7 +366,7 @@ public:
         }
 
         int atIndex = 0;
-//if (curSize != 1) 
+
         for (size_t i = 1; i < s.size(); i++) {
             minVal = INT_MAX;
             atIndex = 0;

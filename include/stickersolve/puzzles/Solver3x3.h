@@ -38,6 +38,36 @@ namespace PruningFor3x3 {
         }
         MaskPermutaion() { init(); }
     };
+    struct MaskExperiment : public PruningStates<Puzzle3x3, 1, useSym, false> {
+        State recolorMask = {
+            0,  1,  2,  3,  4,  5,  6,  7,  8,  //
+            9,  7,  11, 12, 13, 14, 15, 16, 17, //
+            18, 5,  20, 21, 22, 23, 24, 25, 26, //
+            27, 1,  29, 30, 31, 32, 33, 34, 35, //
+            36, 3,  38, 39, 40, 41, 42, 43, 44, //
+            45, 16, 47, 43, 49, 25, 51, 34, 53  //
+        };
+
+        int cannotBeSolvedInLimit(int movesAvailable, const State& state) {
+            return PruningStates::cannotBeSolvedInLimit(movesAvailable, puzzle.getUniqueSymetric(state.recolor(recolorMask)));
+        }
+        void init(std::string allowed = "U U2 U' R R2 R' F F2 F' D D2 D' L L2 L' B B2 B'", std::string prefix = "") {
+            this->puzzle = Puzzle3x3().getPiecePuzzle();
+            this->puzzle.solvedState = recolorMask;
+            this->puzzle.state = recolorMask;
+            this->puzzle.getPiecePuzzle();
+            recolorMask = this->puzzle.solvedState;
+            std::cout << recolorMask.toString(9, 5);
+            this->puzzle.keepOnlyMoves(allowed);
+            this->puzzle.generateSymetryTable();
+            this->depth = 10;
+            this->hashSize = 33;
+            this->cfg = cfg;
+            this->path = prefix + "MaskExperiment.table";
+        }
+        MaskExperiment() { init(); }
+    };
+    
     struct Mask3Color : public PruningStates<Puzzle3x3, 0, useSym, false> {
         State recolorMask = {
             0,  1,  2,  3,  4, 3,  2,  1,  0,  //
@@ -78,7 +108,8 @@ public:
 
     // PruningStates<2> pruningTableClassic;
     PruningFor3x3::Mask3Color pruning3Color;
-    PruningFor3x3::MaskPermutaion testTable;
+    PruningFor3x3::MaskPermutaion classicTable;
+    PruningFor3x3::MaskExperiment experimentTable;
 
     Solver3x3Restricted() : Solver() {
         if (HAS_SLICES)
@@ -102,7 +133,8 @@ public:
     inline virtual void cancel() {
         Solver::cancel();
         pruning3Color.cancel();
-        testTable.cancel();
+        classicTable.cancel();
+        experimentTable.cancel();
     }
 
     void init() {
@@ -112,7 +144,8 @@ public:
         redundancyTable.cfg = cfg;
 
         pruning3Color.cfg = cfg;
-        testTable.cfg = cfg;
+        classicTable.cfg = cfg;
+        experimentTable.cfg = cfg;
 
         progress1 = 0;
         progress2 = 0;
@@ -123,9 +156,12 @@ public:
             progress1 = p;
             tableProgressCallback((progress1 + progress2) / 2);
         };
-        testTable.progressCallback = [&](int p) {
+        classicTable.progressCallback = [&](int p) {
             progress2 = p;
             tableProgressCallback((progress1 + progress2) / 2);
+        };
+        experimentTable.progressCallback = [&](int p) {
+            tableProgressCallback(p);
         };
 
         int hashSize = 0;
@@ -139,29 +175,35 @@ public:
         prefix += HAS_SLICES ? "_slice_" : "_noslice_";
 
         pruning3Color.init(allowedMoves, prefix);
-        testTable.init(allowedMoves, prefix);
+        classicTable.init(allowedMoves, prefix);
+        experimentTable.init(allowedMoves, prefix);
 
-        testTable.hashSize = hashSize;
+        classicTable.hashSize = hashSize;
         pruning3Color.hashSize = hashSize + 2;
+        experimentTable.hashSize = hashSize;
 
         if constexpr (HAS_SLICES) {
             pruning3Color.depth -= 1;
-            testTable.depth -= 1;
+            classicTable.depth -= 1;
+            experimentTable.depth -= 1;
         }
 
         if (hashSize > 37) {
             pruning3Color.depth += 1;
-            testTable.depth += 1;
+            classicTable.depth += 1;
+            experimentTable.depth -= 1;
         }
 
         if (hashSize < 32) {
             pruning3Color.depth -= 1;
-            testTable.depth -= 1;
+            classicTable.depth -= 1;
+            experimentTable.depth -= 1;
         }
 
         if (hashSize < 28) {
             pruning3Color.depth -= 1;
-            testTable.depth -= 1;
+            classicTable.depth -= 1;
+            experimentTable.depth -= 1;
         }
 
         redundancyTable.load();
@@ -169,13 +211,15 @@ public:
         pruning3Color.load();
         // pruning3ColorB.load();
         // pruningRing.load();
-        testTable.load();
+        classicTable.load();
+        experimentTable.load();
     }
 
     void deinit() {
         redundancyTable.unload();
         pruning3Color.unload();
-        testTable.unload();
+        classicTable.unload();
+        experimentTable.unload();
     }
 
     std::string printTableStats() {
@@ -189,7 +233,8 @@ public:
         printStat("redundancyTable.getStats()", redundancyTable.getStats());
         // printStat("pruningTableClassic.getStats()", pruningTableClassic.getStats());
         printStat("pruning3Color.getStats()", pruning3Color.getStats());
-        printStat("testTable.getStats()", testTable.getStats());
+        printStat("classicTable.getStats()", classicTable.getStats());
+        printStat("experimentTable.getStats()", experimentTable.getStats());
 
         return ss.str();
     }
@@ -225,11 +270,11 @@ public:
         if constexpr (HAS_SLICES || HAS_WIDE) {
             State so = sym.getStandardOrientation(stateReal);
             if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, so) == 1) return true;
-            if (testTable.cannotBeSolvedInLimit(movesAvailable, so) == 1) return true;
+            if (classicTable.cannotBeSolvedInLimit(movesAvailable, so) == 1) return true;
             return false;
         } else {
             if (pruning3Color.cannotBeSolvedInLimit(movesAvailable, stateReal) == 1) return true;
-            if (testTable.cannotBeSolvedInLimit(movesAvailable, stateReal) == 1) return true;
+            if (classicTable.cannotBeSolvedInLimit(movesAvailable, stateReal) == 1) return true;
             return false;
         }
     }

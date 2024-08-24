@@ -70,6 +70,6 @@ public:
     //    reserve(compr.size());
     //    for(const uint8_t& e: compr) push_back(e);
     // }
-    string toString();
+    string toString(int newlineAfter = 0, int entryPadding = 0);
     uint64_t toHash() const;
 };

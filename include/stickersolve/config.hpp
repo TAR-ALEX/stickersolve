@@ -14,6 +14,7 @@ public:
     std::string pruiningTablesPath = "./";
     estd::clone_ptr<estd::thread_pool> threadPool{8};
     bool useMmapForPruning = false;
+    int overrideDepth = 0; // zero just uses the defaults
     SolverConfig() {
         int hwt = (int)std::thread::hardware_concurrency();
         if (hwt != 0) threadPool = estd::thread_pool{hwt+1};
